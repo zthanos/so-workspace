@@ -9,3 +9,9 @@ docs/03_architecture/diagrams/out/
 # If you want to keep only latest and snapshots you curate, ignore everything then whitelist:
 docs/build/reports/
 !docs/build/reports/inconsistencies.template.md
+
+
+tools/so-vsix/.vscode/
+tools/so-vsix/dist/
+tools/so-vsix/node_modules/
+

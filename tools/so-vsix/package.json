@@ -1,0 +1,50 @@
+{
+  "name": "so-vsix",
+  "displayName": "SO Workspace",
+  "description": "Chat participant for SO workspace management",
+  "version": "1.0.0",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "so-workspace.so",
+        "name": "so",
+        "description": "SO workspace documentation and build assistant",
+        "isSticky": true
+      }
+    ],
+    "commands": [
+    { "command": "so-workspace.obj.generate", "title": "SO: Objectives Generate (Open Chat)" },
+    { "command": "so-workspace.obj.eval", "title": "SO: Objectives Evaluate (Open Chat)" },
+    { "command": "so-workspace.obj.patch", "title": "SO: Objectives Patch (Open Chat)" },
+    { "command": "so-workspace.obj.recheck", "title": "SO: Objectives Recheck (Open Chat)" },
+    { "command": "so-workspace.renderDiagrams", "title": "SO: Render Diagrams (Docker)" },
+    { "command": "so-workspace.buildPdf", "title": "SO: Build PDF (Docker)" }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.7.1",
+    "typescript": "^5.9.3"
+  }
+}
