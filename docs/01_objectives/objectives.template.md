@@ -1,50 +1,202 @@
 ---
+
 doc_id: SO-OBJECTIVES
 title: Solution Outline Objectives
-version: 1.0
+version: 1.1
 status: template
----
+----------------
 
 # Solution Outline Objectives
 
-## How to use this document
+## How to Use This Document
 
-This document captures the high-level intent of the initiative and defines what “good” looks like for the Solution Outline. It is written before the Solution Outline and is used as a reference for validating completeness and consistency.
+This document defines the **Objectives blueprint** for the Solution Outline. It acts as the **single source of truth** for:
 
-The content must be stable and concise. Any detail that belongs to detailed design must remain out of scope.
+* validating alignment with Business Requirements
+* generating the Solution Outline
+* generating logical architecture and flow diagrams
 
-## Business context and problem statement
+Authoring rules:
 
-Describe the business situation, why the change is needed, and what pain points exist today. The problem statement must be clear enough that an independent reviewer can understand the purpose without reading other documents.
+* This document captures **intent and scope**, not solution design.
+* Do **not** introduce technologies, products, or implementation details unless explicitly stated as constraints in the requirements.
+* Every objective or capability must be **traceable to one or more Requirements**.
+* If information is missing from the Requirements, record it explicitly under **Assumptions** or **Questions**.
 
-## Objectives
+---
 
-State the measurable outcomes the solution must achieve. Objectives must not be technical implementation choices. If technical outcomes are required (e.g., “enable near real-time updates”), express them as capability outcomes.
+## Requirements Coverage Map
 
-## In scope
+This section provides explicit traceability between Requirements and Objectives. It is the primary input for consistency evaluation.
 
-Describe what is explicitly included. The scope must be consistent with the Requirements document. Anything listed here should be traceable to at least one requirement.
+| Requirement ID | Requirement Title | Covered in Objectives Section | Coverage Status (Covered / Partial / Gap) | Notes / Gaps |
+| -------------- | ----------------- | ----------------------------- | ----------------------------------------- | ------------ |
 
-## Out of scope
+---
 
-Describe what is explicitly excluded. This section is used to catch scope creep and should be reflected in the Requirements (i.e., requirements must not contradict out-of-scope items).
+## Business Context and Objectives
 
-## Stakeholders and target audience
+### Business Context
 
-Identify who cares about the outcome and who reviews/approves the Solution Outline. Include owners for business, architecture, security, and delivery.
+Describe the business background and problem space that motivates this initiative.
 
-## Success criteria
+* **Derived from Requirements**: business drivers, pain points, regulatory or market context.
+* **User-provided**: additional context gathered from stakeholder discussions, clearly separated from assumptions.
 
-Describe how you will know the objectives are achieved. These criteria should map to Requirements acceptance criteria and also influence Solution Outline completeness.
+Avoid describing solution approaches or system behavior.
 
-## Assumptions
+### Business Objectives
 
-List assumptions that, if false, would change the solution. Each assumption that affects delivery or architecture should be validated or converted into a requirement or an ADR.
+Define the high-level business outcomes this initiative aims to achieve.
 
-## Constraints
+* **Derived from Requirements**: stated business goals and expected outcomes.
+* **User-provided**: clarified or grouped objectives expressed in outcome-oriented language.
 
-List non-negotiable constraints (e.g., “Windows-only build”, “must use Docker for tools”, “must keep all artifacts in git”). Constraints should be reflected in the Solution Outline and should not be violated by requirements.
+Objectives must describe *what success looks like*, not how it is implemented.
 
-## Risks and mitigations
+---
 
-Summarize the key risks and the planned mitigations. Any mitigation that implies work or functionality should appear in Requirements or ADRs.
+## Scope Definition
+
+### In Scope
+
+Define the functional and business capabilities that are explicitly included.
+
+* **Derived from Requirements**: required capabilities and features.
+* **User-provided**: logical grouping of requirements into coherent capability areas.
+
+Do not introduce new functionality not supported by Requirements.
+
+### Out of Scope
+
+Explicitly state what is excluded to prevent scope creep.
+
+* **Derived from Requirements**: stated exclusions or limitations.
+* **User-provided**: clarifications necessary to define clear boundaries.
+
+Out-of-scope statements must not contradict any Requirement.
+
+---
+
+## Stakeholders
+
+Identify business and external stakeholders relevant to the solution.
+
+* **Derived from Requirements**: referenced business units, partners, regulators, or customer groups.
+* **User-provided**: additional stakeholders identified during discovery or workshops.
+
+Focus on *who is impacted*, not organizational design.
+
+---
+
+## Teams Involvments
+
+List internal delivery and operational teams involved in the initiative.
+
+* **Derived from Requirements**: teams explicitly referenced.
+* **User-provided**: delivery, ownership, support, or governance teams identified during discovery.
+
+Describe the nature of involvement in descriptive prose.
+
+---
+
+## Systems Identified
+
+Identify systems that participate in the solution context.
+
+| System | Description | Internal / External |
+| ------ | ----------- | ------------------- |
+
+* **Derived from Requirements**: systems explicitly mentioned as sources, targets, or dependencies.
+* **User-provided**: classification and brief purpose clarification.
+
+Do not describe integration mechanisms or technologies.
+
+---
+
+## Functional Requirements (as Objectives)
+
+Translate functional requirements into **functional objectives** expressed at capability level.
+
+* **Derived from Requirements**: functional requirements.
+* **User-provided**: reformulation into objective statements.
+
+Each functional objective should:
+
+* describe a required capability
+* reference supporting Requirement IDs
+* include a short success intent in natural language
+
+---
+
+## Non-Functional Requirements
+
+Capture non-functional objectives that constrain the solution.
+
+* **Derived from Requirements**: performance, availability, security, compliance, auditability, scalability.
+* **User-provided**: clarified NFR objectives consistent with stated constraints.
+
+Avoid defining metrics unless explicitly provided by Requirements.
+
+---
+
+## High-Level Flows
+
+Describe business-level or logical flows relevant to the solution.
+
+* **Derived from Requirements**: described user journeys or business processes.
+* **User-provided**: concise narrative of triggers, key steps, and outcomes.
+
+Rules:
+
+* No technology, protocol, or implementation details
+* Flows represent *logical behavior*, not sequence diagrams
+
+---
+
+## Integrations & Data Flow (High Level)
+
+Identify required integrations and data exchanges at a conceptual level.
+
+* **Derived from Requirements**: integration needs, exchanged data types, interaction patterns.
+* **User-provided**: clarification of data domains and interaction intent.
+
+Do not specify integration technologies or products.
+
+---
+
+## Security Considerations
+
+Document security, privacy, and compliance concerns.
+
+* **Derived from Requirements**: authentication, authorization, data classification, regulatory constraints.
+* **User-provided**: open security questions or areas requiring further clarification.
+
+Security design decisions belong in the Solution Outline or ADRs, not here.
+
+---
+
+## Assumptions and Constraints
+
+### Assumptions
+
+State conditions assumed to be true due to missing or unclear requirements.
+
+Assumptions must be validated or removed in later phases.
+
+### Constraints
+
+State constraints that limit solution options.
+
+Constraints typically originate from Requirements, enterprise standards, or regulatory obligations.
+
+---
+
+## Risks and Questions
+
+Identify known risks, dependencies, and open questions.
+
+* **Derived from Requirements**: stated risks or dependencies.
+* **User-provided**: risks arising from missing information or unresolved assumptions.
+
+This section feeds risk management and follow-up activities.
