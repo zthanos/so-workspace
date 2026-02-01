@@ -1,0 +1,28 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title System Context Diagram - Sports Booking Platform
+
+LAYOUT_WITH_LEGEND()
+
+Person(player, "Player", "Discovers and books sports lessons,\nmatches, and tournaments")
+Person(coach, "Coach", "Creates and publishes activities and\nmanages participation")
+Person(venueOp, "Venue Operator", "Maintains venue details and\navailability schedules")
+Person(admin, "Platform Administrator", "Provides operational oversight\nand configuration")
+
+System_Boundary(sbp_boundary, "Sports Booking Platform") {
+  System(sbp, "Sports Booking Platform", "Central hub for organizing, discovering,\nand booking sports activities")
+}
+
+System_Ext(payment, "Payment Provider", "Processes optional payments\nfor activities")
+System_Ext(notification, "Notification Service", "Delivers booking, change,\nand cancellation notifications")
+
+Rel(player, sbp, "discovers and books activities")
+Rel(coach, sbp, "publishes activities and manages participants")
+Rel(venueOp, sbp, "manages venues and availability")
+Rel(admin, sbp, "administers and oversees operations")
+
+Rel(sbp, payment, "uses for optional payment processing")
+Rel(sbp, notification, "uses for user notifications")
+
+@enduml
