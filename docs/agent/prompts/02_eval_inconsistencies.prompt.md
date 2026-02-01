@@ -1,78 +1,55 @@
-IMPORTANT: Do not modify any *.prompt.md files. Execute only.
-
-You are performing a consistency evaluation between documentation artifacts.
+You are in EXECUTION mode.
 
 Authoritative inputs:
 - docs/01_objectives/objectives.md
-- docs/02_requirements/requirements.md
+- docs/00_requirements/requirements.inventory.md
 
 Template reference:
-- docs/build/reports/inconsistencies.template.md
+- docs/build/reports/objectives_inconsistencies.template.md
 
-Your task is to evaluate consistency between Objectives and Requirements and produce a versioned inconsistency report.
+Purpose:
+Evaluate consistency, completeness, and scope alignment between
+Requirements Inventory and Solution Outline Objectives.
 
 Evaluation scope:
-Objectives vs Requirements only.
+Requirements Inventory vs Objectives only.
 
 Inconsistency categories:
-1) Scope contradiction
-2) Missing requirement coverage (objective with no supporting requirement)
-3) Missing success criteria mapping
-4) Assumption violation
-5) Constraint violation
-6) Terminology mismatch
+1) Missing inventory coverage
+   - Inventory item not reflected in any Objectives section
+2) Scope creep
+   - Objective introduces capability, constraint, or exclusion not supported by inventory
+3) Misplaced content
+   - Inventory item mapped to an incorrect Objectives section
+4) Assumption leakage
+   - Gaps or ambiguities resolved instead of recorded as assumptions
+5) Terminology mismatch
+   - Inconsistent naming of the same concept across documents
 
 Rules:
-- Do NOT modify objectives.md or requirements.md.
-- Do NOT suggest solution design changes.
-- Base all findings strictly on the content of the two input documents.
-- Evidence must reference exact section titles or requirement identifiers.
+- Do NOT modify objectives.md.
+- Do NOT modify requirements.inventory.md.
+- Base findings strictly on inventory content.
+- Evidence must reference:
+  - Inventory Req-IDs, and
+  - Objectives section titles.
 - Use professional, neutral language.
+- Do NOT suggest solution design changes.
 
 Report generation policy:
-
 1) Create a new timestamped report under:
-   docs/build/reports/inconsistencies/
+   docs/build/reports/objectives_inconsistencies/
 
    Filename format:
    YYYY-MM-DDTHH-MM_<short_reason>.md
 
-   Example:
-   2026-02-01T10-30_initial.md
-   2026-02-01T11-05_after_objectives_patch.md
+2) Also overwrite (or create):
+   docs/build/reports/objectives_inconsistencies/latest.md
 
-2) Also overwrite (or create) the file:
-   docs/build/reports/inconsistencies/latest.md
+Report requirements:
+- Include metadata (report_id, generated_at, evaluation_scope, trigger).
+- Summary counts (total issues, critical issues).
+- Issues table with stable IssueIds (OBJ-INV-001, ...).
+- SuggestedFix must reference wording or placement changes only.
 
-3) Reports must be immutable snapshots, except for latest.md.
-
-Report structure requirements:
-
-- Follow the structure defined in inconsistencies.template.md.
-- Add a metadata section at the top with:
-
-  report_id: auto-generated unique id
-  generated_at: ISO-8601 timestamp
-  evaluation_scope: "Objectives vs Requirements"
-  trigger:
-    type: manual | agent | pipeline
-    reason: brief explanation (e.g. initial evaluation, post-patch validation)
-  source_state:
-    objectives_doc_id and version (if available)
-    requirements_doc_id and version (if available)
-  previous_report: filename of the previous latest report, if known
-
-Summary requirements:
-- Total issues count
-- Critical issues count
-
-Issues table requirements:
-- IssueId must be stable and sequential (e.g. OBJ-REQ-001)
-- Severity must be one of: Critical, Major, Minor
-- SuggestedFix must be high-level and refer only to Objectives or Requirements wording changes
-
-Output requirements:
-- Write the full content of the new timestamped report file.
-- Write the same content to latest.md.
-- Return only the content of latest.md.
-- Do not include explanations or commentary outside the report content.
+Return only the content of latest.md.

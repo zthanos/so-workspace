@@ -1,18 +1,25 @@
-Read:
-- docs/build/reports/inconsistencies.md
-- docs/01_objectives/objectives.md
-- docs/02_requirements/requirements.md
+You are in EXECUTION mode.
 
-Task:
-Apply only the necessary changes to resolve the reported issues by updating:
-docs/01_objectives/objectives.md
+Authoritative inputs:
+- docs/build/reports/objectives_inconsistencies/latest.md
+- docs/01_objectives/objectives.md
+- docs/00_requirements/requirements.inventory.md
+
+Purpose:
+Apply minimal and controlled changes to the Objectives document
+in order to resolve reported inconsistencies.
 
 Rules:
-- Only fix issues that are listed in the report.
-- Do not introduce new scope beyond what requirements support.
-- Do not change the section structure/headings of objectives.md.
-- Prefer minimal edits: adjust wording, clarify assumptions/constraints/scope.
-- Do not modify requirements.md in this step.
-- After applying changes, the Objectives must remain aligned with the Requirements.
+- Only address issues explicitly listed in the inconsistency report.
+- Do NOT introduce new objectives, scope, or design.
+- Do NOT remove valid inventory-backed objectives.
+- Prefer minimal edits:
+  - rewording
+  - relocation to correct section
+  - moving content to Assumptions / Questions
+- Do NOT modify requirements.inventory.md.
+
+Output:
+- Update only docs/01_objectives/objectives.md.
 
 Return only the updated content of docs/01_objectives/objectives.md.

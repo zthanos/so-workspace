@@ -1,14 +1,20 @@
-IMPORTANT: Do not modify any *.prompt.md files. Execute only.
+You are in EXECUTION mode.
 
-Re-run the consistency evaluation between:
-docs/01_objectives/objectives.md
-and
-docs/02_requirements/requirements.md
+Authoritative inputs:
+- docs/01_objectives/objectives.md
+- docs/00_requirements/requirements.inventory.md
 
-Overwrite:
-docs/build/reports/inconsistencies.md
+Template reference:
+- docs/build/reports/objectives_inconsistencies.template.md
 
-Use the same structure as the template report.
-Do not edit any other files.
+Purpose:
+Re-evaluate the patched Objectives document to confirm
+that all reported inconsistencies have been resolved.
 
-Return only the content of docs/build/reports/inconsistencies.md.
+Rules:
+- Perform the same evaluation criteria as the initial evaluation.
+- Do NOT modify objectives.md.
+- Do NOT modify requirements.inventory.md.
+- Overwrite docs/build/reports/objectives_inconsistencies/latest.md.
+
+Return only the content of docs/build/reports/objectives_inconsistencies/latest.md.
