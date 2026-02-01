@@ -1,0 +1,11 @@
+# Build outputs
+docs/build/pdf/
+docs/build/tmp/
+
+# Rendered diagrams (derived)
+docs/03_architecture/diagrams/out/
+
+# Optional: reports (choose policy)
+# If you want to keep only latest and snapshots you curate, ignore everything then whitelist:
+docs/build/reports/
+!docs/build/reports/inconsistencies.template.md

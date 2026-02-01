@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Render Diagrams (Docker)",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\docs\\scripts\\render_diagrams_docker.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Export PDF (Docker)",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\docs\\scripts\\export_pdf_docker.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Build PDF (Docker)",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\docs\\scripts\\build_docker.ps1"],
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}

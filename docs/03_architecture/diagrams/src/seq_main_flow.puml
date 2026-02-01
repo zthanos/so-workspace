@@ -1,0 +1,13 @@
+@startuml
+actor User
+participant "Web App" as Web
+participant "API" as API
+database "DB" as DB
+
+User -> Web: Submit request
+Web -> API: POST /action
+API -> DB: Save / Read
+DB --> API: Result
+API --> Web: 200 OK
+Web --> User: Response
+@enduml
