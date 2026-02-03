@@ -1,6 +1,4 @@
 title: "Solution Outline"
 inputs:
   - docs/00_index.md
-  - docs/01_objectives/objectives.md
-  - docs/02_requirements/requirements.md
   - docs/03_architecture/solution_outline.md

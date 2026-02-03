@@ -1,180 +1,607 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>Solution Outline</title>
   <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
-  </style>
+
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <link rel="stylesheet" href="build/pdf-style.css" />
 </head>
 <body>
 <header id="title-block-header">
 <h1 class="title">Solution Outline</h1>
 </header>
-
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#solution-outline" id="toc-solution-outline"><span class="toc-section-number">1</span> Solution Outline</a>
+<ul>
+<li><a href="#document-map" id="toc-document-map"><span class="toc-section-number">1.1</span> Document Map</a></li>
+</ul></li>
+<li><a href="#solution-outline-1" id="toc-solution-outline-1"><span class="toc-section-number">2</span> Solution Outline</a>
+<ul>
+<li><a href="#introduction" id="toc-introduction"><span class="toc-section-number">2.1</span> Introduction</a>
+<ul>
+<li><a href="#how-to-use-this-document" id="toc-how-to-use-this-document"><span class="toc-section-number">2.1.1</span> How to use this
+document</a></li>
+</ul></li>
+<li><a href="#overview-and-context" id="toc-overview-and-context"><span class="toc-section-number">2.2</span> Overview and Context</a>
+<ul>
+<li><a href="#business-context-and-drivers" id="toc-business-context-and-drivers"><span class="toc-section-number">2.2.1</span> Business Context and
+Drivers</a></li>
+<li><a href="#transformation-goal" id="toc-transformation-goal"><span class="toc-section-number">2.2.2</span> Transformation Goal</a></li>
+<li><a href="#target-outcomes-and-success-criteria" id="toc-target-outcomes-and-success-criteria"><span class="toc-section-number">2.2.3</span> Target Outcomes and Success
+Criteria</a></li>
+<li><a href="#in-scope-and-out-of-scope" id="toc-in-scope-and-out-of-scope"><span class="toc-section-number">2.2.4</span> In Scope and Out of
+Scope</a></li>
+<li><a href="#key-stakeholders" id="toc-key-stakeholders"><span class="toc-section-number">2.2.5</span> Key Stakeholders</a></li>
+</ul></li>
+<li><a href="#assumptions-and-conditions" id="toc-assumptions-and-conditions"><span class="toc-section-number">2.3</span> Assumptions and Conditions</a>
+<ul>
+<li><a href="#assumptions" id="toc-assumptions"><span class="toc-section-number">2.3.1</span> Assumptions</a></li>
+<li><a href="#constraints" id="toc-constraints"><span class="toc-section-number">2.3.2</span> Constraints</a></li>
+<li><a href="#open-risks-and-points" id="toc-open-risks-and-points"><span class="toc-section-number">2.3.3</span> Open Risks and Points</a></li>
+</ul></li>
+<li><a href="#list-of-references" id="toc-list-of-references"><span class="toc-section-number">2.4</span> List of References</a>
+<ul>
+<li><a href="#authoritative-sources" id="toc-authoritative-sources"><span class="toc-section-number">2.4.1</span> Authoritative Sources</a></li>
+<li><a href="#cross-references" id="toc-cross-references"><span class="toc-section-number">2.4.2</span> Cross-References</a></li>
+</ul></li>
+<li><a href="#solution-architecture" id="toc-solution-architecture"><span class="toc-section-number">2.5</span> Solution Architecture</a>
+<ul>
+<li><a href="#solution-overview" id="toc-solution-overview"><span class="toc-section-number">2.5.1</span> Solution Overview</a></li>
+<li><a href="#system-boundary-and-relationships" id="toc-system-boundary-and-relationships"><span class="toc-section-number">2.5.2</span> System Boundary and
+Relationships</a></li>
+<li><a href="#key-logical-modules-and-responsibilities" id="toc-key-logical-modules-and-responsibilities"><span class="toc-section-number">2.5.3</span> Key Logical Modules and
+Responsibilities</a></li>
+<li><a href="#high-level-flows" id="toc-high-level-flows"><span class="toc-section-number">2.5.4</span> High-Level Flows</a></li>
+</ul></li>
+<li><a href="#data-architecture" id="toc-data-architecture"><span class="toc-section-number">2.6</span> Data Architecture</a>
+<ul>
+<li><a href="#data-domains" id="toc-data-domains"><span class="toc-section-number">2.6.1</span> Data Domains</a></li>
+<li><a href="#data-consistency-and-visibility" id="toc-data-consistency-and-visibility"><span class="toc-section-number">2.6.2</span> Data Consistency and
+Visibility</a></li>
+<li><a href="#data-retention-and-audit" id="toc-data-retention-and-audit"><span class="toc-section-number">2.6.3</span> Data Retention and
+Audit</a></li>
+</ul></li>
+<li><a href="#integration-architecture" id="toc-integration-architecture"><span class="toc-section-number">2.7</span> Integration Architecture</a>
+<ul>
+<li><a href="#external-systems" id="toc-external-systems"><span class="toc-section-number">2.7.1</span> External Systems</a></li>
+<li><a href="#integration-responsibilities" id="toc-integration-responsibilities"><span class="toc-section-number">2.7.2</span> Integration
+Responsibilities</a></li>
+<li><a href="#interaction-patterns" id="toc-interaction-patterns"><span class="toc-section-number">2.7.3</span> Interaction Patterns</a></li>
+</ul></li>
+<li><a href="#security-architecture" id="toc-security-architecture"><span class="toc-section-number">2.8</span> Security Architecture</a>
+<ul>
+<li><a href="#authentication-and-authorization" id="toc-authentication-and-authorization"><span class="toc-section-number">2.8.1</span> Authentication and
+Authorization</a></li>
+<li><a href="#data-protection-and-privacy" id="toc-data-protection-and-privacy"><span class="toc-section-number">2.8.2</span> Data Protection and
+Privacy</a></li>
+</ul></li>
+<li><a href="#implementation-teams" id="toc-implementation-teams"><span class="toc-section-number">2.9</span> Implementation Teams</a></li>
+<li><a href="#non-functional-requirements" id="toc-non-functional-requirements"><span class="toc-section-number">2.10</span> Non-Functional Requirements</a>
+<ul>
+<li><a href="#responsiveness-and-near-real-time-visibility" id="toc-responsiveness-and-near-real-time-visibility"><span class="toc-section-number">2.10.1</span> Responsiveness and Near
+Real-Time Visibility</a></li>
+<li><a href="#scalability" id="toc-scalability"><span class="toc-section-number">2.10.2</span> Scalability</a></li>
+<li><a href="#reliability-and-availability" id="toc-reliability-and-availability"><span class="toc-section-number">2.10.3</span> Reliability and
+Availability</a></li>
+<li><a href="#data-protection-and-compliance" id="toc-data-protection-and-compliance"><span class="toc-section-number">2.10.4</span> Data Protection and
+Compliance</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+<h1 data-number="1" id="solution-outline"><span class="header-section-number">1</span> Solution Outline</h1>
+<h2 data-number="1.1" id="document-map"><span class="header-section-number">1.1</span> Document Map</h2>
+<ul>
+<li><a href="./01_objectives/objectives.md">Objectives</a></li>
+<li><a href="./02_requirements/requirements.md">Requirements</a></li>
+<li><a href="./03_architecture/solution_outline.md">Architecture</a></li>
+</ul>
+<h1 data-number="2" id="solution-outline-1"><span class="header-section-number">2</span> Solution Outline</h1>
+<h2 data-number="2.1" id="introduction"><span class="header-section-number">2.1</span> Introduction</h2>
+<p><strong>Purpose:</strong> Provide a single, authoritative
+architecture narrative for the Sports Booking Platform initiative,
+suitable for business and delivery stakeholders.</p>
+<p><strong>Scope:</strong> High-level design and decision framework; not
+detailed design. Where information is unknown, it is captured explicitly
+under <strong>Assumptions and Conditions</strong> or as open points.</p>
+<h3 data-number="2.1.1" id="how-to-use-this-document"><span class="header-section-number">2.1.1</span> How to use this document</h3>
+<ul>
+<li>This document is generated from and maintained in alignment with the
+<strong>Objectives</strong> document and validated <strong>C4
+Architecture Diagrams</strong>.</li>
+<li>Sections are included only when supported by Objectives and
+validated artifacts. Gaps and open points are recorded under
+<strong>Assumptions and Conditions</strong>.</li>
+<li>Content is vendor-neutral unless objectives or constraints
+explicitly mandate a specific platform or product.</li>
+<li>Every major statement is traceable to one or more sources:
+Objectives, Requirements Inventory, validated diagrams, or documented
+assumptions.</li>
+<li>Reference the validated diagrams explicitly when describing system
+boundaries and logical structure.</li>
+</ul>
+<hr />
+<h2 data-number="2.2" id="overview-and-context"><span class="header-section-number">2.2</span> Overview and Context</h2>
+<h3 data-number="2.2.1" id="business-context-and-drivers"><span class="header-section-number">2.2.1</span> Business Context and
+Drivers</h3>
+<p>Today, sports activity organization suffers from fragmentation across
+informal communication channels, manual coordination, and disconnected
+systems. Players, coaches, and venue owners rely on phone calls,
+messaging applications, and spreadsheets to arrange training sessions,
+matches, and tournaments. This fragmentation creates limited visibility
+of availability, inefficient scheduling, frequent conflicts, and lack of
+reliable data for planning and optimization.</p>
+<h3 data-number="2.2.2" id="transformation-goal"><span class="header-section-number">2.2.2</span> Transformation Goal</h3>
+<p>The initiative seeks to introduce a unified digital platform that
+acts as a central hub for sports activity management, simplifying
+participation, scheduling, and management while supporting scalability
+and future ecosystem growth.</p>
+<h3 data-number="2.2.3" id="target-outcomes-and-success-criteria"><span class="header-section-number">2.2.3</span> Target Outcomes and Success
+Criteria</h3>
+<p>The platform is designed to achieve the following business
+outcomes:</p>
+<ul>
+<li><p><strong>Unification and Coordination</strong> – Establish a
+single, trusted platform where players, coaches, and venue operators can
+coordinate sports activities instead of relying on informal channels.
+This resolves fragmentation and enables reliable, consistent information
+flow across all stakeholders.</p></li>
+<li><p><strong>Visibility and Efficiency</strong> – Provide near
+real-time visibility of availability, activity schedules, and
+participation status, reducing scheduling conflicts and enabling
+data-driven planning and growth opportunities.</p></li>
+<li><p><strong>Accessibility and Simplicity</strong> – Enable end users
+to register, discover activities, manage participation, and coordinate
+seamlessly through digital channels without manual intervention or
+external coordination.</p></li>
+<li><p><strong>Scalability and Extensibility</strong> – Build a
+foundation that supports growth across additional sports, advanced
+scheduling rules, and integrations with external services as the
+organization evolves.</p></li>
+</ul>
+<h3 data-number="2.2.4" id="in-scope-and-out-of-scope"><span class="header-section-number">2.2.4</span> In Scope and Out of
+Scope</h3>
+<h4 data-number="2.2.4.1" id="in-scope"><span class="header-section-number">2.2.4.1</span> In Scope</h4>
+<p>The platform provides the following business capabilities:</p>
+<ul>
+<li><p><strong>User Management</strong> – Digital registration, profile
+creation, and identity management for all participant roles (players,
+coaches, venue operators, administrators) with support for role-based
+access and permissions.</p></li>
+<li><p><strong>Venue Management</strong> – Centralized management of
+sports venues, including basic facility information, location details,
+and availability schedules that reflect current booking and operational
+status.</p></li>
+<li><p><strong>Activity Lifecycle</strong> – Creation, publication, and
+management of training sessions, matches, and multi-session tournaments
+with support for defining participation rules and capacity
+constraints.</p></li>
+<li><p><strong>Activity Discovery and Booking</strong> – Online
+discovery and booking of available activities by participants, with
+visibility of activity details, capacity, and booking status until
+activity capacity is reached.</p></li>
+<li><p><strong>Participation Management</strong> – Management of
+participation status, confirmations, cancellations, and participant
+notifications throughout the activity lifecycle.</p></li>
+<li><p><strong>Historical and Upcoming Visibility</strong> – Visibility
+into current activity schedules, upcoming activities, and historical
+records for all user roles to support planning and analysis.</p></li>
+<li><p><strong>External Integrations</strong> – Integration capability
+with external payment providers for optional online payments, and with
+notification services to inform users about bookings, changes, and
+cancellations.</p></li>
+</ul>
+<h4 data-number="2.2.4.2" id="out-of-scope"><span class="header-section-number">2.2.4.2</span> Out of Scope</h4>
+<p>The platform does not include:</p>
+<ul>
+<li>Detailed financial management, billing, or revenue sharing
+operations (though payment integration is provided as a capability for
+future use).</li>
+<li>Competitive ranking, tournament scoring, or results management
+beyond basic multi-session event coordination.</li>
+<li>Direct management of operational responsibilities, support ticket
+systems, or internal maintenance workflows.</li>
+<li>Offline modes or mobile-specific features beyond basic web/mobile
+channel access.</li>
+</ul>
+<h3 data-number="2.2.5" id="key-stakeholders"><span class="header-section-number">2.2.5</span> Key Stakeholders</h3>
+<ul>
+<li><p><strong>Players</strong> – End users seeking to discover and
+participate in training sessions, matches, and tournaments. Primary
+consumers of discovery and booking capabilities.</p></li>
+<li><p><strong>Coaches</strong> – Activity organizers who create and
+publish training sessions, coordinate participant enrollment, and
+oversee activity execution.</p></li>
+<li><p><strong>Venue Owners and Operators</strong> – Facility managers
+responsible for managing venue information and maintaining availability
+schedules.</p></li>
+<li><p><strong>Platform Administrators</strong> – Internal users
+responsible for operational oversight, system configuration, and
+governance rule definition.</p></li>
+<li><p><strong>External Partners</strong> – Payment service providers
+and notification services that integrate with the platform.</p></li>
+</ul>
+<hr />
+<h2 data-number="2.3" id="assumptions-and-conditions"><span class="header-section-number">2.3</span> Assumptions and Conditions</h2>
+<h3 data-number="2.3.1" id="assumptions"><span class="header-section-number">2.3.1</span> Assumptions</h3>
+<p>The following conditions are assumed due to missing or ambiguous
+inventory information:</p>
+<ol type="1">
+<li><p><strong>Eligibility Rules</strong> – “Eligible participants” are
+referenced but specific eligibility criteria (skill level, registration
+requirements, prerequisites) are not defined. These rules will be
+clarified by stakeholders during detailed specification phases.</p></li>
+<li><p><strong>Booking Conflict Policies</strong> – The platform must
+handle booking conflicts when venue availability changes after
+activities are scheduled. Specific business policies for conflict
+resolution (re-accommodation, cancellation, notification) require
+stakeholder input.</p></li>
+<li><p><strong>Cancellation and Refund Rules</strong> – Cancellation
+workflows and refund policies for both coaches canceling activities and
+participants canceling bookings are open business policies requiring
+clarification.</p></li>
+<li><p><strong>Waitlist Management</strong> – Whether the system should
+maintain waiting lists when activity capacity is reached will be
+clarified during detailed specification.</p></li>
+<li><p><strong>Real-Time Latency Thresholds</strong> – “Near real-time”
+visibility is required but acceptable latency thresholds
+(seconds/minutes) will be specified during non-functional requirements
+refinement.</p></li>
+<li><p><strong>Tournament Governance</strong> – Multi-session
+tournaments are included but governance rules, participation entry
+requirements, and competitive rules will be specified by
+stakeholders.</p></li>
+<li><p><strong>Data Retention and Archival</strong> – Historical data
+retention periods and archival strategies will be clarified based on
+regulatory and business requirements.</p></li>
+<li><p><strong>Payment Model</strong> – Payment integration is optional
+and the specific payment model (direct payment, escrow, platform fee
+handling) will be clarified during specification.</p></li>
+<li><p><strong>Notification Channels</strong> – Specific notification
+channels (email, SMS, push) and delivery guarantees will be defined
+based on user preferences and integration capabilities.</p></li>
+<li><p><strong>Regulatory Compliance Scope</strong> – Data protection
+requirements depend on deployment geography. Compliance requirements
+will be clarified based on intended deployment scope.</p></li>
+</ol>
+<h3 data-number="2.3.2" id="constraints"><span class="header-section-number">2.3.2</span> Constraints</h3>
+<p>The following constraints limit solution options:</p>
+<ol type="1">
+<li><p><strong>Cloud-Based Deployment</strong> (REQ-23) – The platform
+must be hosted in a cloud environment. Specific cloud provider, regions,
+and service model (SaaS, PaaS, IaaS) are not prescribed by
+requirements.</p></li>
+<li><p><strong>Independent Scaling</strong> (REQ-24) – The platform
+architecture must support independent scaling of different functional
+areas to accommodate growth without redesign.</p></li>
+<li><p><strong>Role-Based Access Control</strong> (REQ-26) – Access
+control must be enforced at the functional and data level based on user
+roles.</p></li>
+<li><p><strong>External Integration Requirements</strong> (REQ-17,
+REQ-18) – The platform must integrate with external payment providers
+and notification services, constraining the integration architecture and
+data exchange patterns.</p></li>
+<li><p><strong>Data Centralization</strong> (REQ-19, REQ-20, REQ-21) –
+All user, venue, and activity data must be centralized and maintained in
+a single authoritative source rather than in disconnected
+systems.</p></li>
+</ol>
+<h3 data-number="2.3.3" id="open-risks-and-points"><span class="header-section-number">2.3.3</span> Open Risks and Points</h3>
+<ol type="1">
+<li><p><strong>Booking Conflict Resolution</strong> (REQ-32) – The
+business policy for conflict resolution (re-accommodation, cancellation,
+prioritization) when venue availability changes is not yet defined,
+creating risk of misalignment with stakeholder expectations.</p></li>
+<li><p><strong>Tournament Governance and Rules</strong> (REQ-34) –
+Governance rules for tournaments and competitive events are not
+specified, creating risk of delayed or incomplete tournament
+functionality.</p></li>
+<li><p><strong>Payment Model Definition</strong> (REQ-33) – Revenue
+sharing mechanisms and payment models are not specified, creating risk
+of misalignment between platform capabilities and business financial
+goals.</p></li>
+<li><p><strong>Operational Support Model</strong> (REQ-35) – Operational
+responsibilities for platform support and maintenance, including SLAs
+and governance, are not assigned.</p></li>
+<li><p><strong>Availability Synchronization Handling</strong> (REQ-36) –
+When venue availability changes post-booking, the specific business
+policies and handling logic are not defined.</p></li>
+</ol>
+<hr />
+<h2 data-number="2.4" id="list-of-references"><span class="header-section-number">2.4</span> List of References</h2>
+<p>This Solution Outline depends on and must remain consistent with the
+following artifacts:</p>
+<h3 data-number="2.4.1" id="authoritative-sources"><span class="header-section-number">2.4.1</span> Authoritative Sources</h3>
+<ul>
+<li><strong>Requirements Inventory</strong>: BRD-REQ-INVENTORY v1.0 (36
+requirements, derived from Business Requirements Document)</li>
+<li><strong>Objectives Document</strong>: SO-OBJECTIVES v1.0 (derived
+from validated Requirements Inventory)</li>
+<li><strong>C4 System Context Diagram</strong>:
+docs/03_diagrams/c4_context.puml (C4 Level 1 – System Context)</li>
+<li><strong>C4 Container Diagram</strong>:
+docs/03_diagrams/c4_container.puml (C4 Level 2 – Logical
+Containers)</li>
+</ul>
+<h3 data-number="2.4.2" id="cross-references"><span class="header-section-number">2.4.2</span> Cross-References</h3>
+<ul>
+<li><strong>Business Requirements Document</strong> (BRD-SPORTS-PLATFORM
+v1.0) – Foundation for all requirements and objectives</li>
+<li><strong>Architecture Diagrams</strong> – Solution structure and
+component relationships</li>
+</ul>
+<hr />
+<h2 data-number="2.5" id="solution-architecture"><span class="header-section-number">2.5</span> Solution Architecture</h2>
+<h3 data-number="2.5.1" id="solution-overview"><span class="header-section-number">2.5.1</span> Solution Overview</h3>
+<p>The Sports Booking Platform is a unified digital system that acts as
+the central hub for sports activity coordination, replacing fragmented
+informal communication channels with a coordinated, data-driven
+platform. The platform serves four primary user roles (Players, Coaches,
+Venue Operators, Platform Administrators) through web and mobile digital
+channels, with integration to external payment and notification
+services.</p>
+<p>The solution follows a logical three-tier container architecture as
+defined in the C4 Container Diagram
+(docs/03_diagrams/c4_container.puml):</p>
+<p><strong>User Channels Layer:</strong> - Web App – Provides platform
+access for players, coaches, and venue operators - Mobile App – Provides
+platform access for players, coaches, and venue operators - Admin
+Console – Provides platform administration and oversight
+capabilities</p>
+<p><strong>API and Business Logic Layer:</strong> - Platform Backend –
+Exposes platform capabilities, enforces access control and business
+rules, and coordinates with domain services</p>
+<p><strong>Core Domain Services Layer:</strong> - Booking &amp;
+Scheduling Service – Manages activity bookings, scheduling, and conflict
+resolution - Venue Management Service – Manages venues and availability
+schedules - Activity Management Service – Manages publication,
+discovery, and participation tracking</p>
+<p><strong>Integration Layer:</strong> - Payment Integration Adapter –
+Handles optional payment processing integration with external payment
+providers - Notification Integration Adapter – Manages user
+notifications about bookings, changes, and cancellations</p>
+<p><strong>Data Layer:</strong> - Platform Data Store – Single
+centralized logical data store containing all user, venue, activity, and
+participation data</p>
+<h3 data-number="2.5.2" id="system-boundary-and-relationships"><span class="header-section-number">2.5.2</span> System Boundary and
+Relationships</h3>
+<p>The C4 Context Diagram (docs/03_diagrams/c4_context.puml) illustrates
+the system boundary and relationships:</p>
+<ul>
+<li><strong>System of Interest</strong>: Sports Booking Platform</li>
+<li><strong>Actors</strong>: Player, Coach, Venue Operator, Platform
+Administrator</li>
+<li><strong>External Systems</strong>: Payment Provider (optional),
+Notification Service (required)</li>
+</ul>
+<p>All actors interact with the platform through appropriate digital
+channels for their role. The platform integrates with external services
+to enable optional payments and to deliver user notifications.</p>
+<h3 data-number="2.5.3" id="key-logical-modules-and-responsibilities"><span class="header-section-number">2.5.3</span> Key Logical Modules and
+Responsibilities</h3>
+<p><strong>User Identity &amp; Role Management</strong> – Enables
+registration and profile management for distinct participant roles with
+role-based access control ensuring appropriate separation of data and
+functionality. The system supports onboarding workflows that assign
+users to roles and enforce role-based permissions governing access and
+visibility.</p>
+<p><strong>Venue Management &amp; Availability</strong> – Provides
+centralized management of sports venues with support for storing basic
+facility information (name, location, facilities description),
+maintaining availability schedules, and ensuring that venue data is
+accessible to coaches and administrators. Availability schedules reflect
+current booking status and operational constraints.</p>
+<p><strong>Activity Management &amp; Publication</strong> – Enables
+coaches and tournament organizers to create and publish sports
+activities (training sessions, matches, tournaments) linked to specific
+venues and time slots. Supports definition of activity details, capacity
+constraints, and participation rules for different activity types,
+including multi-session tournaments with coordinated scheduling.</p>
+<p><strong>Activity Discovery &amp; Booking</strong> – Provides
+participants with capability to search, discover, and view available
+activities with visibility of activity details, current capacity status,
+and booking status. Enables participants to book activities subject to
+availability and eligibility constraints.</p>
+<p><strong>Participation &amp; Cancellation Management</strong> –
+Manages participant enrollment and participation lifecycle including
+confirmation workflows, capacity enforcement (enrollment until capacity
+is reached), and cancellation handling. Supports identification of
+affected participants and notification of changes.</p>
+<p><strong>Historical &amp; Upcoming Activity Visibility</strong> –
+Provides all user roles with visibility into upcoming scheduled
+activities and historical records of completed activities, participation
+status, and activity outcomes to support planning and analysis.</p>
+<h3 data-number="2.5.4" id="high-level-flows"><span class="header-section-number">2.5.4</span> High-Level Flows</h3>
+<h4 data-number="2.5.4.1" id="player-registration-and-discovery-req-11"><span class="header-section-number">2.5.4.1</span> Player Registration and
+Discovery (REQ-11)</h4>
+<p>A player visits the platform, registers with appropriate profile
+information, and creates a personal profile. The player then searches
+for available training sessions based on preferences or filters and
+views detailed information about discovered activities including
+schedules, venues, coaches, and current enrollment status.</p>
+<h4 data-number="2.5.4.2" id="coach-activity-publication-req-12"><span class="header-section-number">2.5.4.2</span> Coach Activity Publication
+(REQ-12)</h4>
+<p>A coach accesses the platform, selects a venue with available time
+slots, creates a new training session with details (schedule,
+description, capacity limits, participation rules), and publishes the
+activity. The activity becomes discoverable to eligible players.</p>
+<h4 data-number="2.5.4.3" id="player-enrollment-and-capacity-management-req-13"><span class="header-section-number">2.5.4.3</span> Player Enrollment and
+Capacity Management (REQ-13)</h4>
+<p>Players discover and enroll in published activities. The system
+tracks enrollment and enforces capacity limits, preventing overbooking.
+When an activity reaches capacity, further enrollment is blocked or
+placed in a waitlist (handling of waitlists is an open question).</p>
+<h4 data-number="2.5.4.4" id="venue-availability-updates-req-14-req-36"><span class="header-section-number">2.5.4.4</span> Venue Availability Updates
+(REQ-14, REQ-36)</h4>
+<p>A venue operator updates venue availability (e.g., closing a time
+slot due to maintenance or emergencies). The system identifies all
+activities scheduled during the affected time and determines appropriate
+business outcomes such as notifying coaches, offering re-accommodation
+options, or canceling affected activities. The specific business policy
+for conflict resolution is an open question requiring stakeholder
+definition.</p>
+<h4 data-number="2.5.4.5" id="tournament-creation-and-multi-session-coordination-req-15"><span class="header-section-number">2.5.4.5</span> Tournament Creation and
+Multi-Session Coordination (REQ-15)</h4>
+<p>A tournament organizer creates a multi-session event with defined
+participation rules, schedules sessions across multiple time slots and
+venues, and publishes the tournament. Players can discover and enroll in
+tournament activities subject to tournament-specific participation rules
+and eligibility constraints.</p>
+<hr />
+<h2 data-number="2.6" id="data-architecture"><span class="header-section-number">2.6</span> Data Architecture</h2>
+<h3 data-number="2.6.1" id="data-domains"><span class="header-section-number">2.6.1</span> Data Domains</h3>
+<p>The platform maintains four interrelated data domains:</p>
+<p><strong>User Domain</strong> – Centralized storage of player, coach,
+venue operator, and administrator profiles with role assignments,
+contact information, and permissions. Ensures users can be authenticated
+and authorized according to their role.</p>
+<p><strong>Venue Domain</strong> – Centralized storage of venue
+information (location, facilities, contact details) and availability
+schedules reflecting current booking status and operational constraints.
+Linked to activity scheduling and used by coaches for activity
+creation.</p>
+<p><strong>Activity Domain</strong> – Consolidated view of activities
+(training sessions, matches, tournaments) including schedules, venues,
+capacity, participation rules, and current enrollment status. Supports
+discovery, booking, and participation management.</p>
+<p><strong>Participation Domain</strong> – Records of participant
+enrollment, confirmation status, cancellation status, and historical
+participation records for audit and analysis. Enables visibility into
+participation history and supports conflict handling.</p>
+<h3 data-number="2.6.2" id="data-consistency-and-visibility"><span class="header-section-number">2.6.2</span> Data Consistency and
+Visibility</h3>
+<p>The platform must provide near real-time visibility of schedules,
+availability, and participation status updates across all users. The
+specific definition of “near real-time” (acceptable latency thresholds
+in seconds or minutes) requires stakeholder clarification and will be
+documented in detailed specifications.</p>
+<h3 data-number="2.6.3" id="data-retention-and-audit"><span class="header-section-number">2.6.3</span> Data Retention and Audit</h3>
+<p>Historical records of activities and participation must be maintained
+to support audit, compliance verification, and analysis. Data retention
+and archival policies are not yet defined and require stakeholder
+input.</p>
+<hr />
+<h2 data-number="2.7" id="integration-architecture"><span class="header-section-number">2.7</span> Integration Architecture</h2>
+<h3 data-number="2.7.1" id="external-systems"><span class="header-section-number">2.7.1</span> External Systems</h3>
+<p><strong>Payment Provider</strong> – Third-party payment processing
+service enabling optional online payment functionality. Integration is
+optional and supports transaction processing, payment status tracking,
+and confirmation notifications.</p>
+<p><strong>Notification Service</strong> – Third-party service providing
+user communications about bookings, activity changes, cancellations, and
+other relevant events via email, SMS, push notifications, or other
+channels. Integration is required for user communications.</p>
+<h3 data-number="2.7.2" id="integration-responsibilities"><span class="header-section-number">2.7.2</span> Integration
+Responsibilities</h3>
+<p>The Platform Backend orchestrates integration with external
+services:</p>
+<ul>
+<li><p>The Payment Integration Adapter handles communication with the
+Payment Provider for optional payment processing. The specific payment
+model (direct payment, escrow, platform fee handling) is an open
+decision.</p></li>
+<li><p>The Notification Integration Adapter handles communication with
+the Notification Service for sending booking confirmations, activity
+changes, and cancellation notifications. Specific notification channels
+(email, SMS, push) and delivery guarantees are open decisions.</p></li>
+</ul>
+<h3 data-number="2.7.3" id="interaction-patterns"><span class="header-section-number">2.7.3</span> Interaction Patterns</h3>
+<p>User channels (web and mobile) interact with the core Platform
+Backend for all activity discovery, booking, profile management, and
+venue management operations. The Platform Backend delegates business
+logic to domain services and coordinates with external services as
+needed to fulfill transactions and communicate with users.</p>
+<hr />
+<h2 data-number="2.8" id="security-architecture"><span class="header-section-number">2.8</span> Security Architecture</h2>
+<h3 data-number="2.8.1" id="authentication-and-authorization"><span class="header-section-number">2.8.1</span> Authentication and
+Authorization</h3>
+<p>The platform must implement role-based access control (RBAC) ensuring
+that users can only access and modify data appropriate to their role.
+Authentication mechanisms must verify user identity before granting
+access.</p>
+<p>The platform supports four distinct user roles (Players, Coaches,
+Venue Operators, Platform Administrators) with role-based permissions
+governing what capabilities each user can access and what data they can
+view or modify.</p>
+<p><strong>Open Question:</strong> Detailed RBAC matrices and permission
+models for each role have not been defined in the inventory and require
+stakeholder input.</p>
+<h3 data-number="2.8.2" id="data-protection-and-privacy"><span class="header-section-number">2.8.2</span> Data Protection and
+Privacy</h3>
+<p>The platform must protect user data according to applicable
+regulations. Personal information including user profiles, contact
+details, and participation history must be handled according to data
+protection principles.</p>
+<p><strong>Open Question:</strong> Specific applicable regulations
+depend on deployment geography (GDPR for EU, CCPA for California, etc.)
+and require clarification during design phases.</p>
+<hr />
+<h2 data-number="2.9" id="implementation-teams"><span class="header-section-number">2.9</span> Implementation Teams</h2>
+<p>The following teams are responsible for translating the Solution
+Outline into implementation:</p>
+<p><strong>Product and Requirements Team</strong> – Responsible for
+validating business requirements, clarifying ambiguous policies (booking
+conflicts, eligibility rules, cancellation policies), and working with
+stakeholders to define open business decisions.</p>
+<p><strong>Architecture and Design Team</strong> – Responsible for
+translating objectives into detailed logical architecture, designing
+data models, defining system integrations, and ensuring alignment with
+constraints (cloud deployment, independent scaling, compliance).</p>
+<p><strong>Development and Engineering Team</strong> – Responsible for
+implementing the platform across all functional capabilities,
+integrating external services, and ensuring technical compliance with
+non-functional requirements.</p>
+<p><strong>Operations and Support Team</strong> – Responsible for
+defining operational procedures, support models, maintenance workflows,
+and governance for the platform (implied by requirements but not yet
+detailed).</p>
+<hr />
+<h2 data-number="2.10" id="non-functional-requirements"><span class="header-section-number">2.10</span> Non-Functional
+Requirements</h2>
+<h3 data-number="2.10.1" id="responsiveness-and-near-real-time-visibility"><span class="header-section-number">2.10.1</span> Responsiveness and Near
+Real-Time Visibility</h3>
+<p>The platform must provide near real-time visibility of schedules,
+availability, and participation status updates across all users. The
+specific definition of “near real-time” (acceptable latency thresholds
+in seconds or minutes) requires stakeholder clarification and will be
+documented in detailed specifications.</p>
+<h3 data-number="2.10.2" id="scalability"><span class="header-section-number">2.10.2</span> Scalability</h3>
+<p>The platform must support independent scaling of different functional
+areas to accommodate growth in users, activities, and data volume over
+time. This enables the platform to evolve with additional sports and
+advanced features without architectural redesign.</p>
+<h3 data-number="2.10.3" id="reliability-and-availability"><span class="header-section-number">2.10.3</span> Reliability and
+Availability</h3>
+<p>The platform must operate reliably as a central hub for sports
+activity coordination. The criticality of the platform as a single point
+of coordination implies high reliability expectations. While specific
+availability targets and SLAs are not defined, the platform’s role in
+enabling coordination across all stakeholders makes reliability a
+critical quality attribute.</p>
+<h3 data-number="2.10.4" id="data-protection-and-compliance"><span class="header-section-number">2.10.4</span> Data Protection and
+Compliance</h3>
+<p>The platform must comply with applicable data protection and privacy
+regulations. Specific regulations (GDPR, CCPA, etc.) depend on
+deployment geography and require clarification during design and
+planning phases.</p>
 </body>
 </html>

@@ -23,12 +23,74 @@
       }
     ],
     "commands": [
-    { "command": "so-workspace.obj.generate", "title": "SO: Objectives Generate (Open Chat)" },
-    { "command": "so-workspace.obj.eval", "title": "SO: Objectives Evaluate (Open Chat)" },
-    { "command": "so-workspace.obj.patch", "title": "SO: Objectives Patch (Open Chat)" },
-    { "command": "so-workspace.obj.recheck", "title": "SO: Objectives Recheck (Open Chat)" },
-    { "command": "so-workspace.renderDiagrams", "title": "SO: Render Diagrams (Docker)" },
-    { "command": "so-workspace.buildPdf", "title": "SO: Build PDF (Docker)" }
+      {
+        "command": "so-workspace.obj.generate",
+        "title": "SO: Objectives Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.eval",
+        "title": "SO: Objectives Evaluate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.patch",
+        "title": "SO: Objectives Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.recheck",
+        "title": "SO: Objectives Recheck (Open Chat)"
+      },
+      {
+        "command": "so-workspace.renderDiagrams",
+        "title": "SO: Render Diagrams (Docker)"
+      },
+      {
+        "command": "so-workspace.buildPdf",
+        "title": "SO: Build PDF (Docker)"
+      },
+      {
+        "command": "so-workspace.req.generate",
+        "title": "SO: Requirements Inventory Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.req.eval",
+        "title": "SO: Requirements Inventory Evaluate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.req.patch",
+        "title": "SO: Requirements Inventory Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.req.recheck",
+        "title": "SO: Requirements Inventory Recheck (Open Chat)"
+      },
+      {
+        "command": "so-workspace.diagram.eval",
+        "title": "SO: Diagram Evaluate (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.diagram.patch",
+        "title": "SO: Diagram Patch (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.diagram.recheck",
+        "title": "SO: Diagram Recheck (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.so.generate",
+        "title": "SO: Solution Outline Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.so.eval",
+        "title": "SO: Solution Outline Evaluate (Objectives + Diagrams)"
+      },
+      {
+        "command": "so-workspace.so.patch",
+        "title": "SO: Solution Outline Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.so.finalReview",
+        "title": "SO: Solution Outline Final Review (Requirements Inventory)"
+      }
     ]
   },
   "scripts": {
