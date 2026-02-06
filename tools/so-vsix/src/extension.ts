@@ -23,7 +23,7 @@ import {
   soFinalReviewOpenChat
 } from "./solution_outline_open_chat";
 import { registerPaletteBuildCommands } from "./build_open_tasks";
-import { renderDiagrams } from "./diagram_renderer";
+import { CommandHandlerImpl } from "./diagram_renderer_v2";
 
 export function activate(context: vscode.ExtensionContext) {
   // Objectives
@@ -57,10 +57,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("so-workspace.so.finalReview", soFinalReviewOpenChat)
   );
 
-  // Diagram rendering with plantuml-wasm
-  context.subscriptions.push(
-    vscode.commands.registerCommand("so-workspace.renderDiagrams", renderDiagrams)
-  );
+  // Diagram rendering with plantuml-wasm (V2 implementation)
+  const diagramCommandHandler = new CommandHandlerImpl();
+  diagramCommandHandler.register(context);
 
   // Docker build tasks
   registerPaletteBuildCommands(context);

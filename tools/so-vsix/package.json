@@ -39,6 +39,38 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "SO Workspace Diagrams",
+      "properties": {
+        "so-workspace.diagrams.sourceDirectory": {
+          "type": "string",
+          "default": "docs/03_architecture/diagrams/src",
+          "description": "Source directory containing diagram files (.mmd and .puml files)",
+          "order": 1
+        },
+        "so-workspace.diagrams.outputDirectory": {
+          "type": "string",
+          "default": "docs/03_architecture/diagrams/out",
+          "description": "Output directory for rendered SVG files",
+          "order": 2
+        },
+        "so-workspace.diagrams.plantUmlServerUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "PlantUML server URL (plantuml-wasm server)",
+          "pattern": "^https?://.*",
+          "order": 3
+        },
+        "so-workspace.diagrams.concurrencyLimit": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Maximum number of concurrent rendering operations",
+          "order": 4
+        }
+      }
+    },
     "chatParticipants": [
       {
         "id": "so-workspace.so",
@@ -142,12 +174,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/mermaid": "^9.1.0",
     "@types/node": "^25.1.0",
+    "@types/plantuml-encoder": "^1.4.2",
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.7.1",
+    "fast-check": "^4.5.3",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@sakirtemel/plantuml.js": "^1.0.1"
+    "mermaid": "^11.12.2",
+    "plantuml-encoder": "^1.4.0"
   }
 }
