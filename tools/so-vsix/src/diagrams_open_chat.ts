@@ -31,9 +31,9 @@ async function pickDiagram(): Promise<DiagramPick | undefined> {
  *
  * Expected prompt files in repo:
  * - docs/agent/prompts/00_EXECUTE.prompt.md
- * - docs/agent/prompts/20_eval_diagram.prompt.md
- * - docs/agent/prompts/21_patch_diagram.prompt.md
- * - docs/agent/prompts/22_recheck_diagram.prompt.md
+ * - docs/agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md
+ * - docs/agent/prompts/02_diagrams/08_patch_diagram.prompt.md
+ * - docs/agent/prompts/02_diagrams/09_recheck_diagram.prompt.md
  *
  * The prompts should read the diagram from diagram_path and write reports under:
  * docs/build/reports/diagram_inconsistencies/<diagram_id>/
@@ -43,7 +43,7 @@ export async function diagramEvalOpenChat(): Promise<void> {
   const diagram = await pickDiagram();
   if (!diagram) return;
 
-  const specific = "docs/agent/prompts/20_eval_diagram.prompt.md";
+  const specific = "docs/agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -66,9 +66,9 @@ export async function diagramRecheckOpenChat(): Promise<void> {
   const diagram = await pickDiagram();
   if (!diagram) return;
 
-  const specific = (await exists("docs/agent/prompts/22_recheck_diagram.prompt.md"))
-    ? "docs/agent/prompts/22_recheck_diagram.prompt.md"
-    : "docs/agent/prompts/20_eval_diagram.prompt.md";
+  const specific = (await exists("docs/agent/prompts/02_diagrams/09_recheck_diagram.prompt.md"))
+    ? "docs/agent/prompts/02_diagrams/09_recheck_diagram.prompt.md"
+    : "docs/agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md";
 
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
@@ -100,7 +100,7 @@ export async function diagramPatchOpenChat(): Promise<void> {
   });
   if (!issueIds?.trim()) return;
 
-  const specific = "docs/agent/prompts/21_patch_diagram.prompt.md";
+  const specific = "docs/agent/prompts/02_diagrams/08_patch_diagram.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;

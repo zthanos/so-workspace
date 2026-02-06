@@ -1,0 +1,56 @@
+# Build source (keep dist, ignore src)
+src/
+out/
+**/*.ts
+**/*.tsx
+**/*.map
+*.tsbuildinfo
+
+# Keep scripts directory for PowerShell scripts
+!scripts/
+!scripts/**/*.ps1
+
+# Node.js - IMPORTANT: Do NOT exclude node_modules
+# Runtime dependencies (like plantuml-wasm) must be included in the package
+# vsce will automatically include only production dependencies from package.json
+# node_modules/ is NOT excluded - it will be included in the VSIX
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Tests
+**/*.test.*
+**/*.spec.*
+tests/
+test/
+coverage/
+.nyc_output/
+jest-coverage/
+
+# Local config
+.env
+.local
+
+# Workspace documentation (project artifacts, not part of the extension)
+docs/
+
+# Locks (optional)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+tsconfig.json
+
+
+# Keep these (DO NOT ignore):
+# README.md
+# LICENSE*
+# package.json
+# dist/

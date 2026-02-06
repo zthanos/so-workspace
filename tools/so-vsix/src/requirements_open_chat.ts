@@ -15,13 +15,13 @@ async function compose(baseRel: string, specificRel: string, extraHeader?: strin
  *
  * Expected prompt files in repo:
  * - docs/agent/prompts/00_EXECUTE.prompt.md
- * - docs/agent/prompts/10_generate_requirements_inventory.prompt.md
- * - docs/agent/prompts/11_eval_requirements_inventory.prompt.md
- * - docs/agent/prompts/12_patch_requirements_inventory.prompt.md
- * - docs/agent/prompts/13_recheck_requirements_inventory.prompt.md
+ * - docs/agent/prompts/00_requirements/10_generate_requirements_inventory.prompt.md
+ * - docs/agent/prompts/00_requirements/11_eval_requirements_inventory.prompt.md
+ * - docs/agent/prompts/00_requirements/12_patch_requirements_inventory.prompt.md
+ * - docs/agent/prompts/00_requirements/13_recheck_requirements_inventory.prompt.md
  */
 export async function reqInventoryGenerateOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/10_generate_requirements_inventory.prompt.md";
+  const specific = "docs/agent/prompts/00_requirements/00_extract_requirements_inventory.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -31,7 +31,7 @@ export async function reqInventoryGenerateOpenChat(): Promise<void> {
 }
 
 export async function reqInventoryEvalOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/11_eval_requirements_inventory.prompt.md";
+  const specific = "docs/agent/prompts/00_requirements/01_evaluate_inventory.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -41,9 +41,9 @@ export async function reqInventoryEvalOpenChat(): Promise<void> {
 }
 
 export async function reqInventoryRecheckOpenChat(): Promise<void> {
-  const specific = (await exists("docs/agent/prompts/13_recheck_requirements_inventory.prompt.md"))
-    ? "docs/agent/prompts/13_recheck_requirements_inventory.prompt.md"
-    : "docs/agent/prompts/11_eval_requirements_inventory.prompt.md";
+  const specific = (await exists("docs/agent/prompts/00_requirements/03_recheck_inventory.prompt.md"))
+    ? "docs/agent/prompts/00_requirements/03_recheck_inventory.prompt.md"
+    : "docs/agent/prompts/00_requirements/01_evaluate_inventory.prompt.md";
 
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
@@ -75,7 +75,7 @@ export async function reqInventoryPatchOpenChat(): Promise<void> {
     "Then execute the patch instructions below."
   ].join("\n");
 
-  const specific = "docs/agent/prompts/12_patch_requirements_inventory.prompt.md";
+  const specific = "docs/agent/prompts/00_requirements/02_patch_inventory.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;

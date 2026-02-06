@@ -15,13 +15,13 @@ async function compose(baseRel: string, specificRel: string, extraHeader?: strin
  *
  * Expected prompt files in repo:
  * - docs/agent/prompts/00_EXECUTE.prompt.md
- * - docs/agent/prompts/30_generate_solution_outline.prompt.md
- * - docs/agent/prompts/31_eval_solution_outline.prompt.md
- * - docs/agent/prompts/32_patch_solution_outline.prompt.md
- * - docs/agent/prompts/33_final_review_solution_outline.prompt.md
+ * - docs/agent/prompts/04_solution_outline/20_generate_solution_outline.prompt.md
+ * - docs/agent/prompts/04_solution_outline/21_evaluate_solution_outline.prompt.md
+ * - docs/agent/prompts/04_solution_outline/22_patch_solution_outline.prompt.md
+ * - docs/agent/prompts/04_solution_outline/24_final_review_solution_outline.prompt.md
  */
 export async function soGenerateOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/30_generate_solution_outline.prompt.md";
+  const specific = "docs/agent/prompts/04_solution_outline/20_generate_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -31,7 +31,7 @@ export async function soGenerateOpenChat(): Promise<void> {
 }
 
 export async function soEvalOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/31_eval_solution_outline.prompt.md";
+  const specific = "docs/agent/prompts/04_solution_outline/21_evaluate_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -61,7 +61,7 @@ export async function soPatchOpenChat(): Promise<void> {
     "Then execute the patch instructions below."
   ].join("\n");
 
-  const specific = "docs/agent/prompts/32_patch_solution_outline.prompt.md";
+  const specific = "docs/agent/prompts/04_solution_outline/22_patch_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -72,7 +72,7 @@ export async function soPatchOpenChat(): Promise<void> {
 }
 
 export async function soFinalReviewOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/33_final_review_solution_outline.prompt.md";
+  const specific = "docs/agent/prompts/04_solution_outline/24_final_review_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;

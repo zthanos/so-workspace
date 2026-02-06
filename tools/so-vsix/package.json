@@ -4,6 +4,10 @@
   "description": "Chat participant for SO workspace management",
   "version": "1.0.0",
   "publisher": "your-publisher-name",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zthanos/so-workspace.git"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -11,7 +15,28 @@
     "AI",
     "Chat"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:so-workspace.obj.generate",
+    "onCommand:so-workspace.obj.eval",
+    "onCommand:so-workspace.obj.patch",
+    "onCommand:so-workspace.obj.recheck",
+    "onCommand:so-workspace.renderDiagrams",
+    "onCommand:so-workspace.buildPdf",
+    "onCommand:so-workspace.req.generate",
+    "onCommand:so-workspace.req.eval",
+    "onCommand:so-workspace.req.patch",
+    "onCommand:so-workspace.req.recheck",
+    "onCommand:so-workspace.diagram.eval",
+    "onCommand:so-workspace.diagram.patch",
+    "onCommand:so-workspace.diagram.recheck",
+    "onCommand:so-workspace.so.generate",
+    "onCommand:so-workspace.so.eval",
+    "onCommand:so-workspace.so.patch",
+    "onCommand:so-workspace.so.finalReview",
+    "onCommand:so-workspace.exportPdf",
+    "onCommand:so-workspace.cleanBuildOutputs",
+    "onCommand:so-workspace.openGeneratedPdf"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "chatParticipants": [
@@ -41,7 +66,7 @@
       },
       {
         "command": "so-workspace.renderDiagrams",
-        "title": "SO: Render Diagrams (Docker)"
+        "title": "SO: Render Diagrams (Local)"
       },
       {
         "command": "so-workspace.buildPdf",
@@ -90,12 +115,25 @@
       {
         "command": "so-workspace.so.finalReview",
         "title": "SO: Solution Outline Final Review (Requirements Inventory)"
+      },
+      {
+        "command": "so-workspace.exportPdf",
+        "title": "SO: Export PDF (Docker)"
+      },
+      {
+        "command": "so-workspace.cleanBuildOutputs",
+        "title": "SO: Clean Build Outputs"
+      },
+      {
+        "command": "so-workspace.openGeneratedPdf",
+        "title": "SO: Open Generated PDF"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && npm run copy-scripts",
+    "copy-scripts": "node -e \"const fs = require('fs'); const path = require('path'); const src = path.join('..', '..', 'scripts'); const dest = 'scripts'; if (fs.existsSync(src)) { fs.cpSync(src, dest, { recursive: true }); console.log('Scripts copied successfully'); } else { console.warn('Warning: /scripts directory not found'); }\"",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -108,5 +146,8 @@
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.7.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@sakirtemel/plantuml.js": "^1.0.1"
   }
 }

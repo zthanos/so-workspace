@@ -13,7 +13,7 @@ async function compose(baseRel: string, specificRel: string, extraHeader?: strin
 export async function objectivesGenerateOpenChat(): Promise<void> {
   const prompt = await compose(
     "docs/agent/prompts/00_EXECUTE.prompt.md",
-    "docs/agent/prompts/01_generate_objectives.prompt.md"
+    "docs/agent/prompts/03_objectives/01_generate_objectives.prompt.md"
   );
   await openChatWithPrompt(prompt);
 }
@@ -21,15 +21,15 @@ export async function objectivesGenerateOpenChat(): Promise<void> {
 export async function objectivesEvalOpenChat(): Promise<void> {
   const prompt = await compose(
     "docs/agent/prompts/00_EXECUTE.prompt.md",
-    "docs/agent/prompts/02_eval_inconsistencies_versioned.prompt.md"
+    "docs/agent/prompts/03_objectives/02_eval_inconsistencies.prompt.md"
   );
   await openChatWithPrompt(prompt);
 }
 
 export async function objectivesRecheckOpenChat(): Promise<void> {
   // Prefer dedicated recheck prompt if present, else reuse eval prompt
-  const recheckPath = "docs/agent/prompts/04_recheck_inconsistencies.prompt.md";
-  const evalPath = "docs/agent/prompts/02_eval_inconsistencies_versioned.prompt.md";
+  const recheckPath = "docs/agent/prompts/03_objectives/04_recheck_inconsistencies.prompt.md";
+  const evalPath = "docs/agent/prompts/03_objectives/02_eval_inconsistencies.prompt.md";
 
   // We can't "exists" without importing; simplest: just try recheck first.
   let specific = recheckPath;
@@ -70,7 +70,7 @@ export async function objectivesPatchOpenChat(): Promise<void> {
 
   const prompt = await compose(
     "docs/agent/prompts/00_EXECUTE.prompt.md",
-    "docs/agent/prompts/03_patch_objectives.prompt.md",
+    "docs/agent/prompts/03_objectives/03_patch_objectives.prompt.md",
     scopedHeader
   );
 

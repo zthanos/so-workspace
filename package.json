@@ -8,6 +8,9 @@
     "export:pdf": "powershell -ExecutionPolicy Bypass -File ./scripts/export_pdf.ps1",
     "build": "powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1"
   },
+  "dependencies": {
+    "plantuml-wasm": "^1.2024.0"
+  },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.4.2"
   }
