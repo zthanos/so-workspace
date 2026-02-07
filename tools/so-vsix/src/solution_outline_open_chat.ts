@@ -14,29 +14,29 @@ async function compose(baseRel: string, specificRel: string, extraHeader?: strin
  * Solution Outline generation & evaluation – Open Chat commands.
  *
  * Expected prompt files in repo:
- * - docs/agent/prompts/00_EXECUTE.prompt.md
- * - docs/agent/prompts/04_solution_outline/20_generate_solution_outline.prompt.md
- * - docs/agent/prompts/04_solution_outline/21_evaluate_solution_outline.prompt.md
- * - docs/agent/prompts/04_solution_outline/22_patch_solution_outline.prompt.md
- * - docs/agent/prompts/04_solution_outline/24_final_review_solution_outline.prompt.md
+ * - agent/prompts/00_EXECUTE.prompt.md
+ * - agent/prompts/04_solution_outline/20_generate_solution_outline.prompt.md
+ * - agent/prompts/04_solution_outline/21_evaluate_solution_outline.prompt.md
+ * - agent/prompts/04_solution_outline/22_patch_solution_outline.prompt.md
+ * - agent/prompts/04_solution_outline/24_final_review_solution_outline.prompt.md
  */
 export async function soGenerateOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/04_solution_outline/20_generate_solution_outline.prompt.md";
+  const specific = "agent/prompts/04_solution_outline/20_generate_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
   }
-  const prompt = await compose("docs/agent/prompts/00_EXECUTE.prompt.md", specific);
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific);
   await openChatWithPrompt(prompt);
 }
 
 export async function soEvalOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/04_solution_outline/21_evaluate_solution_outline.prompt.md";
+  const specific = "agent/prompts/04_solution_outline/21_evaluate_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
   }
-  const prompt = await compose("docs/agent/prompts/00_EXECUTE.prompt.md", specific);
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific);
   await openChatWithPrompt(prompt);
 }
 
@@ -53,7 +53,7 @@ export async function soPatchOpenChat(): Promise<void> {
     "Execute now:",
     "",
     "Read:",
-    "- docs/build/reports/so_inconsistencies/latest.md",
+    "- build/reports/so_inconsistencies/latest.md",
     "",
     "Apply a patch ONLY for the following IssueIds:",
     issueIds.split(",").map(x => x.trim()).filter(Boolean).join(", "),
@@ -61,22 +61,22 @@ export async function soPatchOpenChat(): Promise<void> {
     "Then execute the patch instructions below."
   ].join("\n");
 
-  const specific = "docs/agent/prompts/04_solution_outline/22_patch_solution_outline.prompt.md";
+  const specific = "agent/prompts/04_solution_outline/22_patch_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
   }
 
-  const prompt = await compose("docs/agent/prompts/00_EXECUTE.prompt.md", specific, scopedHeader);
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific, scopedHeader);
   await openChatWithPrompt(prompt);
 }
 
 export async function soFinalReviewOpenChat(): Promise<void> {
-  const specific = "docs/agent/prompts/04_solution_outline/24_final_review_solution_outline.prompt.md";
+  const specific = "agent/prompts/04_solution_outline/24_final_review_solution_outline.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
   }
-  const prompt = await compose("docs/agent/prompts/00_EXECUTE.prompt.md", specific);
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific);
   await openChatWithPrompt(prompt);
 }

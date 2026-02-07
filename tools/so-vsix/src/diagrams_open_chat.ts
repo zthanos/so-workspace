@@ -6,8 +6,8 @@ import * as vscode from "vscode";
 type DiagramPick = { id: string; label: string; path: string };
 
 const DIAGRAMS: DiagramPick[] = [
-  { id: "c4_context", label: "C4 Context (L1)", path: "docs/03_diagrams/c4_context.puml" },
-  { id: "c4_container", label: "C4 Container (L2)", path: "docs/03_diagrams/c4_container.puml" }
+  { id: "c4_context", label: "C4 Context (L1)", path: "docs/03_architecture/diagrams/src/c4_context.puml" },
+  { id: "c4_container", label: "C4 Container (L2)", path: "docs/03_architecture/diagrams/src/c4_container.puml" }
 ];
 
 async function compose(baseRel: string, specificRel: string, extraHeader?: string): Promise<string> {
@@ -30,20 +30,20 @@ async function pickDiagram(): Promise<DiagramPick | undefined> {
  * Diagram evaluation & patch – Open Chat commands.
  *
  * Expected prompt files in repo:
- * - docs/agent/prompts/00_EXECUTE.prompt.md
- * - docs/agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md
- * - docs/agent/prompts/02_diagrams/08_patch_diagram.prompt.md
- * - docs/agent/prompts/02_diagrams/09_recheck_diagram.prompt.md
+ * - agent/prompts/00_EXECUTE.prompt.md
+ * - agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md
+ * - agent/prompts/02_diagrams/08_patch_diagram.prompt.md
+ * - agent/prompts/02_diagrams/09_recheck_diagram.prompt.md
  *
  * The prompts should read the diagram from diagram_path and write reports under:
- * docs/build/reports/diagram_inconsistencies/<diagram_id>/
- * plus docs/build/reports/diagram_inconsistencies/<diagram_id>/latest.md
+ * build/reports/diagram_inconsistencies/<diagram_id>/
+ * plus build/reports/diagram_inconsistencies/<diagram_id>/latest.md
  */
 export async function diagramEvalOpenChat(): Promise<void> {
   const diagram = await pickDiagram();
   if (!diagram) return;
 
-  const specific = "docs/agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md";
+  const specific = "agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -58,7 +58,7 @@ export async function diagramEvalOpenChat(): Promise<void> {
     ""
   ].join("\n");
 
-  const prompt = await compose("docs/agent/prompts/00_EXECUTE.prompt.md", specific, header);
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific, header);
   await openChatWithPrompt(prompt);
 }
 
@@ -66,9 +66,9 @@ export async function diagramRecheckOpenChat(): Promise<void> {
   const diagram = await pickDiagram();
   if (!diagram) return;
 
-  const specific = (await exists("docs/agent/prompts/02_diagrams/09_recheck_diagram.prompt.md"))
-    ? "docs/agent/prompts/02_diagrams/09_recheck_diagram.prompt.md"
-    : "docs/agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md";
+  const specific = (await exists("agent/prompts/02_diagrams/09_recheck_diagram.prompt.md"))
+    ? "agent/prompts/02_diagrams/09_recheck_diagram.prompt.md"
+    : "agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md";
 
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
@@ -84,7 +84,7 @@ export async function diagramRecheckOpenChat(): Promise<void> {
     ""
   ].join("\n");
 
-  const prompt = await compose("docs/agent/prompts/00_EXECUTE.prompt.md", specific, header);
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific, header);
   await openChatWithPrompt(prompt);
 }
 
@@ -100,7 +100,7 @@ export async function diagramPatchOpenChat(): Promise<void> {
   });
   if (!issueIds?.trim()) return;
 
-  const specific = "docs/agent/prompts/02_diagrams/08_patch_diagram.prompt.md";
+  const specific = "agent/prompts/02_diagrams/08_patch_diagram.prompt.md";
   if (!(await exists(specific))) {
     vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
     return;
@@ -110,7 +110,7 @@ export async function diagramPatchOpenChat(): Promise<void> {
     "Execute now:",
     "",
     "Read:",
-    `- docs/build/reports/diagram_inconsistencies/${diagram.id}/latest.md`,
+    `- build/reports/diagram_inconsistencies/${diagram.id}/latest.md`,
     "",
     "Diagram selection:",
     `- diagram_id: ${diagram.id}`,
@@ -122,6 +122,6 @@ export async function diagramPatchOpenChat(): Promise<void> {
     "Then execute the patch instructions below."
   ].join("\n");
 
-  const prompt = await compose("docs/agent/prompts/00_EXECUTE.prompt.md", specific, header);
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific, header);
   await openChatWithPrompt(prompt);
 }

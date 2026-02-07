@@ -152,8 +152,8 @@ This Solution Outline depends on and must remain consistent with the following a
 
 - **Requirements Inventory**: BRD-REQ-INVENTORY v1.0 (36 requirements, derived from Business Requirements Document)
 - **Objectives Document**: SO-OBJECTIVES v1.0 (derived from validated Requirements Inventory)
-- **C4 System Context Diagram**: docs/03_diagrams/c4_context.puml (C4 Level 1 – System Context)
-- **C4 Container Diagram**: docs/03_diagrams/c4_container.puml (C4 Level 2 – Logical Containers)
+- **C4 System Context Diagram**: docs/03_architecture/diagrams/src/c4_context.puml (C4 Level 1 – System Context)
+- **C4 Container Diagram**: docs/03_architecture/diagrams/src/c4_container.puml (C4 Level 2 – Logical Containers)
 
 ### Cross-References
 
@@ -168,7 +168,7 @@ This Solution Outline depends on and must remain consistent with the following a
 
 The Sports Booking Platform is a unified digital system that acts as the central hub for sports activity coordination, replacing fragmented informal communication channels with a coordinated, data-driven platform. The platform serves four primary user roles (Players, Coaches, Venue Operators, Platform Administrators) through web and mobile digital channels, with integration to external payment and notification services.
 
-The solution follows a logical three-tier container architecture as defined in the C4 Container Diagram (docs/03_diagrams/c4_container.puml):
+The solution follows a logical three-tier container architecture as defined in the C4 Container Diagram (docs/03_architecture/diagrams/src/c4_container.puml):
 
 **User Channels Layer:**
 - Web App – Provides platform access for players, coaches, and venue operators
@@ -192,7 +192,7 @@ The solution follows a logical three-tier container architecture as defined in t
 
 ### System Boundary and Relationships
 
-The C4 Context Diagram (docs/03_diagrams/c4_context.puml) illustrates the system boundary and relationships:
+The C4 Context Diagram (docs/03_architecture/diagrams/src/c4_context.puml) illustrates the system boundary and relationships:
 
 - **System of Interest**: Sports Booking Platform
 - **Actors**: Player, Coach, Venue Operator, Platform Administrator

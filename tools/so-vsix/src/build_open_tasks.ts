@@ -186,12 +186,11 @@ export function registerPaletteBuildCommands(context: vscode.ExtensionContext) {
           throw new Error("No workspace folder open");
         }
 
-        // PDF is at repo root: ../../docs/build/pdf/Full_Doc.pdf
+        // PDF is at repo root: ../../build/pdf/Full_Doc.pdf
         const pdfPath = vscode.Uri.joinPath(
           workspaceFolder.uri,
           "..",
           "..",
-          "docs",
           "build",
           "pdf",
           "Full_Doc.pdf"

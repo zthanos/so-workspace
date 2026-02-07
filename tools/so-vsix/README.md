@@ -25,8 +25,8 @@ A VS Code extension that provides chat participants for managing SO (Software Op
 
 This extension expects prompts/templates to live inside the workspace (versioned with the project), typically under:
 
-- `docs/agent/prompts/`
-- `docs/agent/templates/` (optional)
+- `agent/prompts/`
+- `templates/` (for template files)
 
 ## Commands
 

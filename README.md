@@ -27,14 +27,14 @@ The VSIX extension acts strictly as an **orchestrator**:
 
 ## Repository Structure (Key Paths)
 
-- `docs/00_requirements/` – Requirements Inventory
-- `docs/01_objectives/` – Solution Outline Objectives (**source of truth**)
-- `docs/02_solution_outline/` – Solution Outline template and generated document
-- `docs/03_diagrams/` – Architecture diagrams (PlantUML / C4)
-- `docs/agent/prompts/` – Agent execution prompts
-- `docs/agent/commands/` – VSIX command runner scripts
-- `docs/build/reports/` – Evaluation & inconsistency reports
-- `scripts/` – Docker build and export scripts
+- `docs/00_brd/` – Business Requirements Document
+- `docs/01_requirements/` – Requirements Inventory
+- `docs/02_objectives/` – Solution Outline Objectives (**source of truth**)
+- `docs/03_architecture/` – Solution Outline and architecture diagrams (PlantUML / C4)
+- `agent/prompts/` – Agent execution prompts
+- `agent/Commands/` – VSIX command runner scripts
+- `build/reports/` – Evaluation & inconsistency reports
+- `tools/so-vsix/scripts/` – Docker build and export scripts
 - `build/pdf/` – Final PDF output
 
 ---
@@ -60,11 +60,11 @@ SO Evaluation (Objectives + Diagrams)
 SO Final Review (Requirements Inventory)
 
 ### Source of Truth
-- `docs/01_objectives/objectives.md`
-- Validated diagrams in `docs/03_diagrams/`
+- `docs/02_objectives/objectives.md`
+- Validated diagrams in `docs/03_architecture/diagrams/`
 
 ### Final Completeness Gate
-- `docs/00_requirements/requirements.inventory.md`
+- `docs/01_requirements/requirements.inventory.md`
 
 ---
 
@@ -121,12 +121,12 @@ Generate → Evaluate → Patch → Recheck
 ### Option A – Full Build
 Runs diagram rendering and PDF export in one step:
 ```powershell
-.\scripts\build_docker.ps1
+.\tools\so-vsix\scripts\build_docker.ps1
 ```
 
 ### Option B – PDF Export Only
 ```powershell
-.\scripts\export_pdf_docker.ps1
+.\tools\so-vsix\scripts\export_pdf_docker.ps1
 ```
 
 ### Output
@@ -137,7 +137,7 @@ Runs diagram rendering and PDF export in one step:
 ## Templates and Contracts
 
 - Solution Outline Template:
-  `docs/02_solution_outline/soloution_outline_template.md`
+  `templates/solution_outline.template.md`
 
 - All evaluation reports are written to a `latest.md` file to ensure deterministic patch and recheck steps.
 
