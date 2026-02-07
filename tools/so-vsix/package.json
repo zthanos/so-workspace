@@ -34,7 +34,8 @@
     "onCommand:so-workspace.so.finalReview",
     "onCommand:so-workspace.exportPdfNpm",
     "onCommand:so-workspace.cleanBuildOutputs",
-    "onCommand:so-workspace.openGeneratedPdf"
+    "onCommand:so-workspace.openGeneratedPdf",
+    "onCommand:so-workspace.convertWordToMarkdown"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -158,6 +159,10 @@
       {
         "command": "so-workspace.openGeneratedPdf",
         "title": "SO: Open Generated PDF"
+      },
+      {
+        "command": "so-workspace.convertWordToMarkdown",
+        "title": "SO: Convert Word to Markdown"
       }
     ]
   },
@@ -184,6 +189,7 @@
     "@types/mermaid": "^9.1.0",
     "@types/node": "^25.1.0",
     "@types/plantuml-encoder": "^1.4.2",
+    "@types/turndown": "^5.0.4",
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.7.1",
     "fast-check": "^4.5.3",
@@ -194,12 +200,15 @@
   "dependencies": {
     "fs-extra": "^11.2.0",
     "js-yaml": "^4.1.0",
+    "mammoth": "^1.6.0",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
     "markdown-it-attrs": "^4.2.0",
     "markdown-it-table-of-contents": "^0.8.0",
     "mermaid": "^11.12.2",
     "plantuml-encoder": "^1.4.0",
-    "puppeteer": "^23.11.1"
+    "puppeteer": "^23.11.1",
+    "turndown": "^7.1.2",
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }

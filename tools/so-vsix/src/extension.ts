@@ -24,6 +24,7 @@ import {
 } from "./solution_outline_open_chat";
 import { registerPaletteBuildCommands } from "./build_open_tasks";
 import { CommandHandlerImpl } from "./diagram_renderer_v2";
+import { registerWordToMarkdownCommand } from "./word_to_markdown";
 
 export function activate(context: vscode.ExtensionContext) {
   // Objectives
@@ -63,6 +64,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Docker build tasks
   registerPaletteBuildCommands(context);
+
+  // Word to Markdown conversion
+  registerWordToMarkdownCommand(context);
 }
 
 export function deactivate() {}
