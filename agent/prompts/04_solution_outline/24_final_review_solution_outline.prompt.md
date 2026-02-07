@@ -20,11 +20,11 @@ Checks:
 
 Output:
 - Write report to:
-  build/reports/solution_outline_final_review/latest.md
+  docs/reports/solution_outline_final_review/latest.md
 - Include:
   - Coverage summary (REQ-xx → SO section)
   - Issues table (if any)
   - Final assessment: PASS / ACCEPTABLE / FAIL
 
 Return only the content of:
-build/reports/solution_outline_final_review/latest.md
+docs/reports/solution_outline_final_review/latest.md

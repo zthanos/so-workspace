@@ -2,7 +2,7 @@
 Execute now:
 
 Read:
-- build/reports/diagram_inconsistencies/{{diagram_id}}/latest.md
+- docs/reports/diagram_inconsistencies/{{diagram_id}}/latest.md
 
 Apply a patch ONLY for the following IssueId:
 {{issue_id}}

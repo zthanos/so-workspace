@@ -6,7 +6,7 @@ Authoritative inputs:
 - <DIAGRAM_PATH>
 
 Template reference:
-- build/reports/diagram_inconsistencies.template.md
+- templates/diagram_inconsistencies.template.md
 
 Purpose:
 Re-evaluate the patched diagram to confirm that all reported issues have been resolved.
@@ -14,7 +14,7 @@ Re-evaluate the patched diagram to confirm that all reported issues have been re
 Rules:
 - Use the same evaluation checks as the initial evaluation.
 - Do NOT modify any files.
-- Overwrite build/reports/diagram_inconsistencies/<DIAGRAM_ID>/latest.md.
+- Overwrite docs/reports/diagram_inconsistencies/<DIAGRAM_ID>/latest.md.
 
 Return only the content of:
-build/reports/diagram_inconsistencies/<DIAGRAM_ID>/latest.md
+docs/reports/diagram_inconsistencies/<DIAGRAM_ID>/latest.md

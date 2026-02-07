@@ -5,7 +5,7 @@ Authoritative inputs:
 - docs/01_requirements/requirements.inventory.md
 
 Template reference:
-- build/reports/objectives_inconsistencies.template.md
+- templates/objectives_inconsistencies.template.md
 
 Purpose:
 Evaluate consistency, completeness, and scope alignment between
@@ -38,13 +38,13 @@ Rules:
 
 Report generation policy:
 1) Create a new timestamped report under:
-   build/reports/objectives_inconsistencies/
+   docs/reports/objectives_inconsistencies/
 
    Filename format:
    YYYY-MM-DDTHH-MM_<short_reason>.md
 
 2) Also overwrite (or create):
-   build/reports/objectives_inconsistencies/latest.md
+   docs/reports/objectives_inconsistencies/latest.md
 
 Report requirements:
 - Include metadata (report_id, generated_at, evaluation_scope, trigger).

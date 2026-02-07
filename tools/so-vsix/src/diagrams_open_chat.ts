@@ -36,8 +36,8 @@ async function pickDiagram(): Promise<DiagramPick | undefined> {
  * - agent/prompts/02_diagrams/09_recheck_diagram.prompt.md
  *
  * The prompts should read the diagram from diagram_path and write reports under:
- * build/reports/diagram_inconsistencies/<diagram_id>/
- * plus build/reports/diagram_inconsistencies/<diagram_id>/latest.md
+ * docs/reports/diagram_inconsistencies/<diagram_id>/
+ * plus docs/reports/diagram_inconsistencies/<diagram_id>/latest.md
  */
 export async function diagramEvalOpenChat(): Promise<void> {
   const diagram = await pickDiagram();
@@ -110,7 +110,7 @@ export async function diagramPatchOpenChat(): Promise<void> {
     "Execute now:",
     "",
     "Read:",
-    `- build/reports/diagram_inconsistencies/${diagram.id}/latest.md`,
+    `- docs/reports/diagram_inconsistencies/${diagram.id}/latest.md`,
     "",
     "Diagram selection:",
     `- diagram_id: ${diagram.id}`,

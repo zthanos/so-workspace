@@ -2,10 +2,9 @@
   "name": "so-workspace",
   "private": true,
   "version": "0.1.0",
-  "description": "Markdown-first Solution Outline workspace with rendered diagrams and PDF export (Windows).",
+  "description": "Markdown-first Solution Outline workspace with rendered diagrams and PDF export.",
   "scripts": {
     "render:diagrams": "powershell -ExecutionPolicy Bypass -File ./scripts/render_diagrams.ps1",
-    "export:pdf": "powershell -ExecutionPolicy Bypass -File ./scripts/export_pdf.ps1",
     "build": "powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1"
   },
   "dependencies": {

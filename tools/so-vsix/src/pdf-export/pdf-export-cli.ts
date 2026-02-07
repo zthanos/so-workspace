@@ -48,7 +48,7 @@ Requirements:
   - docs/manifest.yml must exist with title and inputs fields
   - docs/project_information.md must exist with project metadata
   - All input files listed in manifest.yml must exist
-  - Company logo must exist at docs/assets/logo.png
+  - Company logo must exist at templates/logo.png
 
 Exit Codes:
   0 - PDF generated successfully

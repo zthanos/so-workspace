@@ -151,52 +151,6 @@ export function registerPaletteBuildCommands(context: vscode.ExtensionContext) {
       }
     }),
 
-    vscode.commands.registerCommand("so-workspace.cleanBuildOutputs", async () => {
-      vscode.window.showInformationMessage("Starting: Clean Build Outputs");
-      try {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
-          throw new Error("No workspace folder open");
-        }
-
-        // Clean paths relative to repo root (workspace/../..)
-        const repoRoot = vscode.Uri.joinPath(workspaceFolder.uri, "..", "..");
-        const paths = [
-          vscode.Uri.joinPath(repoRoot, "docs", "build", "tmp").fsPath,
-          vscode.Uri.joinPath(repoRoot, "docs", "build", "pdf").fsPath,
-          vscode.Uri.joinPath(repoRoot, "docs", "03_architecture", "diagrams", "out").fsPath
-        ].map(p => `"${p}"`).join(", ");
-
-        const execution = new vscode.ShellExecution("powershell.exe", [
-          "-NoProfile",
-          "-ExecutionPolicy",
-          "Bypass",
-          "-Command",
-          `Remove-Item -Recurse -Force -ErrorAction SilentlyContinue ${paths}; Write-Host 'Build outputs cleaned successfully'`
-        ]);
-
-        const task = new vscode.Task(
-          { type: "shell", label: "SO: Clean Build Outputs" },
-          workspaceFolder,
-          "SO: Clean Build Outputs",
-          "SO Workspace",
-          execution,
-          []
-        );
-
-        task.presentationOptions = {
-          reveal: vscode.TaskRevealKind.Always,
-          panel: vscode.TaskPanelKind.Dedicated
-        };
-
-        log("[SO] Executing clean task");
-        await vscode.tasks.executeTask(task);
-      } catch (err: any) {
-        log(`[SO] ERROR cleanBuildOutputs: ${err.message}`);
-        vscode.window.showErrorMessage(`Clean failed:\n${err.message}`);
-      }
-    }),
-
     vscode.commands.registerCommand("so-workspace.openGeneratedPdf", async () => {
       log("[SO] Command: openGeneratedPdf invoked");
       try {

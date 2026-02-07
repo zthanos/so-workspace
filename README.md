@@ -33,9 +33,9 @@ The VSIX extension acts strictly as an **orchestrator**:
 - `docs/03_architecture/` – Solution Outline and architecture diagrams (PlantUML / C4)
 - `agent/prompts/` – Agent execution prompts
 - `agent/Commands/` – VSIX command runner scripts
-- `build/reports/` – Evaluation & inconsistency reports
+- `docs/reports/` – Evaluation & inconsistency reports
 - `tools/so-vsix/scripts/` – Docker build and export scripts
-- `build/pdf/` – Final PDF output
+- `docs/build/` – Final PDF output
 
 ---
 
@@ -130,7 +130,7 @@ Runs diagram rendering and PDF export in one step:
 ```
 
 ### Output
-- Final document: `build/pdf/Full_Doc.pdf`
+- Final document: `docs/build/Full_Doc.pdf`
 
 ---
 

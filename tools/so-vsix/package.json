@@ -4,6 +4,7 @@
   "description": "Chat participant for SO workspace management",
   "version": "1.0.0",
   "publisher": "your-publisher-name",
+  "icon": "so_logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/zthanos/so-workspace.git"
@@ -33,9 +34,9 @@
     "onCommand:so-workspace.so.patch",
     "onCommand:so-workspace.so.finalReview",
     "onCommand:so-workspace.exportPdfNpm",
-    "onCommand:so-workspace.cleanBuildOutputs",
     "onCommand:so-workspace.openGeneratedPdf",
-    "onCommand:so-workspace.convertWordToMarkdown"
+    "onCommand:so-workspace.convertWordToMarkdown",
+    "onCommand:so.resetGeneratedFiles"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -81,20 +82,28 @@
     ],
     "commands": [
       {
+        "command": "so.resetGeneratedFiles",
+        "title": "19 SO: Reset Generated Files"
+      },      
+      {
+        "command": "so-workspace.convertWordToMarkdown",
+        "title": "SO: 01 Convert Word to Markdown"
+      },      
+      {
         "command": "so-workspace.obj.generate",
-        "title": "SO: Objectives Generate (Open Chat)"
+        "title": "SO: 02 Objectives Generate (Open Chat)"
       },
       {
         "command": "so-workspace.obj.eval",
-        "title": "SO: Objectives Evaluate (Open Chat)"
+        "title": "SO: 03 Objectives Evaluate (Open Chat)"
       },
       {
         "command": "so-workspace.obj.patch",
-        "title": "SO: Objectives Patch (Open Chat)"
+        "title": "SO: 04 Objectives Patch (Open Chat)"
       },
       {
         "command": "so-workspace.obj.recheck",
-        "title": "SO: Objectives Recheck (Open Chat)"
+        "title": "SO: 05 Objectives Recheck (Open Chat)"
       },
       {
         "command": "so-workspace.renderDiagrams",
@@ -106,63 +115,55 @@
       },
       {
         "command": "so-workspace.req.generate",
-        "title": "SO: Requirements Inventory Generate (Open Chat)"
+        "title": "SO: 06 Requirements Inventory Generate (Open Chat)"
       },
       {
         "command": "so-workspace.req.eval",
-        "title": "SO: Requirements Inventory Evaluate (Open Chat)"
+        "title": "SO: 07 Requirements Inventory Evaluate (Open Chat)"
       },
       {
         "command": "so-workspace.req.patch",
-        "title": "SO: Requirements Inventory Patch (Open Chat)"
+        "title": "SO: 08 Requirements Inventory Patch (Open Chat)"
       },
       {
         "command": "so-workspace.req.recheck",
-        "title": "SO: Requirements Inventory Recheck (Open Chat)"
+        "title": "SO: 09 Requirements Inventory Recheck (Open Chat)"
       },
       {
         "command": "so-workspace.diagram.eval",
-        "title": "SO: Diagram Evaluate (Select Diagram)"
+        "title": "SO: 10 Diagram Evaluate (Select Diagram)"
       },
       {
         "command": "so-workspace.diagram.patch",
-        "title": "SO: Diagram Patch (Select Diagram)"
+        "title": "SO: 11 Diagram Patch (Select Diagram)"
       },
       {
         "command": "so-workspace.diagram.recheck",
-        "title": "SO: Diagram Recheck (Select Diagram)"
+        "title": "SO: 12 Diagram Recheck (Select Diagram)"
       },
       {
         "command": "so-workspace.so.generate",
-        "title": "SO: Solution Outline Generate (Open Chat)"
+        "title": "SO: 13 Solution Outline Generate (Open Chat)"
       },
       {
         "command": "so-workspace.so.eval",
-        "title": "SO: Solution Outline Evaluate (Objectives + Diagrams)"
+        "title": "SO: 14 Solution Outline Evaluate (Objectives + Diagrams)"
       },
       {
         "command": "so-workspace.so.patch",
-        "title": "SO: Solution Outline Patch (Open Chat)"
+        "title": "SO: 15 Solution Outline Patch (Open Chat)"
       },
       {
         "command": "so-workspace.so.finalReview",
-        "title": "SO: Solution Outline Final Review (Requirements Inventory)"
+        "title": "SO: 16 Solution Outline Final Review (Requirements Inventory)"
       },
       {
         "command": "so-workspace.exportPdfNpm",
-        "title": "SO: Export PDF"
-      },
-      {
-        "command": "so-workspace.cleanBuildOutputs",
-        "title": "SO: Clean Build Outputs"
+        "title": "17 SO: Export PDF"
       },
       {
         "command": "so-workspace.openGeneratedPdf",
-        "title": "SO: Open Generated PDF"
-      },
-      {
-        "command": "so-workspace.convertWordToMarkdown",
-        "title": "SO: Convert Word to Markdown"
+        "title": "18 SO: Open Generated PDF"
       }
     ]
   },

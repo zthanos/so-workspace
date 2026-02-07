@@ -5,11 +5,11 @@ docs/build/tmp/
 # Rendered diagrams (derived)
 docs/03_architecture/diagrams/out/
 
-# Optional: reports (choose policy)
-# If you want to keep only latest and snapshots you curate, ignore everything then whitelist:
-docs/build/reports/
-!docs/build/reports/inconsistencies.template.md
+# Generated reports (all generated content)
+docs/reports/
 
+# Templates folder is tracked (contains template files and assets)
+# templates/
 
 tools/so-vsix/.vscode/
 tools/so-vsix/dist/

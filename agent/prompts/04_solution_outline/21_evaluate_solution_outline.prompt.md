@@ -8,7 +8,7 @@ Authoritative inputs:
 - docs/03_architecture/diagrams/src/c4_container.puml
 
 Template reference:
-- build/reports/so_inconsistencies.template.md
+- templates/so_inconsistencies.template.md
 
 Purpose:
 Evaluate the Solution Outline for correctness, completeness, and consistency
@@ -39,8 +39,8 @@ Rules:
 
 Report generation:
 - Write report to:
-  build/reports/solution_outline_inconsistencies/latest.md
+  docs/reports/solution_outline_inconsistencies/latest.md
 - Use IssueIds: SO-OBJ-001, SO-OBJ-002, ...
 
 Return only the content of:
-build/reports/solution_outline_inconsistencies/latest.md
+docs/reports/solution_outline_inconsistencies/latest.md

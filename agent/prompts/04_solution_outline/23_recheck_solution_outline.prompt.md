@@ -8,7 +8,7 @@ Authoritative inputs:
 - docs/03_architecture/diagrams/src/c4_container.puml
 
 Template reference:
-- build/reports/so_inconsistencies.template.md
+- templates/so_inconsistencies.template.md
 
 Purpose:
 Re-evaluate the patched Solution Outline to confirm
@@ -18,7 +18,7 @@ Rules:
 - Apply the same checks as the initial evaluation.
 - Do NOT modify any files.
 - Overwrite:
-  build/reports/solution_outline_inconsistencies/latest.md
+  docs/reports/solution_outline_inconsistencies/latest.md
 
 Return only the content of:
-build/reports/solution_outline_inconsistencies/latest.md
+docs/reports/solution_outline_inconsistencies/latest.md

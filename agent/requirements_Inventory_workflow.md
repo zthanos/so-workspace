@@ -107,7 +107,7 @@ Evaluate the completeness and internal consistency of the Requirements Inventory
 **Output**
 
 * Generate an inconsistencies report under:
-  `build/reports/inventory_inconsistencies/`
+  `docs/reports/inventory_inconsistencies/`
 * Update `latest.md` with the most recent evaluation
 
 ---

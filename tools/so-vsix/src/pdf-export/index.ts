@@ -65,7 +65,7 @@ export async function exportPdf(): Promise<void> {
     
     // Step 5: Validate assets (company logo)
     console.log('Validating assets...');
-    const logoPath = 'docs/assets/logo.png'; // Default logo path
+    const logoPath = 'templates/logo.png'; // Default logo path
     const assetValidation = validateAssets(workspaceRoot, logoPath);
     
     if (!assetValidation.valid) {
@@ -186,7 +186,7 @@ export async function exportPdf(): Promise<void> {
         console.error('Suggestion: Ensure all files in manifest.yml exist');
       } else if (error.message.includes('Missing required assets')) {
         console.error('\nContext: Asset validation failed');
-        console.error('Suggestion: Add company logo at docs/assets/logo.png');
+        console.error('Suggestion: Add company logo at templates/logo.png');
       } else if (error.message.includes('PDF generation failed')) {
         console.error('\nContext: PDF generation stage');
         console.error('Suggestion: Check that all HTML content is valid');

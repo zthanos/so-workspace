@@ -19,7 +19,7 @@ Diagram under evaluation:
 - diagram_path: <resolved from mapping>
 
 Template reference:
-- build/reports/diagram_inconsistencies.template.md
+- templates/diagram_inconsistencies.template.md
 
 Purpose:
 Evaluate the selected diagram for correctness, completeness, and scope alignment
@@ -44,13 +44,13 @@ Evaluation checks:
 
 Report generation policy:
 1) Create a new timestamped report under:
-   build/reports/diagram_inconsistencies/<diagram_id>/
+   docs/reports/diagram_inconsistencies/<diagram_id>/
 
    Filename format:
    YYYY-MM-DDTHH-MM_<short_reason>.md
 
 2) Also overwrite (or create):
-   build/reports/diagram_inconsistencies/<diagram_id>/latest.md
+   docs/reports/diagram_inconsistencies/<diagram_id>/latest.md
 
 Return only the content of:
-build/reports/diagram_inconsistencies/<diagram_id>/latest.md
+docs/reports/diagram_inconsistencies/<diagram_id>/latest.md

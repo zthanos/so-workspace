@@ -60,7 +60,7 @@ export async function objectivesPatchOpenChat(): Promise<void> {
     "Execute now:",
     "",
     "Read:",
-    "- build/reports/inconsistencies/latest.md",
+    "- docs/reports/objectives_inconsistencies/latest.md",
     "",
     "Apply a patch ONLY for the following IssueIds:",
     issueIds.split(",").map(x => x.trim()).filter(Boolean).join(", "),

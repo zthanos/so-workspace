@@ -2,7 +2,7 @@
 Execute now:
 
 Read:
-- build/reports/inventory_inconsistencies/latest.md
+- docs/reports/inventory_inconsistencies/latest.md
 
 Apply a patch ONLY for the following IssueId:
 {{issue_id}}

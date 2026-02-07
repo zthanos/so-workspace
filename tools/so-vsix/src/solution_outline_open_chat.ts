@@ -53,7 +53,7 @@ export async function soPatchOpenChat(): Promise<void> {
     "Execute now:",
     "",
     "Read:",
-    "- build/reports/so_inconsistencies/latest.md",
+    "- docs/reports/solution_outline_inconsistencies/latest.md",
     "",
     "Apply a patch ONLY for the following IssueIds:",
     issueIds.split(",").map(x => x.trim()).filter(Boolean).join(", "),

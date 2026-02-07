@@ -1,7 +1,7 @@
 You are in EXECUTION mode.
 
 Authoritative inputs:
-- build/reports/diagram_inconsistencies/<DIAGRAM_ID>/latest.md
+- docs/reports/diagram_inconsistencies/<DIAGRAM_ID>/latest.md
 - <DIAGRAM_PATH>
 - docs/02_objectives/objectives.md
 - docs/01_requirements/requirements.inventory.md

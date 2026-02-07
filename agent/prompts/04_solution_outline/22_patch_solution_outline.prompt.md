@@ -1,7 +1,7 @@
 You are in EXECUTION mode.
 
 Authoritative inputs:
-- build/reports/solution_outline_inconsistencies/latest.md
+- docs/reports/solution_outline_inconsistencies/latest.md
 - docs/03_architecture/solution_outline.md
 - docs/02_objectives/objectives.md
 - docs/03_architecture/diagrams/src/c4_context.puml

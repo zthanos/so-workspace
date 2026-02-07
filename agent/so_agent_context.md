@@ -25,10 +25,10 @@ You are allowed to create/update:
 
 - `docs/03_architecture/solution_outline.md`
 - `docs/03_architecture/adr/*.md` (new ADRs if required)
-- `build/reports/inconsistencies.md` (new report file)
+- `docs/reports/solution_outline_inconsistencies/latest.md` (new report file)
 
 You must not edit:
-- `build/**` except for reports
+- `docs/reports/**` except for creating new reports
 - any rendered diagram outputs in `diagrams/out` (these are derived from src)
 - the repository structure
 
@@ -42,7 +42,7 @@ When generating `docs/03_architecture/solution_outline.md` you must:
 
 # Consistency checks (Objectives vs Requirements)
 
-You must identify inconsistencies and produce a report in `build/reports/inconsistencies.md`. An inconsistency is any of the following:
+You must identify inconsistencies and produce a report in `docs/reports/solution_outline_inconsistencies/latest.md`. An inconsistency is any of the following:
 
 1. Scope contradiction: Requirements introduce functionality explicitly out of scope in Objectives.
 2. Missing requirement coverage: Objectives include an in-scope capability that is not present in Requirements.

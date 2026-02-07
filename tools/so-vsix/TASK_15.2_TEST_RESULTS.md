@@ -20,7 +20,7 @@
    - Changes: Version 1.0 - Initial solution outline
 
 3. **Assets:**
-   - Company logo: `docs/assets/logo.png` (placeholder created for testing)
+   - Company logo: `templates/logo.png` (placeholder created for testing)
    - Diagrams available: `c4_container.svg`, `c4_context.svg`, `test_simple.svg`
 
 ### Test Execution

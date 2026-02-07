@@ -25,6 +25,7 @@ import {
 import { registerPaletteBuildCommands } from "./build_open_tasks";
 import { CommandHandlerImpl } from "./diagram_renderer_v2";
 import { registerWordToMarkdownCommand } from "./word_to_markdown";
+import { registerResetGeneratedFilesCommand } from "./reset_generated_files";
 
 export function activate(context: vscode.ExtensionContext) {
   // Objectives
@@ -67,6 +68,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Word to Markdown conversion
   registerWordToMarkdownCommand(context);
+
+  // Reset generated files command
+  registerResetGeneratedFilesCommand(context);
 }
 
 export function deactivate() {}

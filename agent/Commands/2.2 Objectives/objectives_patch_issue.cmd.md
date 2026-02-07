@@ -2,7 +2,7 @@
 Execute now:
 
 Read:
-- build/reports/objectives_inconsistencies/latest.md
+- docs/reports/objectives_inconsistencies/latest.md
 
 Apply a patch ONLY for the following IssueId:
 {{issue_id}}

@@ -5,7 +5,7 @@ Authoritative inputs:
 - docs/01_requirements/requirements.inventory.md
 
 Template reference:
-- build/reports/objectives_inconsistencies.template.md
+- templates/objectives_inconsistencies.template.md
 
 Purpose:
 Re-evaluate the patched Objectives document to confirm
@@ -15,6 +15,6 @@ Rules:
 - Perform the same evaluation criteria as the initial evaluation.
 - Do NOT modify objectives.md.
 - Do NOT modify requirements.inventory.md.
-- Overwrite build/reports/objectives_inconsistencies/latest.md.
+- Overwrite docs/reports/objectives_inconsistencies/latest.md.
 
-Return only the content of build/reports/objectives_inconsistencies/latest.md.
+Return only the content of docs/reports/objectives_inconsistencies/latest.md.

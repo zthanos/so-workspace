@@ -78,7 +78,7 @@ Before generating the PDF, ensure you have:
    ---
    ```
 
-3. **Company Logo**: `docs/assets/logo.png` (or .jpg)
+3. **Company Logo**: `templates/logo.png` (or .jpg)
 
 4. **Input Files**: All markdown files listed in manifest must exist
 
@@ -106,7 +106,7 @@ To open the generated PDF:
 - Check file paths are relative to workspace root
 
 ### "Company logo not found"
-- Add logo file to `docs/assets/logo.png`
+- Add logo file to `templates/logo.png`
 - Supported formats: PNG, JPG, JPEG
 
 ### "Invalid project information format"
