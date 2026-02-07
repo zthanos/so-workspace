@@ -21,7 +21,6 @@
     "onCommand:so-workspace.obj.patch",
     "onCommand:so-workspace.obj.recheck",
     "onCommand:so-workspace.renderDiagrams",
-    "onCommand:so-workspace.buildPdf",
     "onCommand:so-workspace.req.generate",
     "onCommand:so-workspace.req.eval",
     "onCommand:so-workspace.req.patch",
@@ -33,7 +32,7 @@
     "onCommand:so-workspace.so.eval",
     "onCommand:so-workspace.so.patch",
     "onCommand:so-workspace.so.finalReview",
-    "onCommand:so-workspace.exportPdf",
+    "onCommand:so-workspace.exportPdfNpm",
     "onCommand:so-workspace.cleanBuildOutputs",
     "onCommand:so-workspace.openGeneratedPdf"
   ],
@@ -149,8 +148,8 @@
         "title": "SO: Solution Outline Final Review (Requirements Inventory)"
       },
       {
-        "command": "so-workspace.exportPdf",
-        "title": "SO: Export PDF (Docker)"
+        "command": "so-workspace.exportPdfNpm",
+        "title": "SO: Export PDF"
       },
       {
         "command": "so-workspace.cleanBuildOutputs",
@@ -168,22 +167,39 @@
     "copy-scripts": "node -e \"const fs = require('fs'); const path = require('path'); const src = path.join('..', '..', 'scripts'); const dest = 'scripts'; if (fs.existsSync(src)) { fs.cpSync(src, dest, { recursive: true }); console.log('Scripts copied successfully'); } else { console.warn('Warning: /scripts directory not found'); }\"",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "export:pdf": "node dist/pdf-export/pdf-export-cli.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.14",
+    "@types/js-yaml": "^4.0.9",
+    "@types/markdown-it": "^14.1.2",
     "@types/mermaid": "^9.1.0",
     "@types/node": "^25.1.0",
     "@types/plantuml-encoder": "^1.4.2",
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.7.1",
     "fast-check": "^4.5.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^4.1.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-attrs": "^4.2.0",
+    "markdown-it-table-of-contents": "^0.8.0",
     "mermaid": "^11.12.2",
-    "plantuml-encoder": "^1.4.0"
+    "plantuml-encoder": "^1.4.0",
+    "puppeteer": "^23.11.1"
   }
 }

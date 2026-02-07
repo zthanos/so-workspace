@@ -112,20 +112,39 @@ export function registerPaletteBuildCommands(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("so-workspace.buildPdf", async () => {
-      vscode.window.showInformationMessage("Starting: Build PDF (Docker)");
+    vscode.commands.registerCommand("so-workspace.exportPdfNpm", async () => {
+      vscode.window.showInformationMessage("Starting: Export PDF");
       try {
-        await executeTask("SO: Build PDF", "build_docker.ps1");
-      } catch (err: any) {
-        log(`[SO] ERROR buildPdf: ${err.message}`);
-        vscode.window.showErrorMessage(`Build PDF failed:\n${err.message}`);
-      }
-    }),
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+          throw new Error("No workspace folder open");
+        }
 
-    vscode.commands.registerCommand("so-workspace.exportPdf", async () => {
-      vscode.window.showInformationMessage("Starting: Export PDF (Docker)");
-      try {
-        await executeTask("SO: Export PDF", "export_pdf_docker.ps1");
+        // Find the tools/so-vsix directory
+        const soVsixPath = vscode.Uri.joinPath(workspaceFolder.uri, "tools", "so-vsix");
+        
+        log(`[SO] Running npm export:pdf in: ${soVsixPath.fsPath}`);
+
+        const execution = new vscode.ShellExecution("npm", ["run", "export:pdf"], {
+          cwd: soVsixPath.fsPath
+        });
+
+        const task = new vscode.Task(
+          { type: "shell", label: "SO: Export PDF" },
+          workspaceFolder,
+          "SO: Export PDF",
+          "SO Workspace",
+          execution,
+          []
+        );
+
+        task.presentationOptions = {
+          reveal: vscode.TaskRevealKind.Always,
+          panel: vscode.TaskPanelKind.Dedicated,
+          clear: true
+        };
+
+        await vscode.tasks.executeTask(task);
       } catch (err: any) {
         log(`[SO] ERROR exportPdf: ${err.message}`);
         vscode.window.showErrorMessage(`Export PDF failed:\n${err.message}`);
@@ -186,11 +205,12 @@ export function registerPaletteBuildCommands(context: vscode.ExtensionContext) {
           throw new Error("No workspace folder open");
         }
 
-        // PDF is at repo root: ../../build/pdf/Full_Doc.pdf
+        // PDF is at repo root: ../../docs/build/pdf/Full_Doc.pdf
         const pdfPath = vscode.Uri.joinPath(
           workspaceFolder.uri,
           "..",
           "..",
+          "docs",
           "build",
           "pdf",
           "Full_Doc.pdf"
@@ -203,7 +223,7 @@ export function registerPaletteBuildCommands(context: vscode.ExtensionContext) {
           await vscode.env.openExternal(pdfPath);
           vscode.window.showInformationMessage("PDF opened successfully");
         } catch {
-          vscode.window.showErrorMessage(`PDF not found at:\n${pdfPath.fsPath}\n\nRun "SO: Build PDF (Docker)" first.`);
+          vscode.window.showErrorMessage(`PDF not found at:\n${pdfPath.fsPath}\n\nRun "SO: Export PDF" first.`);
         }
       } catch (err: any) {
         log(`[SO] ERROR openGeneratedPdf: ${err.message}`);
