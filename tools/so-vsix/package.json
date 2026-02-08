@@ -16,28 +16,6 @@
     "AI",
     "Chat"
   ],
-  "activationEvents": [
-    "onCommand:so-workspace.obj.generate",
-    "onCommand:so-workspace.obj.eval",
-    "onCommand:so-workspace.obj.patch",
-    "onCommand:so-workspace.obj.recheck",
-    "onCommand:so-workspace.renderDiagrams",
-    "onCommand:so-workspace.req.generate",
-    "onCommand:so-workspace.req.eval",
-    "onCommand:so-workspace.req.patch",
-    "onCommand:so-workspace.req.recheck",
-    "onCommand:so-workspace.diagram.eval",
-    "onCommand:so-workspace.diagram.patch",
-    "onCommand:so-workspace.diagram.recheck",
-    "onCommand:so-workspace.so.generate",
-    "onCommand:so-workspace.so.eval",
-    "onCommand:so-workspace.so.patch",
-    "onCommand:so-workspace.so.finalReview",
-    "onCommand:so-workspace.exportPdfNpm",
-    "onCommand:so-workspace.openGeneratedPdf",
-    "onCommand:so-workspace.convertWordToMarkdown",
-    "onCommand:so.resetGeneratedFiles"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
@@ -57,8 +35,8 @@
         },
         "so-workspace.diagrams.plantUmlServerUrl": {
           "type": "string",
-          "default": "http://localhost:8080",
-          "description": "PlantUML server URL (plantuml-wasm server)",
+          "default": "https://www.plantuml.com/plantuml",
+          "description": "PlantUML server URL (use public server or local server)",
           "pattern": "^https?://.*",
           "order": 3
         },
@@ -83,87 +61,95 @@
     "commands": [
       {
         "command": "so.resetGeneratedFiles",
-        "title": "19 SO: Reset Generated Files"
+        "title": "SO: 0-00 Reset Generated Files"
       },      
       {
         "command": "so-workspace.convertWordToMarkdown",
-        "title": "SO: 01 Convert Word to Markdown"
+        "title": "SO: 0-01 Convert Word to Markdown"
       },      
       {
-        "command": "so-workspace.obj.generate",
-        "title": "SO: 02 Objectives Generate (Open Chat)"
-      },
-      {
-        "command": "so-workspace.obj.eval",
-        "title": "SO: 03 Objectives Evaluate (Open Chat)"
-      },
-      {
-        "command": "so-workspace.obj.patch",
-        "title": "SO: 04 Objectives Patch (Open Chat)"
-      },
-      {
-        "command": "so-workspace.obj.recheck",
-        "title": "SO: 05 Objectives Recheck (Open Chat)"
-      },
-      {
-        "command": "so-workspace.renderDiagrams",
-        "title": "SO: Render Diagrams (Local)"
-      },
-      {
-        "command": "so-workspace.buildPdf",
-        "title": "SO: Build PDF (Docker)"
-      },
-      {
         "command": "so-workspace.req.generate",
-        "title": "SO: 06 Requirements Inventory Generate (Open Chat)"
+        "title": "SO: 1-01 Requirements Inventory Generate (Open Chat)"
       },
       {
         "command": "so-workspace.req.eval",
-        "title": "SO: 07 Requirements Inventory Evaluate (Open Chat)"
+        "title": "SO: 1-02 Requirements Inventory Evaluate (Open Chat)"
       },
       {
         "command": "so-workspace.req.patch",
-        "title": "SO: 08 Requirements Inventory Patch (Open Chat)"
+        "title": "SO: 1-03 Requirements Inventory Patch (Open Chat)"
       },
       {
         "command": "so-workspace.req.recheck",
-        "title": "SO: 09 Requirements Inventory Recheck (Open Chat)"
+        "title": "SO: 1-04 Requirements Inventory Recheck (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.generate",
+        "title": "SO: 2-01 Objectives Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.eval",
+        "title": "SO: 2-02 Objectives Evaluate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.patch",
+        "title": "SO: 2-03 Objectives Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.recheck",
+        "title": "SO: 2-04 Objectives Recheck (Open Chat)"
+      },
+      {
+        "command": "so-workspace.diagram.generateC4Context",
+        "title": "SO: 3-01 Generate C4 Context Diagram (Open Chat)"
+      },
+      {
+        "command": "so-workspace.diagram.generateC4Container",
+        "title": "SO: 3-02 Generate C4 Container Diagram (Open Chat)"
+      },
+      {
+        "command": "so-workspace.renderDiagrams",
+        "title": "SO: 3-03 Render Diagrams (Local)"
       },
       {
         "command": "so-workspace.diagram.eval",
-        "title": "SO: 10 Diagram Evaluate (Select Diagram)"
+        "title": "SO: 3-04 Diagram Evaluate (Select Diagram)"
       },
       {
         "command": "so-workspace.diagram.patch",
-        "title": "SO: 11 Diagram Patch (Select Diagram)"
+        "title": "SO: 3-05 Diagram Patch (Select Diagram)"
       },
       {
         "command": "so-workspace.diagram.recheck",
-        "title": "SO: 12 Diagram Recheck (Select Diagram)"
+        "title": "SO: 3-06 Diagram Recheck (Select Diagram)"
       },
       {
         "command": "so-workspace.so.generate",
-        "title": "SO: 13 Solution Outline Generate (Open Chat)"
+        "title": "SO: 4-01 Solution Outline Generate (Open Chat)"
       },
       {
         "command": "so-workspace.so.eval",
-        "title": "SO: 14 Solution Outline Evaluate (Objectives + Diagrams)"
+        "title": "SO: 4-02 Solution Outline Evaluate (Objectives + Diagrams)"
       },
       {
         "command": "so-workspace.so.patch",
-        "title": "SO: 15 Solution Outline Patch (Open Chat)"
+        "title": "SO: 4-03 Solution Outline Patch (Open Chat)"
       },
       {
         "command": "so-workspace.so.finalReview",
-        "title": "SO: 16 Solution Outline Final Review (Requirements Inventory)"
+        "title": "SO: 4-04 Solution Outline Final Review (Requirements Inventory)"
+      },
+      {
+        "command": "so-workspace.buildPdf",
+        "title": "SO: 5-01 Build PDF (Docker)"
       },
       {
         "command": "so-workspace.exportPdfNpm",
-        "title": "17 SO: Export PDF"
+        "title": "5-02 SO: Export PDF"
       },
       {
         "command": "so-workspace.openGeneratedPdf",
-        "title": "18 SO: Open Generated PDF"
+        "title": "5-03 SO: Open Generated PDF"
       }
     ]
   },

@@ -1,12 +1,6 @@
 # Build outputs
-docs/build/pdf/
-docs/build/tmp/
+docs/
 
-# Rendered diagrams (derived)
-docs/03_architecture/diagrams/out/
-
-# Generated reports (all generated content)
-docs/reports/
 
 # Templates folder is tracked (contains template files and assets)
 # templates/

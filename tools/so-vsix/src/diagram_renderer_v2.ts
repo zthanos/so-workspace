@@ -182,7 +182,7 @@ export function getDefaultConfig(): DiagramRenderConfig {
   return {
     sourceDirectory: "docs/03_architecture/diagrams/src",
     outputDirectory: "docs/03_architecture/diagrams/out",
-    plantUmlServerUrl: "http://localhost:8080",
+    plantUmlServerUrl: "https://www.plantuml.com/plantuml",
     concurrencyLimit: 5,
     includeCache: new Map<string, string>(),
   };

@@ -40,6 +40,68 @@ When generating `docs/03_architecture/solution_outline.md` you must:
 - reference requirements where relevant (e.g., BR-01, BR-02)
 - embed rendered diagrams using relative paths to `./diagrams/out/*.png`
 
+
+# Architecture Flow and Integration Rules Usage
+
+You must use the Reference Architecture Rules Pack as a deterministic policy layer when identifying integrations and generating architectural flows.
+
+The Rules Pack defines:
+- system categories and zones,
+- allowed and preferred integration routes,
+- preferred interaction styles (synchronous vs asynchronous),
+- minimum cross-cutting requirements (security and observability).
+
+The Rules Pack is not part of the Solution Outline content and must not be quoted or embedded verbatim in documents.
+
+## Flow Identification
+
+You must identify high-level flows when:
+- Objectives describe end-to-end business processes,
+- multiple systems participate in a capability,
+- state transitions (e.g. booking, payment, availability) occur.
+
+Each identified flow must:
+- have a clear trigger (actor + intent),
+- identify participating systems using canonical names,
+- remain technology-agnostic.
+
+## Rules Application
+
+When a flow involves systems across different categories or zones, you must apply the Reference Architecture Rules Pack to determine:
+- whether direct integration is allowed,
+- whether intermediary systems (middleware, gateway) are required,
+- whether synchronous or asynchronous interaction is preferred.
+
+If a rule mandates routing via an intermediary, you must reflect this in the generated flow structure.
+
+You must not invent product-specific technologies unless explicitly stated in authoritative inputs.
+
+## Sequence Diagram Generation
+
+You may generate high-level sequence diagrams only when:
+- the flow includes 5–12 meaningful steps,
+- each interaction can be classified (UI, synchronous call, asynchronous event, data access),
+- at least one error scenario is identifiable at a high level.
+
+Sequence diagrams must:
+- reflect the routed flow after rule application,
+- show logical participants (not infrastructure details),
+- avoid implementation-level specifics.
+
+## Handling Missing Information
+
+If required information is missing:
+- do not assume or invent details,
+- apply default preferences from the Rules Pack where allowed,
+- explicitly record open points or assumptions.
+
+## Precedence
+
+In case of conflict:
+1. Project-specific rules (if provided) take precedence.
+2. Enterprise Reference Architecture rules override generic defaults.
+3. Unresolved conflicts must be surfaced as exceptions requiring human decision.
+
 # Consistency checks (Objectives vs Requirements)
 
 You must identify inconsistencies and produce a report in `docs/reports/solution_outline_inconsistencies/latest.md`. An inconsistency is any of the following:

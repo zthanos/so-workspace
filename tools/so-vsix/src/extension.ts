@@ -12,6 +12,8 @@ import {
   reqInventoryRecheckOpenChat
 } from "./requirements_open_chat";
 import {
+  diagramGenerateC4ContextOpenChat,
+  diagramGenerateC4ContainerOpenChat,
   diagramEvalOpenChat,
   diagramPatchOpenChat,
   diagramRecheckOpenChat
@@ -46,6 +48,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Diagrams (evaluate/patch per selected diagram)
   context.subscriptions.push(
+    vscode.commands.registerCommand("so-workspace.diagram.generateC4Context", diagramGenerateC4ContextOpenChat),
+    vscode.commands.registerCommand("so-workspace.diagram.generateC4Container", diagramGenerateC4ContainerOpenChat),
     vscode.commands.registerCommand("so-workspace.diagram.eval", diagramEvalOpenChat),
     vscode.commands.registerCommand("so-workspace.diagram.patch", diagramPatchOpenChat),
     vscode.commands.registerCommand("so-workspace.diagram.recheck", diagramRecheckOpenChat)

@@ -10,6 +10,11 @@ const DIAGRAMS: DiagramPick[] = [
   { id: "c4_container", label: "C4 Container (L2)", path: "docs/03_architecture/diagrams/src/c4_container.puml" }
 ];
 
+const DIAGRAM_GENERATION_PROMPTS: Record<string, string> = {
+  "c4_context": "agent/prompts/02_diagrams/05_generate_c4_context.prompt.md",
+  "c4_container": "agent/prompts/02_diagrams/06_generate_c4_container.prompt.md"
+};
+
 async function compose(baseRel: string, specificRel: string, extraHeader?: string): Promise<string> {
   const base = await readText(baseRel);
   const spec = await readText(specificRel);
@@ -31,6 +36,8 @@ async function pickDiagram(): Promise<DiagramPick | undefined> {
  *
  * Expected prompt files in repo:
  * - agent/prompts/00_EXECUTE.prompt.md
+ * - agent/prompts/02_diagrams/05_generate_c4_context.prompt.md
+ * - agent/prompts/02_diagrams/06_generate_c4_container.prompt.md
  * - agent/prompts/02_diagrams/07_evaluate_diagram.prompt.md
  * - agent/prompts/02_diagrams/08_patch_diagram.prompt.md
  * - agent/prompts/02_diagrams/09_recheck_diagram.prompt.md
@@ -39,6 +46,29 @@ async function pickDiagram(): Promise<DiagramPick | undefined> {
  * docs/reports/diagram_inconsistencies/<diagram_id>/
  * plus docs/reports/diagram_inconsistencies/<diagram_id>/latest.md
  */
+
+export async function diagramGenerateC4ContextOpenChat(): Promise<void> {
+  const specific = "agent/prompts/02_diagrams/05_generate_c4_context.prompt.md";
+  if (!(await exists(specific))) {
+    vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
+    return;
+  }
+
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific);
+  await openChatWithPrompt(prompt);
+}
+
+export async function diagramGenerateC4ContainerOpenChat(): Promise<void> {
+  const specific = "agent/prompts/02_diagrams/06_generate_c4_container.prompt.md";
+  if (!(await exists(specific))) {
+    vscode.window.showErrorMessage(`Missing prompt file: ${specific}`);
+    return;
+  }
+
+  const prompt = await compose("agent/prompts/00_EXECUTE.prompt.md", specific);
+  await openChatWithPrompt(prompt);
+}
+
 export async function diagramEvalOpenChat(): Promise<void> {
   const diagram = await pickDiagram();
   if (!diagram) return;
