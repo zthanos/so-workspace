@@ -764,18 +764,93 @@ export class ProgressReporterImpl implements ProgressReporter {
 
 /**
  * MermaidRenderer implementation - Renders Mermaid diagrams to SVG
- * Note: This is a placeholder implementation. Full Mermaid rendering will be implemented in task 6.
  */
 export class MermaidRendererImpl implements MermaidRenderer {
+  /** Counter for generating unique IDs for Mermaid diagrams */
+  private idCounter: number = 0;
+  
+  /** Flag to track if Mermaid has been initialized */
+  private initialized: boolean = false;
+
+  /**
+   * Initialize Mermaid library with configuration
+   * This is called lazily on first render to avoid initialization issues
+   */
+  private async initializeMermaid(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
+
+    try {
+      // Dynamic import of mermaid to avoid initialization issues
+      const mermaid = (await import("mermaid")).default;
+      
+      // Initialize mermaid with configuration
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "default",
+        securityLevel: "loose",
+        fontFamily: "Arial, sans-serif",
+      });
+      
+      this.initialized = true;
+    } catch (error) {
+      throw new Error(`Failed to initialize Mermaid: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   /**
    * Render Mermaid content to SVG
    * @param content - Mermaid content to render
    * @returns SVG content as string
    */
   async render(content: string): Promise<string> {
-    // TODO: Implement Mermaid rendering in task 6
-    // For now, throw an error to indicate this is not yet implemented
-    throw new Error("Mermaid rendering not yet implemented - will be completed in task 6");
+    // Validate content is not empty
+    if (!content || content.trim() === "") {
+      throw new Error("Mermaid content is empty");
+    }
+
+    // Initialize Mermaid if not already done
+    await this.initializeMermaid();
+
+    try {
+      // Dynamic import of mermaid
+      const mermaid = (await import("mermaid")).default;
+      
+      // Generate unique ID for this diagram
+      const id = `mermaid-diagram-${this.idCounter++}`;
+      
+      // Render the diagram using mermaid.render()
+      // This returns an object with svg property containing the SVG string
+      const result = await mermaid.render(id, content);
+      
+      // Extract SVG content from result
+      const svg = result.svg;
+      
+      // Validate that we got valid SVG content
+      if (!svg || typeof svg !== "string") {
+        throw new Error("Mermaid render returned invalid SVG content");
+      }
+      
+      return svg;
+      
+    } catch (error) {
+      // Handle Mermaid syntax errors gracefully
+      if (error instanceof Error) {
+        // Check if it's a syntax error
+        if (error.message.includes("Parse error") || 
+            error.message.includes("Syntax error") ||
+            error.message.includes("Lexical error")) {
+          throw new Error(`Invalid Mermaid syntax: ${error.message}`);
+        }
+        
+        // Re-throw other errors with context
+        throw new Error(`Failed to render Mermaid diagram: ${error.message}`);
+      }
+      
+      // Handle non-Error objects
+      throw new Error(`Failed to render Mermaid diagram: ${String(error)}`);
+    }
   }
 }
 
