@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "activeEnvironment": "development",
+  "endpoints": {
+    "kroki": {
+      "url": "https://kroki.io",
+      "timeout": 30000,
+      "maxConcurrent": 5,
+      "enabled": true
+    },
+    "plantuml": {
+      "url": "https://www.plantuml.com/plantuml",
+      "timeout": 30000,
+      "enabled": true
+    },
+    "java": {
+      "plantUmlJarPath": "tools/plantuml/plantuml-1.2026.1.jar",
+      "mermaidCliPath": "mmdc",
+      "javaPath": "java",
+      "enabled": true
+    },
+    "rendering": {
+      "sourceDirectory": "docs/03_architecture/diagrams/src",
+      "outputDirectory": "docs/03_architecture/diagrams/out",
+      "concurrencyLimit": 5
+    }
+  },
+  "environments": {
+    "development": {
+      "kroki": {
+        "url": "http://localhost:8000",
+        "timeout": 60000,
+        "maxConcurrent": 10
+      }
+    },
+    "staging": {
+      "kroki": {
+        "url": "https://kroki-staging.example.com",
+        "timeout": 45000
+      }
+    },
+    "production": {
+      "kroki": {
+        "url": "https://kroki.example.com",
+        "timeout": 30000,
+        "maxConcurrent": 3
+      }
+    }
+  }
+}

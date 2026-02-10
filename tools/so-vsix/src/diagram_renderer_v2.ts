@@ -42,7 +42,7 @@ export interface DiagramFile {
   /** Path relative to source directory */
   relativePath: string;
   /** Type of diagram */
-  type: "mermaid" | "plantuml";
+  type: "mermaid" | "plantuml" | "structurizr";
   /** File content (loaded on demand) */
   content?: string;
 }
@@ -70,7 +70,7 @@ export interface RenderError {
   /** File path that failed */
   file: string;
   /** Type of diagram */
-  type: "mermaid" | "plantuml";
+  type: "mermaid" | "plantuml" | "structurizr";
   /** Error message */
   message: string;
   /** Stack trace (optional) */
@@ -155,6 +155,8 @@ export interface ServerChecker {
 export interface OutputManager {
   /** Write SVG content to output file */
   write(file: DiagramFile, svg: string, outputDir: string): Promise<void>;
+  /** Write rendered output to disk (supports multiple formats) */
+  writeOutput?(file: DiagramFile, output: import("./backend-strategy").RenderOutput, outputDir: string): Promise<void>;
 }
 
 /**
@@ -530,6 +532,31 @@ export class OutputManagerImpl implements OutputManager {
   }
 
   /**
+   * Write rendered output to disk (supports multiple formats)
+   * @param file - Diagram file information
+   * @param output - Rendered output from backend (RenderOutput)
+   * @param outputDir - Output directory path
+   */
+  async writeOutput(file: DiagramFile, output: import("./backend-strategy").RenderOutput, outputDir: string): Promise<void> {
+    // Calculate output path with appropriate extension
+    const outputPath = this.calculateOutputPathWithExtension(file.relativePath, output.extension, outputDir);
+    
+    // Create nested directories recursively
+    await this.ensureDirectoryExists(path.dirname(outputPath));
+    
+    // Write content based on format
+    if (output.format === "svg") {
+      // SVG is text, write as UTF-8
+      await fs.promises.writeFile(outputPath, output.content, "utf-8");
+    } else if (output.format === "png") {
+      // PNG is binary, write as buffer
+      await fs.promises.writeFile(outputPath, output.content);
+    } else {
+      throw new Error(`Unsupported output format: ${output.format}`);
+    }
+  }
+
+  /**
    * Calculate output file path with .svg extension
    * @param relativePath - Relative path from source directory
    * @param outputDir - Output directory path
@@ -544,6 +571,26 @@ export class OutputManagerImpl implements OutputManager {
     
     // Combine output directory with relative directory and new filename
     const outputPath = path.join(outputDir, parsed.dir, svgFileName);
+    
+    return outputPath;
+  }
+
+  /**
+   * Calculate output file path with specified extension
+   * @param relativePath - Relative path from source directory
+   * @param extension - File extension (e.g., ".svg", ".png")
+   * @param outputDir - Output directory path
+   * @returns Full output file path with specified extension
+   */
+  private calculateOutputPathWithExtension(relativePath: string, extension: string, outputDir: string): string {
+    // Parse the relative path
+    const parsed = path.parse(relativePath);
+    
+    // Change extension to the output format
+    const outputFileName = parsed.name + extension;
+    
+    // Combine output directory with relative directory and new filename
+    const outputPath = path.join(outputDir, parsed.dir, outputFileName);
     
     return outputPath;
   }
@@ -763,39 +810,38 @@ export class ProgressReporterImpl implements ProgressReporter {
 // ============================================================================
 
 /**
- * MermaidRenderer implementation - Renders Mermaid diagrams to SVG
+ * MermaidRenderer implementation - Renders Mermaid diagrams to SVG using Puppeteer
  */
 export class MermaidRendererImpl implements MermaidRenderer {
   /** Counter for generating unique IDs for Mermaid diagrams */
   private idCounter: number = 0;
   
-  /** Flag to track if Mermaid has been initialized */
+  /** Puppeteer browser instance (shared across renders) */
+  private browser: any = null;
+  
+  /** Flag to track if browser has been initialized */
   private initialized: boolean = false;
 
   /**
-   * Initialize Mermaid library with configuration
-   * This is called lazily on first render to avoid initialization issues
+   * Initialize Puppeteer browser
+   * This is called lazily on first render
    */
-  private async initializeMermaid(): Promise<void> {
-    if (this.initialized) {
+  private async initializeBrowser(): Promise<void> {
+    if (this.initialized && this.browser) {
       return;
     }
 
     try {
-      // Dynamic import of mermaid to avoid initialization issues
-      const mermaid = (await import("mermaid")).default;
+      const puppeteer = await import("puppeteer");
       
-      // Initialize mermaid with configuration
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: "default",
-        securityLevel: "loose",
-        fontFamily: "Arial, sans-serif",
+      this.browser = await puppeteer.default.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
       });
       
       this.initialized = true;
     } catch (error) {
-      throw new Error(`Failed to initialize Mermaid: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to initialize browser: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -810,29 +856,58 @@ export class MermaidRendererImpl implements MermaidRenderer {
       throw new Error("Mermaid content is empty");
     }
 
-    // Initialize Mermaid if not already done
-    await this.initializeMermaid();
+    // Initialize browser if not already done
+    await this.initializeBrowser();
 
     try {
-      // Dynamic import of mermaid
-      const mermaid = (await import("mermaid")).default;
+      // Create a new page
+      const page = await this.browser.newPage();
       
-      // Generate unique ID for this diagram
-      const id = `mermaid-diagram-${this.idCounter++}`;
-      
-      // Render the diagram using mermaid.render()
-      // This returns an object with svg property containing the SVG string
-      const result = await mermaid.render(id, content);
-      
-      // Extract SVG content from result
-      const svg = result.svg;
-      
-      // Validate that we got valid SVG content
-      if (!svg || typeof svg !== "string") {
-        throw new Error("Mermaid render returned invalid SVG content");
+      try {
+        // Generate unique ID for this diagram
+        const id = `mermaid-diagram-${this.idCounter++}`;
+        
+        // Set up the page with Mermaid
+        await page.setContent(`
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+    window.mermaid = mermaid;
+  </script>
+</head>
+<body>
+  <div id="diagram-container"></div>
+</body>
+</html>
+        `);
+        
+        // Wait for Mermaid to load
+        await page.waitForFunction(() => (window as any).mermaid !== undefined, { timeout: 10000 });
+        
+        // Render the diagram
+        const svg = await page.evaluate(async (diagramId: string, diagramContent: string) => {
+          try {
+            const result = await (window as any).mermaid.render(diagramId, diagramContent);
+            return result.svg;
+          } catch (err: any) {
+            throw new Error(`Mermaid render error: ${err.message}`);
+          }
+        }, id, content);
+        
+        // Validate SVG
+        if (!svg || typeof svg !== "string") {
+          throw new Error("Mermaid render returned invalid SVG content");
+        }
+        
+        return svg;
+        
+      } finally {
+        // Always close the page
+        await page.close();
       }
-      
-      return svg;
       
     } catch (error) {
       // Handle Mermaid syntax errors gracefully
@@ -840,7 +915,8 @@ export class MermaidRendererImpl implements MermaidRenderer {
         // Check if it's a syntax error
         if (error.message.includes("Parse error") || 
             error.message.includes("Syntax error") ||
-            error.message.includes("Lexical error")) {
+            error.message.includes("Lexical error") ||
+            error.message.includes("Mermaid render error")) {
           throw new Error(`Invalid Mermaid syntax: ${error.message}`);
         }
         
@@ -850,6 +926,18 @@ export class MermaidRendererImpl implements MermaidRenderer {
       
       // Handle non-Error objects
       throw new Error(`Failed to render Mermaid diagram: ${String(error)}`);
+    }
+  }
+  
+  /**
+   * Cleanup method to close the browser
+   * Should be called when done with all rendering
+   */
+  async cleanup(): Promise<void> {
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+      this.initialized = false;
     }
   }
 }
@@ -972,14 +1060,8 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
   /** File scanner for discovering diagram files */
   private fileScanner: FileScanner;
   
-  /** Server checker for verifying PlantUML server availability */
-  private serverChecker: ServerChecker;
-  
-  /** Mermaid renderer for rendering Mermaid diagrams */
-  private mermaidRenderer: MermaidRenderer;
-  
-  /** PlantUML renderer for rendering PlantUML diagrams */
-  private plantUmlRenderer: PlantUMLRenderer;
+  /** Backend strategy for rendering diagrams */
+  private backend: import("./backend-strategy").RenderBackend;
   
   /** Output manager for writing SVG files */
   private outputManager: OutputManager;
@@ -988,17 +1070,13 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
   private progressReporter: ProgressReporter;
 
   constructor(
+    backend: import("./backend-strategy").RenderBackend,
     fileScanner?: FileScanner,
-    serverChecker?: ServerChecker,
-    mermaidRenderer?: MermaidRenderer,
-    plantUmlRenderer?: PlantUMLRenderer,
     outputManager?: OutputManager,
     progressReporter?: ProgressReporter
   ) {
+    this.backend = backend;
     this.fileScanner = fileScanner || new FileScannerImpl();
-    this.serverChecker = serverChecker || new ServerCheckerImpl();
-    this.mermaidRenderer = mermaidRenderer || new MermaidRendererImpl();
-    this.plantUmlRenderer = plantUmlRenderer || new PlantUMLRendererImpl();
     this.outputManager = outputManager || new OutputManagerImpl();
     this.progressReporter = progressReporter || new ProgressReporterImpl();
   }
@@ -1014,14 +1092,22 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     // Step 1: Validate configuration
     this.validateConfiguration(config);
     
-    // Step 2: Check server availability
-    const serverAvailable = await this.serverChecker.isAvailable(config.plantUmlServerUrl);
+    // Step 2: Check backend availability
+    const availability = await this.backend.isAvailable();
     
-    if (!serverAvailable) {
+    if (!availability.available) {
       this.progressReporter.error(
-        `PlantUML server is not available at ${config.plantUmlServerUrl}. ` +
-        `PlantUML diagrams will be skipped. Please start the server and try again.`
+        `Backend not available: ${availability.message || 'Unknown error'}`
       );
+      
+      // Return empty result if backend is completely unavailable
+      return {
+        totalFiles: 0,
+        successCount: 0,
+        failureCount: 0,
+        errors: [],
+        duration: Date.now() - startTime,
+      };
     }
     
     // Step 3: Scan files
@@ -1050,29 +1136,42 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
       return result;
     }
     
-    // Step 4: Partition files by type
-    const mermaidFiles = files.filter(f => f.type === "mermaid");
-    const plantUmlFiles = files.filter(f => f.type === "plantuml");
+    // Step 4: Filter files by backend's supported types
+    const supportedFiles = files.filter(f => 
+      availability.supportedTypes.includes(f.type as import("./backend-strategy").DiagramType)
+    );
     
-    // Filter out PlantUML files if server is not available
-    const filesToProcess = serverAvailable 
-      ? files 
-      : mermaidFiles;
+    // Log skipped files if any
+    const skippedCount = files.length - supportedFiles.length;
+    if (skippedCount > 0) {
+      console.log(`Skipping ${skippedCount} file(s) - diagram type not supported by ${this.backend.name} backend`);
+    }
     
-    if (!serverAvailable && plantUmlFiles.length > 0) {
-      // Log skipped files (will be shown in progress reporter's output)
-      console.log(`Skipping ${plantUmlFiles.length} PlantUML file(s) due to server unavailability`);
+    // Handle no supported files
+    if (supportedFiles.length === 0) {
+      const result: RenderResult = {
+        totalFiles: 0,
+        successCount: 0,
+        failureCount: 0,
+        errors: [],
+        duration: Date.now() - startTime,
+      };
+      
+      vscode.window.showInformationMessage(
+        `No supported diagram files found for ${this.backend.name} backend`
+      );
+      
+      return result;
     }
     
     // Step 5: Start progress reporting
-    this.progressReporter.start(filesToProcess.length);
+    this.progressReporter.start(supportedFiles.length);
     
     // Step 6: Render files concurrently with concurrency limit
     const outputDir = path.join(workspaceFolder.uri.fsPath, config.outputDirectory);
     const results = await this.renderFilesWithConcurrencyLimit(
-      filesToProcess,
+      supportedFiles,
       outputDir,
-      config.plantUmlServerUrl,
       config.concurrencyLimit
     );
     
@@ -1084,7 +1183,7 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       if (result.status === "rejected") {
-        const file = filesToProcess[i];
+        const file = supportedFiles[i];
         errors.push({
           file: file.relativePath,
           type: file.type,
@@ -1096,7 +1195,7 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     
     // Step 8: Complete progress reporting
     const finalResult: RenderResult = {
-      totalFiles: filesToProcess.length,
+      totalFiles: supportedFiles.length,
       successCount: successCount,
       failureCount: failureCount,
       errors: errors,
@@ -1135,14 +1234,12 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
    * Render files with concurrency limit enforcement
    * @param files - Files to render
    * @param outputDir - Output directory path
-   * @param serverUrl - PlantUML server URL
    * @param concurrencyLimit - Maximum number of concurrent operations
    * @returns Array of settled promises
    */
   private async renderFilesWithConcurrencyLimit(
     files: DiagramFile[],
     outputDir: string,
-    serverUrl: string,
     concurrencyLimit: number
   ): Promise<PromiseSettledResult<void>[]> {
     const results: PromiseSettledResult<void>[] = [];
@@ -1152,7 +1249,7 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
       const batch = files.slice(i, i + concurrencyLimit);
       
       // Render batch concurrently
-      const batchPromises = batch.map(file => this.renderFile(file, outputDir, serverUrl));
+      const batchPromises = batch.map(file => this.renderFile(file, outputDir));
       const batchResults = await Promise.allSettled(batchPromises);
       
       results.push(...batchResults);
@@ -1162,15 +1259,13 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
   }
 
   /**
-   * Render a single file
+   * Render a single file using the backend strategy
    * @param file - File to render
    * @param outputDir - Output directory path
-   * @param serverUrl - PlantUML server URL
    */
   private async renderFile(
     file: DiagramFile,
-    outputDir: string,
-    serverUrl: string
+    outputDir: string
   ): Promise<void> {
     // Update progress
     this.progressReporter.update(file.relativePath, 0);
@@ -1179,20 +1274,80 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
       // Read file content
       const content = await fs.promises.readFile(file.absolutePath, "utf-8");
       
-      // Render based on type
-      let svg: string;
-      if (file.type === "mermaid") {
-        svg = await this.mermaidRenderer.render(content);
-      } else {
-        svg = await this.plantUmlRenderer.render(content, serverUrl);
-      }
+      // Render using backend strategy
+      const output = await this.backend.render(file, content);
       
-      // Write output
-      await this.outputManager.write(file, svg, outputDir);
+      // Write output using the output manager's new writeOutput method
+      if (this.outputManager.writeOutput) {
+        await this.outputManager.writeOutput(file, output, outputDir);
+      } else {
+        // Fallback to direct write if writeOutput is not available
+        await this.writeOutput(file, output, outputDir);
+      }
       
     } catch (error) {
       // Re-throw error to be caught by Promise.allSettled
       throw error;
+    }
+  }
+
+  /**
+   * Write rendered output to disk
+   * @param file - Original diagram file
+   * @param output - Rendered output from backend
+   * @param outputDir - Output directory path
+   */
+  private async writeOutput(
+    file: DiagramFile,
+    output: import("./backend-strategy").RenderOutput,
+    outputDir: string
+  ): Promise<void> {
+    // Calculate output path from relative path
+    const outputPath = this.calculateOutputPath(file.relativePath, output.extension, outputDir);
+    
+    // Create nested directories recursively
+    await this.ensureDirectoryExists(path.dirname(outputPath));
+    
+    // Write content based on format
+    if (output.format === "svg") {
+      // SVG is text, write as UTF-8
+      await fs.promises.writeFile(outputPath, output.content, "utf-8");
+    } else {
+      // PNG is binary, write as buffer
+      await fs.promises.writeFile(outputPath, output.content);
+    }
+  }
+
+  /**
+   * Calculate output file path with appropriate extension
+   * @param relativePath - Relative path from source directory
+   * @param extension - File extension (e.g., ".svg", ".png")
+   * @param outputDir - Output directory path
+   * @returns Full output file path
+   */
+  private calculateOutputPath(relativePath: string, extension: string, outputDir: string): string {
+    // Parse the relative path
+    const parsed = path.parse(relativePath);
+    
+    // Change extension to the output format
+    const outputFileName = parsed.name + extension;
+    
+    // Combine output directory with relative directory and new filename
+    const outputPath = path.join(outputDir, parsed.dir, outputFileName);
+    
+    return outputPath;
+  }
+
+  /**
+   * Ensure directory exists, creating it recursively if needed
+   * @param dirPath - Directory path to ensure exists
+   */
+  private async ensureDirectoryExists(dirPath: string): Promise<void> {
+    try {
+      await fs.promises.access(dirPath);
+    } catch {
+      // Directory doesn't exist, create it recursively
+      await fs.promises.mkdir(dirPath, { recursive: true });
     }
   }
 }
@@ -1215,10 +1370,10 @@ export class CommandHandlerImpl implements CommandHandler {
   private progressReporter: ProgressReporter;
 
   constructor(
-    orchestrator?: RendererOrchestrator,
+    orchestrator: RendererOrchestrator,
     progressReporter?: ProgressReporter
   ) {
-    this.orchestrator = orchestrator || new RendererOrchestratorImpl();
+    this.orchestrator = orchestrator;
     this.progressReporter = progressReporter || new ProgressReporterImpl();
   }
 
