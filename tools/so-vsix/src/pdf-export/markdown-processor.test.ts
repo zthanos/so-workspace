@@ -160,4 +160,62 @@ This is the actual content.`;
     expect(html).toContain('data:image/png;base64,');
     expect(html).not.toContain('images/test.png');
   });
+
+  it('should generate table of contents when enabled', async () => {
+    // Create test markdown file with multiple headings
+    const testFile = 'with-toc.md';
+    const testContent = `[[toc]]
+
+# Introduction
+
+This is the introduction section.
+
+## Background
+
+Some background information.
+
+### Details
+
+More detailed information.
+
+## Objectives
+
+The objectives of this document.
+
+# Main Content
+
+The main content section.
+
+## Section 1
+
+First section content.
+
+## Section 2
+
+Second section content.`;
+    await fs.writeFile(path.join(docsDir, testFile), testContent);
+
+    const options: MarkdownOptions = {
+      toc: true,
+      tocDepth: 3,
+      numberSections: false,
+      resourcePaths: ['docs'],
+      selfContained: false
+    };
+
+    const html = await convertMarkdownToHtml(testDir, [`docs/${testFile}`], options);
+
+    // Verify TOC container is present
+    expect(html).toContain('toc-page');
+    
+    // Verify TOC contains links to headings
+    expect(html).toContain('Introduction');
+    expect(html).toContain('Background');
+    expect(html).toContain('Objectives');
+    expect(html).toContain('Main Content');
+    
+    // Verify actual content is also present
+    expect(html).toContain('This is the introduction section');
+    expect(html).toContain('Some background information');
+  });
 });
