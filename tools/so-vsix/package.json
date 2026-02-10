@@ -255,7 +255,7 @@
     "mermaid": "^11.12.2",
     "pako": "^2.1.0",
     "plantuml-encoder": "^1.4.0",
-    "puppeteer": "^23.11.1",
+    "puppeteer": "^24.37.2",
     "turndown": "^7.1.2",
     "turndown-plugin-gfm": "^1.0.2"
   }
