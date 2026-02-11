@@ -10,7 +10,7 @@
     "url": "https://github.com/zthanos/so-workspace.git"
   },
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.109.0"
   },
   "categories": [
     "AI",

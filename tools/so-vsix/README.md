@@ -505,7 +505,8 @@ Here's a complete example showing all available configuration options:
 
 ## Requirements
 
-- VS Code 1.90.0 or higher
+- VS Code 1.109.0 or higher
+- Node.js 18.12.0 or higher (required for Jest 30)
 - Docker (for diagram rendering and PDF building)
 - **Pandoc** (required for Word → Markdown conversion)
 
