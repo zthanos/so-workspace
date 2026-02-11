@@ -76,7 +76,7 @@ Commands are available via Command Palette (Ctrl+Shift+P). Search for `SO:`.
 
 ## Diagram Rendering
 
-The extension provides three options for rendering diagrams (Mermaid, PlantUML, and Structurizr):
+The extension provides three options for rendering diagrams (Mermaid, Structurizr DSL, and legacy PlantUML):
 
 ### Render Diagrams (Docker)
 Uses Docker containers to render diagrams. No local dependencies required beyond Docker.
@@ -86,13 +86,14 @@ Renders diagrams using local Java-based tools for offline rendering without inte
 
 **Supported Formats:**
 - **Mermaid** (.mmd) - Rendered using Mermaid CLI to SVG
-- **PlantUML** (.puml) - Rendered using PlantUML JAR to PNG
-- **Structurizr** - Rendered using PlantUML JAR
+- **Structurizr DSL** (.dsl) - Rendered using Structurizr CLI to SVG
+- **PlantUML (Legacy)** (.puml) - Rendered using PlantUML JAR to PNG
 
 **Prerequisites:**
 - Java Runtime Environment (JRE) 8 or higher
 - Mermaid CLI (`mmdc`) - Install with: `npm install -g @mermaid-js/mermaid-cli`
-- PlantUML JAR file (included in workspace at `tools/plantuml/plantuml-1.2026.1.jar`)
+- Structurizr CLI - Download from https://github.com/structurizr/cli
+- PlantUML JAR file (included in workspace at `tools/plantuml/plantuml-1.2026.1.jar`) - for legacy diagrams only
 
 **Configuration:**
 Configure paths in VS Code settings (File > Preferences > Settings, search for "SO Workspace"):
@@ -101,7 +102,8 @@ Configure paths in VS Code settings (File > Preferences > Settings, search for "
 {
   "so-workspace.diagrams.java.plantUmlJarPath": "tools/plantuml/plantuml-1.2026.1.jar",
   "so-workspace.diagrams.java.mermaidCliPath": "mmdc",
-  "so-workspace.diagrams.java.javaPath": "java"
+  "so-workspace.diagrams.java.javaPath": "java",
+  "so-workspace.diagrams.structurizrCliPath": "structurizr-cli"
 }
 ```
 
@@ -110,8 +112,8 @@ Renders diagrams using the Kroki cloud service. No local dependencies required, 
 
 **Supported Formats:**
 - **Mermaid** (.mmd)
-- **PlantUML** (.puml)
-- **Structurizr**
+- **Structurizr DSL** (.dsl)
+- **PlantUML (Legacy)** (.puml)
 
 **Configuration:**
 Configure Kroki settings in VS Code settings:

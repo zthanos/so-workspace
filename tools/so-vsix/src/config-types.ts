@@ -80,6 +80,12 @@ export interface EndpointConfigurations {
   java?: JavaBackendConfig;
 
   /**
+   * Structurizr backend configuration
+   * Used for rendering Structurizr DSL files with Structurizr CLI
+   */
+  structurizr?: StructurizrBackendConfig;
+
+  /**
    * General diagram rendering settings
    * Applies to all rendering backends
    */
@@ -207,6 +213,51 @@ export interface JavaBackendConfig {
 }
 
 // ============================================================================
+// Structurizr Backend Configuration
+// ============================================================================
+
+/**
+ * Structurizr backend configuration
+ * 
+ * Configures Structurizr CLI for rendering C4 architecture diagrams.
+ * Enables rendering of Structurizr DSL files to SVG format.
+ * Requires Structurizr CLI and Java runtime.
+ */
+export interface StructurizrBackendConfig {
+  /**
+   * Path to Structurizr CLI executable
+   * Can be command name in PATH or absolute path
+   * @default "structurizr-cli"
+   * @example "structurizr-cli", "/usr/local/bin/structurizr-cli", "C:\\tools\\structurizr-cli\\structurizr-cli.bat"
+   */
+  structurizrCliPath?: string;
+
+  /**
+   * Structurizr server URL for DSL validation
+   * Used to validate DSL files against Structurizr server API
+   * Supports both Structurizr Lite (local) and Structurizr Cloud
+   * @default "http://localhost:8080"
+   * @example "http://localhost:8080", "https://api.structurizr.com"
+   */
+  structurizrServerUrl?: string;
+
+  /**
+   * Whether to validate DSL files before rendering
+   * When true, DSL files are validated against Structurizr server before rendering
+   * Validation errors are displayed, but user can choose to proceed with rendering
+   * @default false
+   */
+  validateBeforeRender?: boolean;
+
+  /**
+   * Whether this backend is enabled
+   * When false, Structurizr backend will not be used for rendering
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+// ============================================================================
 // Rendering Configuration
 // ============================================================================
 
@@ -273,6 +324,12 @@ export interface ResolvedConfig {
    * All fields have concrete values after merging
    */
   java: Required<JavaBackendConfig>;
+
+  /**
+   * Resolved Structurizr backend configuration
+   * All fields have concrete values after merging
+   */
+  structurizr: Required<StructurizrBackendConfig>;
 
   /**
    * Resolved rendering configuration

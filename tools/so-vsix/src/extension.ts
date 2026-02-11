@@ -30,6 +30,7 @@ import { registerWordToMarkdownCommand } from "./word_to_markdown";
 import { registerResetGeneratedFilesCommand } from "./reset_generated_files";
 import { registerGenerateConfigCommand } from "./generate-config-command";
 import { registerSwitchEnvironmentCommand } from "./switch-environment-command";
+import { registerValidateDiagramsCommand } from "./validate-diagrams-command";
 import { ConfigurationManager } from "./configuration-manager";
 import { JavaCommandHandler } from "./java-command-handler";
 import { KrokiCommandHandler } from "./kroki-command-handler";
@@ -115,6 +116,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Switch environment command (requires Configuration Manager)
   registerSwitchEnvironmentCommand(context, configurationManager);
+
+  // Validate Structurizr DSL diagrams
+  registerValidateDiagramsCommand(context);
 }
 
 export function deactivate() {

@@ -14,6 +14,7 @@ import {
   DiagramRenderConfig,
 } from "./diagram_renderer_v2";
 import { ConfigurationManager } from "./configuration-manager";
+import { StructurizrRenderer } from "./structurizr-renderer";
 
 /**
  * Java Command Handler
@@ -85,12 +86,21 @@ export class JavaCommandHandler {
       // Create progress reporter
       const progressReporter = new ProgressReporterImpl();
 
-      // Create orchestrator with Java backend
+      // Create Structurizr renderer
+      const structurizrRenderer = new StructurizrRenderer();
+
+      // Create Structurizr validator
+      const { StructurizrValidator } = await import("./structurizr-validator");
+      const structurizrValidator = new StructurizrValidator();
+
+      // Create orchestrator with Java backend and Structurizr renderer
       const orchestrator = new RendererOrchestratorImpl(
         backend,
         undefined, // Use default file scanner
         undefined, // Use default output manager
-        progressReporter
+        progressReporter,
+        structurizrRenderer,
+        structurizrValidator
       );
 
       // Execute rendering with progress UI

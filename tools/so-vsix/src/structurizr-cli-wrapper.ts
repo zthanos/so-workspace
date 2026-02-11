@@ -1,0 +1,203 @@
+/**
+ * Structurizr CLI Wrapper
+ * 
+ * Provides abstraction over Structurizr CLI execution for rendering DSL files.
+ * The Structurizr CLI is a command-line tool for exporting diagrams from
+ * Structurizr DSL workspace files to various formats (SVG, PNG, etc.).
+ * 
+ * Requirements:
+ * - Structurizr CLI must be installed and available in PATH
+ * - Java Runtime Environment (JRE 8+) must be installed
+ * 
+ * CLI Installation:
+ * - Download from: https://github.com/structurizr/cli
+ * - Add to PATH or configure custom path in settings
+ */
+
+import { exec } from "child_process";
+import { promisify } from "util";
+import * as fs from "fs";
+import * as path from "path";
+
+const execAsync = promisify(exec);
+
+// ============================================================================
+// Interface Definitions
+// ============================================================================
+
+/**
+ * Result from CLI command execution
+ */
+export interface CLIResult {
+  /** Whether the command executed successfully (exit code 0) */
+  success: boolean;
+  
+  /** Standard output from the CLI command */
+  stdout: string;
+  
+  /** Standard error output from the CLI command */
+  stderr: string;
+  
+  /** Process exit code */
+  exitCode: number;
+}
+
+/**
+ * Export format options for Structurizr CLI
+ */
+export type ExportFormat = 'svg' | 'png';
+
+// ============================================================================
+// Structurizr CLI Wrapper Implementation
+// ============================================================================
+
+/**
+ * Wrapper for Structurizr CLI operations
+ * Provides methods to check availability, get version, and export diagrams
+ */
+export class StructurizrCLI {
+  private cliPath: string;
+
+  /**
+   * Create a new Structurizr CLI wrapper
+   * @param cliPath - Path to Structurizr CLI executable (defaults to 'structurizr-cli' in PATH)
+   */
+  constructor(cliPath?: string) {
+    this.cliPath = cliPath || 'structurizr-cli';
+  }
+
+  /**
+   * Check if Structurizr CLI is available and executable
+   * Attempts to execute the CLI with --version flag
+   * 
+   * @returns Promise<boolean> - true if CLI is available, false otherwise
+   */
+  async isAvailable(): Promise<boolean> {
+    try {
+      // Try to execute CLI with --version flag
+      const result = await this.executeCommand('--version');
+      return result.success;
+    } catch (error) {
+      // CLI not found or not executable
+      return false;
+    }
+  }
+
+  /**
+   * Get the version of the installed Structurizr CLI
+   * 
+   * @returns Promise<string> - Version string (e.g., "1.30.0")
+   * @throws Error if CLI is not available or version cannot be determined
+   */
+  async getVersion(): Promise<string> {
+    try {
+      const result = await this.executeCommand('--version');
+      
+      if (!result.success) {
+        throw new Error(`Failed to get CLI version: ${result.stderr}`);
+      }
+
+      // Parse version from output
+      // Expected format: "structurizr-cli: 1.30.0" or similar
+      const versionMatch = result.stdout.match(/(\d+\.\d+\.\d+)/);
+      if (versionMatch && versionMatch[1]) {
+        return versionMatch[1];
+      }
+
+      // If we can't parse the version, return the full output
+      return result.stdout.trim();
+    } catch (error) {
+      throw new Error(
+        `Failed to get Structurizr CLI version: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * Export diagrams from a Structurizr DSL workspace file
+   * Executes: structurizr-cli export -workspace <dslPath> -format <format> -output <outputDir>
+   * 
+   * @param dslPath - Path to the .dsl workspace file
+   * @param format - Export format ('svg' or 'png')
+   * @param outputDir - Directory where exported files will be saved
+   * @returns Promise<CLIResult> - Result of the export operation
+   * @throws Error if dslPath does not exist or is not readable
+   */
+  async export(
+    dslPath: string,
+    format: ExportFormat,
+    outputDir: string
+  ): Promise<CLIResult> {
+    // Validate that the DSL file exists
+    try {
+      await fs.promises.access(dslPath, fs.constants.R_OK);
+    } catch (error) {
+      throw new Error(`DSL file not found or not readable: ${dslPath}`);
+    }
+
+    // Ensure output directory exists
+    try {
+      await fs.promises.mkdir(outputDir, { recursive: true });
+    } catch (error) {
+      throw new Error(
+        `Failed to create output directory: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    // Build the export command
+    // Format: structurizr-cli export -workspace <dslPath> -format <format> -output <outputDir>
+    const args = [
+      'export',
+      '-workspace',
+      `"${dslPath}"`,
+      '-format',
+      format,
+      '-output',
+      `"${outputDir}"`
+    ];
+
+    try {
+      const result = await this.executeCommand(args.join(' '));
+      return result;
+    } catch (error) {
+      throw new Error(
+        `Structurizr CLI export failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  // ==========================================================================
+  // Private Helper Methods
+  // ==========================================================================
+
+  /**
+   * Execute a Structurizr CLI command
+   * 
+   * @param args - Command arguments as a string
+   * @returns Promise<CLIResult> - Result of the command execution
+   */
+  private async executeCommand(args: string): Promise<CLIResult> {
+    const command = `${this.cliPath} ${args}`;
+
+    try {
+      const { stdout, stderr } = await execAsync(command, {
+        maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large outputs
+      });
+
+      return {
+        success: true,
+        stdout: stdout || '',
+        stderr: stderr || '',
+        exitCode: 0,
+      };
+    } catch (error: any) {
+      // exec throws an error for non-zero exit codes
+      return {
+        success: false,
+        stdout: error.stdout || '',
+        stderr: error.stderr || error.message || '',
+        exitCode: error.code || 1,
+      };
+    }
+  }
+}

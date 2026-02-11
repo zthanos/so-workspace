@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  # Structurizr Lite - Web UI for viewing and validating diagrams
+  structurizr-lite:
+    image: structurizr/lite
+    container_name: structurizr-lite
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docs/03_architecture/diagrams/src:/usr/local/structurizr
+    environment:
+      - STRUCTURIZR_WORKSPACE_PATH=/usr/local/structurizr
+    restart: unless-stopped
+
+  # Structurizr CLI - Command-line tool for rendering diagrams to SVG
+  structurizr-cli:
+    image: structurizr/cli:latest
+    container_name: structurizr-cli
+    volumes:
+      - ./docs/03_architecture/diagrams/src:/workspace/src
+      - ./docs/03_architecture/diagrams/out:/workspace/out
+    working_dir: /workspace
+    # Keep container running with a sleep loop
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["while true; do sleep 3600; done"]
+    restart: unless-stopped

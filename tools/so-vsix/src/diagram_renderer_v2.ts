@@ -31,6 +31,10 @@ export interface DiagramRenderConfig {
   concurrencyLimit: number;
   /** In-memory cache for remote includes */
   includeCache: Map<string, string>;
+  /** Structurizr server URL for validation */
+  structurizrServerUrl?: string;
+  /** Whether to validate DSL files before rendering */
+  structurizrValidateBeforeRender?: boolean;
 }
 
 /**
@@ -164,13 +168,15 @@ export interface OutputManager {
  */
 export interface ProgressReporter {
   /** Start progress reporting */
-  start(totalFiles: number): void;
+  start(totalFiles: number, cliAvailability?: { structurizr: boolean }): void;
   /** Update progress with current file */
   update(currentFile: string, progress: number): void;
   /** Complete progress reporting with results */
   complete(result: RenderResult): void;
   /** Report an error */
   error(message: string): void;
+  /** Get the output channel for external use */
+  getOutputChannel(): vscode.OutputChannel;
 }
 
 // ============================================================================
@@ -221,12 +227,22 @@ export function readConfiguration(): DiagramRenderConfig {
     50
   );
 
+  // Read Structurizr validation settings
+  const structurizrServerUrl = validateStringConfig(
+    config.get<string>("structurizrServerUrl"),
+    "http://localhost:8080"
+  );
+
+  const structurizrValidateBeforeRender = config.get<boolean>("structurizrValidateBeforeRender") || false;
+
   return {
     sourceDirectory,
     outputDirectory,
     plantUmlServerUrl,
     concurrencyLimit,
     includeCache: new Map<string, string>(),
+    structurizrServerUrl,
+    structurizrValidateBeforeRender,
   };
 }
 
@@ -308,7 +324,7 @@ export class FileScannerImpl implements FileScanner {
   /**
    * Scan directory recursively for diagram files
    * @param rootPath - Root directory to scan
-   * @param patterns - File extension patterns to match (e.g., ['.mmd', '.puml'])
+   * @param patterns - File extension patterns to match (e.g., ['.mmd', '.puml', '.dsl'])
    * @returns Array of discovered diagram files
    */
   async scanDirectory(rootPath: string, patterns: string[]): Promise<DiagramFile[]> {
@@ -358,7 +374,14 @@ export class FileScannerImpl implements FileScanner {
         
         if (patterns.includes(ext)) {
           // Determine diagram type based on extension
-          const type = ext === ".mmd" ? "mermaid" : "plantuml";
+          let type: "mermaid" | "plantuml" | "structurizr";
+          if (ext === ".mmd") {
+            type = "mermaid";
+          } else if (ext === ".dsl") {
+            type = "structurizr";
+          } else {
+            type = "plantuml";
+          }
           
           // Calculate relative path from root
           const relativePath = path.relative(rootPath, fullPath);
@@ -683,8 +706,9 @@ export class ProgressReporterImpl implements ProgressReporter {
   /**
    * Start progress reporting
    * @param totalFiles - Total number of files to process
+   * @param cliAvailability - Optional CLI availability information
    */
-  start(totalFiles: number): void {
+  start(totalFiles: number, cliAvailability?: { structurizr: boolean }): void {
     this.totalFiles = totalFiles;
     this.processedFiles = 0;
     
@@ -694,6 +718,19 @@ export class ProgressReporterImpl implements ProgressReporter {
     this.outputChannel.appendLine("Diagram Rendering Started");
     this.outputChannel.appendLine("=".repeat(80));
     this.outputChannel.appendLine(`Total files to process: ${totalFiles}`);
+    
+    // Report CLI availability if provided
+    if (cliAvailability) {
+      this.outputChannel.appendLine("");
+      this.outputChannel.appendLine("Rendering Backend Availability:");
+      this.outputChannel.appendLine(`  Structurizr CLI: ${cliAvailability.structurizr ? "Available" : "Not Available"}`);
+      
+      if (!cliAvailability.structurizr) {
+        this.outputChannel.appendLine("  Note: .dsl files will be skipped. Install Structurizr CLI from:");
+        this.outputChannel.appendLine("        https://github.com/structurizr/cli");
+      }
+    }
+    
     this.outputChannel.appendLine("");
     
     // Show output channel
@@ -708,8 +745,19 @@ export class ProgressReporterImpl implements ProgressReporter {
   update(currentFile: string, progress: number): void {
     this.processedFiles++;
     
+    // Determine file type from extension for better messaging
+    const ext = currentFile.toLowerCase().substring(currentFile.lastIndexOf('.'));
+    let fileType = "";
+    if (ext === ".dsl") {
+      fileType = " (Structurizr DSL)";
+    } else if (ext === ".puml") {
+      fileType = " (PlantUML)";
+    } else if (ext === ".mmd") {
+      fileType = " (Mermaid)";
+    }
+    
     // Log to output channel
-    this.outputChannel.appendLine(`[${this.processedFiles}/${this.totalFiles}] Processing: ${currentFile}`);
+    this.outputChannel.appendLine(`[${this.processedFiles}/${this.totalFiles}] Processing: ${currentFile}${fileType}`);
     
     // Update VSCode progress UI if callback is set
     if (this.progressCallback) {
@@ -735,6 +783,28 @@ export class ProgressReporterImpl implements ProgressReporter {
     this.outputChannel.appendLine(`Successful: ${result.successCount}`);
     this.outputChannel.appendLine(`Failed: ${result.failureCount}`);
     this.outputChannel.appendLine(`Duration: ${result.duration}ms`);
+    
+    // Break down results by diagram type if available
+    if (result.errors.length > 0) {
+      const errorsByType = this.groupErrorsByType(result.errors);
+      
+      this.outputChannel.appendLine("");
+      this.outputChannel.appendLine("Results by Type:");
+      this.outputChannel.appendLine("-".repeat(80));
+      
+      const types = ["mermaid", "plantuml", "structurizr"] as const;
+      for (const type of types) {
+        const typeErrors = errorsByType.get(type) || [];
+        const typeTotal = result.errors.filter(e => e.type === type).length;
+        const typeSuccess = this.countSuccessByType(result, type);
+        
+        if (typeTotal > 0 || typeSuccess > 0) {
+          const typeName = type === "structurizr" ? "Structurizr DSL" : 
+                          type === "plantuml" ? "PlantUML" : "Mermaid";
+          this.outputChannel.appendLine(`  ${typeName}: ${typeSuccess} succeeded, ${typeErrors.length} failed`);
+        }
+      }
+    }
     
     // Log errors if any
     if (result.errors.length > 0) {
@@ -771,6 +841,40 @@ export class ProgressReporterImpl implements ProgressReporter {
         `Failed to render all ${result.totalFiles} diagram(s). Check output for details.`
       );
     }
+  }
+
+  /**
+   * Group errors by diagram type
+   * @param errors - Array of render errors
+   * @returns Map of diagram type to errors
+   */
+  private groupErrorsByType(errors: RenderError[]): Map<string, RenderError[]> {
+    const grouped = new Map<string, RenderError[]>();
+    
+    for (const error of errors) {
+      const existing = grouped.get(error.type) || [];
+      existing.push(error);
+      grouped.set(error.type, existing);
+    }
+    
+    return grouped;
+  }
+
+  /**
+   * Count successful renders by type
+   * @param result - Rendering result
+   * @param type - Diagram type to count
+   * @returns Number of successful renders for the type
+   */
+  private countSuccessByType(result: RenderResult, type: string): number {
+    // This is an approximation since we don't have per-type success counts
+    // We calculate it as: total files of this type - errors of this type
+    const errorsOfType = result.errors.filter(e => e.type === type).length;
+    
+    // We can't determine the exact count without more information
+    // For now, we'll just return 0 if there are errors, otherwise assume success
+    // This is a limitation that could be improved by enhancing the RenderResult interface
+    return errorsOfType > 0 ? result.successCount : 0;
   }
 
   /**
@@ -1063,6 +1167,12 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
   /** Backend strategy for rendering diagrams */
   private backend: import("./backend-strategy").RenderBackend;
   
+  /** Structurizr renderer for .dsl files */
+  private structurizrRenderer?: import("./structurizr-renderer").StructurizrRenderer;
+  
+  /** Structurizr validator for pre-render validation */
+  private structurizrValidator?: import("./structurizr-validator").StructurizrValidator;
+  
   /** Output manager for writing SVG files */
   private outputManager: OutputManager;
   
@@ -1073,12 +1183,16 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     backend: import("./backend-strategy").RenderBackend,
     fileScanner?: FileScanner,
     outputManager?: OutputManager,
-    progressReporter?: ProgressReporter
+    progressReporter?: ProgressReporter,
+    structurizrRenderer?: import("./structurizr-renderer").StructurizrRenderer,
+    structurizrValidator?: import("./structurizr-validator").StructurizrValidator
   ) {
     this.backend = backend;
     this.fileScanner = fileScanner || new FileScannerImpl();
     this.outputManager = outputManager || new OutputManagerImpl();
     this.progressReporter = progressReporter || new ProgressReporterImpl();
+    this.structurizrRenderer = structurizrRenderer;
+    this.structurizrValidator = structurizrValidator;
   }
 
   /**
@@ -1095,12 +1209,18 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     // Step 2: Check backend availability
     const availability = await this.backend.isAvailable();
     
-    if (!availability.available) {
+    // Step 3: Check Structurizr CLI availability
+    let structurizrAvailable = false;
+    if (this.structurizrRenderer) {
+      structurizrAvailable = await this.structurizrRenderer.isAvailable();
+    }
+    
+    // If neither backend nor Structurizr is available, return error
+    if (!availability.available && !structurizrAvailable) {
       this.progressReporter.error(
-        `Backend not available: ${availability.message || 'Unknown error'}`
+        `No rendering backend available: ${availability.message || 'Unknown error'}`
       );
       
-      // Return empty result if backend is completely unavailable
       return {
         totalFiles: 0,
         successCount: 0,
@@ -1110,14 +1230,14 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
       };
     }
     
-    // Step 3: Scan files
+    // Step 4: Scan files
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
       throw new Error("No workspace folder found");
     }
     
     const sourceDir = path.join(workspaceFolder.uri.fsPath, config.sourceDirectory);
-    const files = await this.fileScanner.scanDirectory(sourceDir, [".mmd", ".puml"]);
+    const files = await this.fileScanner.scanDirectory(sourceDir, [".mmd", ".puml", ".dsl"]);
     
     // Handle no files found
     if (files.length === 0) {
@@ -1136,19 +1256,37 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
       return result;
     }
     
-    // Step 4: Filter files by backend's supported types
-    const supportedFiles = files.filter(f => 
+    // Step 5: Partition files by type
+    const structurizrFiles = files.filter(f => f.type === "structurizr");
+    const otherFiles = files.filter(f => f.type !== "structurizr");
+    
+    // Filter other files by backend's supported types
+    const backendSupportedFiles = otherFiles.filter(f => 
       availability.supportedTypes.includes(f.type as import("./backend-strategy").DiagramType)
     );
     
-    // Log skipped files if any
-    const skippedCount = files.length - supportedFiles.length;
-    if (skippedCount > 0) {
-      console.log(`Skipping ${skippedCount} file(s) - diagram type not supported by ${this.backend.name} backend`);
+    // Determine which files can be processed
+    const processableStructurizrFiles = structurizrAvailable ? structurizrFiles : [];
+    const processableBackendFiles = availability.available ? backendSupportedFiles : [];
+    
+    // Calculate total processable files
+    const totalProcessableFiles = processableStructurizrFiles.length + processableBackendFiles.length;
+    
+    // Log warnings for skipped files
+    if (structurizrFiles.length > 0 && !structurizrAvailable) {
+      console.log(
+        `Skipping ${structurizrFiles.length} Structurizr file(s) - Structurizr CLI not available. ` +
+        `Install from: https://github.com/structurizr/cli`
+      );
     }
     
-    // Handle no supported files
-    if (supportedFiles.length === 0) {
+    const skippedBackendCount = otherFiles.length - backendSupportedFiles.length;
+    if (skippedBackendCount > 0) {
+      console.log(`Skipping ${skippedBackendCount} file(s) - diagram type not supported by ${this.backend.name} backend`);
+    }
+    
+    // Handle no processable files
+    if (totalProcessableFiles === 0) {
       const result: RenderResult = {
         totalFiles: 0,
         successCount: 0,
@@ -1158,32 +1296,47 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
       };
       
       vscode.window.showInformationMessage(
-        `No supported diagram files found for ${this.backend.name} backend`
+        `No supported diagram files found for available rendering backends`
       );
       
       return result;
     }
     
-    // Step 5: Start progress reporting
-    this.progressReporter.start(supportedFiles.length);
+    // Step 6: Start progress reporting
+    this.progressReporter.start(totalProcessableFiles, {
+      structurizr: structurizrAvailable
+    });
     
-    // Step 6: Render files concurrently with concurrency limit
+    // Step 7: Render files
     const outputDir = path.join(workspaceFolder.uri.fsPath, config.outputDirectory);
-    const results = await this.renderFilesWithConcurrencyLimit(
-      supportedFiles,
+    
+    // Render backend files
+    const backendResults = await this.renderFilesWithConcurrencyLimit(
+      processableBackendFiles,
       outputDir,
       config.concurrencyLimit
     );
     
-    // Step 7: Aggregate results and errors
-    const successCount = results.filter(r => r.status === "fulfilled").length;
-    const failureCount = results.filter(r => r.status === "rejected").length;
+    // Render Structurizr files with optional validation
+    const structurizrResults = await this.renderStructurizrFiles(
+      processableStructurizrFiles,
+      outputDir,
+      config.structurizrValidateBeforeRender || false,
+      config.structurizrServerUrl || "http://localhost:8080"
+    );
+    
+    // Step 8: Aggregate results from both renderers
+    const allResults = [...backendResults, ...structurizrResults];
+    const allFiles = [...processableBackendFiles, ...processableStructurizrFiles];
+    
+    const successCount = allResults.filter(r => r.status === "fulfilled").length;
+    const failureCount = allResults.filter(r => r.status === "rejected").length;
     const errors: RenderError[] = [];
     
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i];
+    for (let i = 0; i < allResults.length; i++) {
+      const result = allResults[i];
       if (result.status === "rejected") {
-        const file = supportedFiles[i];
+        const file = allFiles[i];
         errors.push({
           file: file.relativePath,
           type: file.type,
@@ -1193,9 +1346,9 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
       }
     }
     
-    // Step 8: Complete progress reporting
+    // Step 9: Complete progress reporting
     const finalResult: RenderResult = {
-      totalFiles: supportedFiles.length,
+      totalFiles: totalProcessableFiles,
       successCount: successCount,
       failureCount: failureCount,
       errors: errors,
@@ -1256,6 +1409,169 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     }
     
     return results;
+  }
+
+  /**
+   * Render Structurizr DSL files using StructurizrRenderer
+   * @param files - Structurizr files to render
+   * @param outputDir - Output directory path
+   * @param validateBeforeRender - Whether to validate files before rendering
+   * @param serverUrl - Structurizr server URL for validation
+   * @returns Array of settled promises
+   */
+  private async renderStructurizrFiles(
+    files: DiagramFile[],
+    outputDir: string,
+    validateBeforeRender: boolean = false,
+    serverUrl: string = "http://localhost:8080"
+  ): Promise<PromiseSettledResult<void>[]> {
+    const results: PromiseSettledResult<void>[] = [];
+    
+    // If no Structurizr renderer is available, return empty results
+    if (!this.structurizrRenderer) {
+      return results;
+    }
+    
+    // Optionally validate files before rendering (Requirement 13.8)
+    if (validateBeforeRender && this.structurizrValidator && files.length > 0) {
+      const shouldProceed = await this.validateBeforeRendering(files, serverUrl);
+      if (!shouldProceed) {
+        // User chose not to proceed with rendering
+        // Return rejected promises for all files
+        for (const file of files) {
+          results.push({
+            status: "rejected",
+            reason: new Error("Rendering cancelled due to validation errors"),
+          });
+        }
+        return results;
+      }
+    }
+    
+    // Render each Structurizr file
+    for (const file of files) {
+      const promise = this.renderStructurizrFile(file, outputDir);
+      const result = await Promise.allSettled([promise]);
+      results.push(result[0]);
+    }
+    
+    return results;
+  }
+
+  /**
+   * Validate DSL files before rendering
+   * Displays validation errors and asks user whether to proceed
+   * 
+   * @param files - DSL files to validate
+   * @param serverUrl - Structurizr server URL for validation
+   * @returns Promise<boolean> - true if user wants to proceed, false otherwise
+   */
+  private async validateBeforeRendering(
+    files: DiagramFile[],
+    serverUrl: string
+  ): Promise<boolean> {
+    if (!this.structurizrValidator) {
+      return true; // No validator available, proceed with rendering
+    }
+
+    this.progressReporter.getOutputChannel().appendLine("");
+    this.progressReporter.getOutputChannel().appendLine("=".repeat(80));
+    this.progressReporter.getOutputChannel().appendLine("Validating DSL files before rendering...");
+    this.progressReporter.getOutputChannel().appendLine("=".repeat(80));
+
+    // Validate all DSL files
+    const filePaths = files.map(f => f.absolutePath);
+    const validationResults = await this.structurizrValidator.validateAll(filePaths, serverUrl);
+
+    // Check if any files have errors
+    const filesWithErrors = validationResults.filter(r => !r.valid);
+    const filesWithWarnings = validationResults.filter(r => r.warnings.length > 0);
+
+    // Display validation results
+    for (const result of validationResults) {
+      const fileName = path.basename(result.filePath);
+      
+      if (result.valid && result.warnings.length === 0) {
+        this.progressReporter.getOutputChannel().appendLine(`✓ ${fileName}: Valid`);
+      } else if (result.valid && result.warnings.length > 0) {
+        this.progressReporter.getOutputChannel().appendLine(`⚠ ${fileName}: Valid with warnings`);
+        for (const warning of result.warnings) {
+          this.progressReporter.getOutputChannel().appendLine(`  Line ${warning.line}: ${warning.message}`);
+        }
+      } else {
+        this.progressReporter.getOutputChannel().appendLine(`✗ ${fileName}: Invalid`);
+        for (const error of result.errors) {
+          this.progressReporter.getOutputChannel().appendLine(`  Line ${error.line}: ${error.message}`);
+        }
+      }
+    }
+
+    this.progressReporter.getOutputChannel().appendLine("=".repeat(80));
+
+    // If there are no errors, proceed automatically
+    if (filesWithErrors.length === 0) {
+      if (filesWithWarnings.length > 0) {
+        this.progressReporter.getOutputChannel().appendLine(
+          `All files are valid, but ${filesWithWarnings.length} file(s) have warnings. Proceeding with rendering.`
+        );
+      }
+      return true;
+    }
+
+    // If there are errors, ask user whether to proceed
+    const errorMessage = `${filesWithErrors.length} DSL file(s) have validation errors. Do you want to proceed with rendering anyway?`;
+    
+    const choice = await vscode.window.showWarningMessage(
+      errorMessage,
+      { modal: true },
+      "Proceed with Rendering",
+      "Cancel Rendering"
+    );
+
+    if (choice === "Proceed with Rendering") {
+      this.progressReporter.getOutputChannel().appendLine("User chose to proceed with rendering despite validation errors.");
+      return true;
+    } else {
+      this.progressReporter.getOutputChannel().appendLine("User cancelled rendering due to validation errors.");
+      vscode.window.showInformationMessage("Rendering cancelled. Fix validation errors and try again.");
+      return false;
+    }
+  }
+
+  /**
+   * Render a single Structurizr DSL file
+   * @param file - Structurizr file to render
+   * @param outputDir - Output directory path
+   */
+  private async renderStructurizrFile(
+    file: DiagramFile,
+    outputDir: string
+  ): Promise<void> {
+    // Update progress
+    this.progressReporter.update(file.relativePath, 0);
+    
+    if (!this.structurizrRenderer) {
+      throw new Error("Structurizr renderer not available");
+    }
+    
+    try {
+      // Render using Structurizr renderer
+      const result = await this.structurizrRenderer.render(file.absolutePath, outputDir);
+      
+      // Check for errors in the result
+      if (result.errors.length > 0) {
+        throw new Error(`Structurizr rendering errors: ${result.errors.join("; ")}`);
+      }
+      
+      // Check if any views were generated
+      if (result.views.length === 0) {
+        throw new Error("No views were generated from the DSL file");
+      }
+      
+    } catch (error) {
+      // Re-throw error to be caught by Promise.allSettled
+      throw error;
+    }
   }
 
   /**

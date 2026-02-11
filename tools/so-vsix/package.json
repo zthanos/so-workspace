@@ -88,6 +88,13 @@
           "maximum": 120000,
           "description": "Request timeout in milliseconds",
           "order": 10
+        },
+        "so-workspace.diagrams.structurizrServerUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "Structurizr server URL for DSL validation (Structurizr Lite or Cloud)",
+          "pattern": "^https?://.*",
+          "order": 11
         }
       }
     },
@@ -179,6 +186,10 @@
       {
         "command": "so-workspace.diagram.recheck",
         "title": "SO: 3-06 Diagram Recheck (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.validateDiagrams",
+        "title": "SO: 3-07 Validate Structurizr DSL Files"
       },
       {
         "command": "so-workspace.so.generate",
