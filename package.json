@@ -1,16 +1,295 @@
 {
-  "name": "so-workspace",
-  "private": true,
-  "version": "0.1.0",
-  "description": "Markdown-first Solution Outline workspace with rendered diagrams and PDF export.",
+  "name": "so-vsix",
+  "displayName": "SO Workspace",
+  "description": "Chat participant for SO workspace management",
+  "version": "1.1.0",
+  "publisher": "architecture-team",
+  "icon": "assets/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zthanos/so-workspace.git"
+  },
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "SO Workspace Diagrams",
+      "properties": {
+        "so-workspace.diagrams.sourceDirectory": {
+          "type": "string",
+          "default": "docs/03_architecture/diagrams/src",
+          "description": "Source directory containing diagram files (.mmd and .puml files)",
+          "order": 1
+        },
+        "so-workspace.diagrams.outputDirectory": {
+          "type": "string",
+          "default": "docs/03_architecture/diagrams/out",
+          "description": "Output directory for rendered SVG files",
+          "order": 2
+        },
+        "so-workspace.diagrams.plantUmlServerUrl": {
+          "type": "string",
+          "default": "https://www.plantuml.com/plantuml",
+          "description": "PlantUML server URL (use public server or local server)",
+          "pattern": "^https?://.*",
+          "order": 3
+        },
+        "so-workspace.diagrams.concurrencyLimit": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 50,
+          "description": "Maximum number of concurrent rendering operations",
+          "order": 4
+        },
+        "so-workspace.diagrams.java.plantUmlJarPath": {
+          "type": "string",
+          "default": "tools/plantuml/plantuml-1.2026.1.jar",
+          "description": "Path to PlantUML JAR file (relative to workspace root)",
+          "order": 5
+        },
+        "so-workspace.diagrams.java.mermaidCliPath": {
+          "type": "string",
+          "default": "mmdc",
+          "description": "Path to Mermaid CLI executable (mmdc)",
+          "order": 6
+        },
+        "so-workspace.diagrams.java.javaPath": {
+          "type": "string",
+          "default": "java",
+          "description": "Java executable path (defaults to 'java' in PATH)",
+          "order": 7
+        },
+        "so-workspace.diagrams.kroki.serviceUrl": {
+          "type": "string",
+          "default": "https://kroki.io",
+          "description": "Kroki service URL",
+          "pattern": "^https?://.*",
+          "order": 8
+        },
+        "so-workspace.diagrams.kroki.maxConcurrent": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum concurrent Kroki API requests",
+          "order": 9
+        },
+        "so-workspace.diagrams.kroki.timeout": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1000,
+          "maximum": 120000,
+          "description": "Request timeout in milliseconds",
+          "order": 10
+        },
+        "so-workspace.diagrams.structurizrServerUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "Structurizr server URL for DSL validation (Structurizr Lite or Cloud)",
+          "pattern": "^https?://.*",
+          "order": 11
+        },
+        "so-workspace.diagrams.structurizrCliContainer": {
+          "type": "string",
+          "default": "structurizr-cli",
+          "description": "Docker container name for Structurizr CLI",
+          "order": 12
+        },
+        "so-workspace.diagrams.structurizrCliPath": {
+          "type": "string",
+          "default": "/usr/local/structurizr-cli/structurizr.sh",
+          "description": "Path to structurizr.sh script inside the Docker container",
+          "order": 13
+        }
+      }
+    },
+    "chatParticipants": [
+      {
+        "id": "so-workspace.so",
+        "name": "so",
+        "description": "SO workspace documentation and build assistant",
+        "isSticky": true
+      }
+    ],
+    "commands": [
+      {
+        "command": "so.resetGeneratedFiles",
+        "title": "SO: 0-00 Reset Generated Files"
+      },
+      {
+        "command": "so-workspace.convertWordToMarkdown",
+        "title": "SO: 0-01 Convert Word to Markdown"
+      },
+      {
+        "command": "so-workspace.initialize",
+        "title": "SO: 0-02 Initialize SO Workspace Structure"
+      },
+      {
+        "command": "so-workspace.generateWorkspaceConfig",
+        "title": "SO: 0-03 Generate Workspace Config"
+      },
+      {
+        "command": "so-workspace.switchEndpointEnvironment",
+        "title": "SO: 0-04 Switch Endpoint Environment"
+      },
+      {
+        "command": "so-workspace.req.generate",
+        "title": "SO: 1-01 Requirements Inventory Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.req.eval",
+        "title": "SO: 1-02 Requirements Inventory Evaluate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.req.patch",
+        "title": "SO: 1-03 Requirements Inventory Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.req.recheck",
+        "title": "SO: 1-04 Requirements Inventory Recheck (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.generate",
+        "title": "SO: 2-01 Objectives Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.eval",
+        "title": "SO: 2-02 Objectives Evaluate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.patch",
+        "title": "SO: 2-03 Objectives Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.obj.recheck",
+        "title": "SO: 2-04 Objectives Recheck (Open Chat)"
+      },
+      {
+        "command": "so-workspace.diagram.generateC4Context",
+        "title": "SO: 3-01 Generate C4 Context Diagram (Open Chat)"
+      },
+      {
+        "command": "so-workspace.diagram.generateC4Container",
+        "title": "SO: 3-02 Generate C4 Container Diagram (Open Chat)"
+      },
+      {
+        "command": "so-workspace.renderDiagrams",
+        "title": "SO: 3-03 Render Diagrams (Local)"
+      },
+      {
+        "command": "so-workspace.renderDiagramsJava",
+        "title": "SO: 3-03a Render Diagrams (Java)"
+      },
+      {
+        "command": "so-workspace.renderDiagramsKroki",
+        "title": "SO: 3-03b Render Diagrams (Kroki)"
+      },
+      {
+        "command": "so-workspace.diagram.eval",
+        "title": "SO: 3-04 Diagram Evaluate (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.diagram.patch",
+        "title": "SO: 3-05 Diagram Patch (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.diagram.recheck",
+        "title": "SO: 3-06 Diagram Recheck (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.validateDiagrams",
+        "title": "SO: 3-07 Validate Structurizr DSL Files"
+      },
+      {
+        "command": "so-workspace.repairMermaidDiagrams",
+        "title": "SO: 3-08 Fix Mermaid Diagram Syntax"
+      },
+      {
+        "command": "so-workspace.so.generate",
+        "title": "SO: 4-01 Solution Outline Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.so.eval",
+        "title": "SO: 4-02 Solution Outline Evaluate (Objectives + Diagrams)"
+      },
+      {
+        "command": "so-workspace.so.patch",
+        "title": "SO: 4-03 Solution Outline Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.so.finalReview",
+        "title": "SO: 4-04 Solution Outline Final Review (Requirements Inventory)"
+      },
+      {
+        "command": "so-workspace.buildPdf",
+        "title": "SO: 5-01 Build PDF (Docker)"
+      },
+      {
+        "command": "so-workspace.exportPdfNpm",
+        "title": "5-02 SO: Export PDF"
+      },
+      {
+        "command": "so-workspace.openGeneratedPdf",
+        "title": "5-03 SO: Open Generated PDF"
+      }
+    ]
+  },
   "scripts": {
-    "render:diagrams": "powershell -ExecutionPolicy Bypass -File ./scripts/render_diagrams.ps1",
-    "build": "powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1"
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./ && npm run copy-scripts",
+    "copy-scripts": "node -e \"const fs = require('fs'); const path = require('path'); const src = 'scripts'; const dest = 'dist/scripts'; if (fs.existsSync(src)) { fs.cpSync(src, dest, { recursive: true }); console.log('Scripts copied successfully'); } else { console.warn('Warning: scripts directory not found'); }\"",
+    "watch": "tsc -watch -p ./",
+    "package": "npm run compile && vsce package && npm run verify-vsix",
+    "verify-vsix": "node scripts/verify-vsix-contents.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "export:pdf": "node dist/pdf-export/pdf-export-cli.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/jsdom": "^27.0.0",
+    "@types/markdown-it": "^14.1.2",
+    "@types/mermaid": "^9.1.0",
+    "@types/node": "^25.2.2",
+    "@types/pako": "^2.0.3",
+    "@types/plantuml-encoder": "^1.4.2",
+    "@types/turndown": "^5.0.4",
+    "@types/vscode": "^1.109.0",
+    "@vscode/vsce": "^3.7.1",
+    "fast-check": "^4.5.3",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "plantuml-wasm": "^1.2024.0"
-  },
-  "devDependencies": {
-    "@mermaid-js/mermaid-cli": "^11.4.2"
+    "@mermaid-js/mermaid-cli": "^11.4.1",
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^4.1.0",
+    "jsdom": "^28.0.0",
+    "mammoth": "^1.6.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-attrs": "^4.2.0",
+    "markdown-it-table-of-contents": "^1.1.0",
+    "mermaid": "^11.12.2",
+    "pako": "^2.1.0",
+    "plantuml-encoder": "^1.4.0",
+    "puppeteer": "^24.37.2",
+    "turndown": "^7.1.2",
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }

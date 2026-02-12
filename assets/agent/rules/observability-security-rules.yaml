@@ -1,0 +1,52 @@
+meta:
+  id: RA-INTEGRATION-STYLES
+  version: "1.0"
+  owner: Enterprise Architecture
+  intent: "Select interaction style per hop and enforce semantics."
+
+defaults:
+  sync_http:
+    timeout_seconds: 15
+    retries:
+      enabled: true
+      max_attempts: 3
+      backoff: exponential
+    idempotency:
+      required: true
+      key_header: "Idempotency-Key"
+
+  async_event:
+    delivery: at-least-once
+    consumer_deduplication: required
+    dlq_required: true
+    dlq_retention_days: 14
+
+rules:
+  - id: S-LEGACY-PREFER-ASYNC
+    description: "Prefer async when integrating with legacy."
+    if:
+      source.category: legacy
+    then:
+      preferred_style: async_event
+
+  - id: S-PAYMENT-SYNC
+    description: "Payments usually require synchronous authorization in the booking flow."
+    if:
+      target.domain: payments
+      interaction_required: immediate_result
+    then:
+      required_style: sync_http
+
+  - id: S-NOTIFICATIONS-ASYNC
+    description: "Notifications should be async to avoid blocking user flows."
+    if:
+      target.domain: notifications
+    then:
+      preferred_style: async_event
+
+  - id: S-UI-FLOWS-SYNC
+    description: "UI-driven queries and commands are synchronous at the edge."
+    if:
+      trigger.kind: ui
+    then:
+      required_style: sync_http

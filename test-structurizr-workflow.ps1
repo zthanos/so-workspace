@@ -98,7 +98,6 @@ Write-Info ""
 
 # Step 3: Run integration tests
 Write-Info "Step 3: Running integration tests..."
-Set-Location tools/so-vsix
 
 try {
     npm test -- c4-migration-integration.test.ts

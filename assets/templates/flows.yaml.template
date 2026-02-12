@@ -1,0 +1,85 @@
+meta:
+  doc_id: SO-FLOWS
+  title: Solution Outline Flows
+  version: "1.0"
+  status: draft
+  sources:
+    brd: "docs/00_brd/brd.md"
+    objectives: "docs/02_objectives/objectives.md"
+    requirements_inventory: "docs/01_requirements/requirements.inventory.md"
+  notation:
+    participants: ["Actor", "Container", "ExternalSystem", "DataStore", "System"]
+    step_types:
+      - ui
+      - sync_http
+      - async_event
+      - internal_sync
+      - db_read
+      - db_write
+      - file_transfer
+      - batch_job
+      - note
+
+glossary:
+  terms:
+    - term: "Correlation ID"
+      definition: "End-to-end identifier propagated across hops for traceability."
+
+flows:
+  - id: FLOW-XXX-01
+    name: "Short flow name"
+    intent: "What business goal this flow achieves"
+    trigger:
+      kind: ui # ui | event | schedule | admin
+      actor: "Actor Name"
+      description: "What starts the flow"
+    scope:
+      in_scope: true
+      notes: "Optional notes about boundaries"
+    participants:
+      - type: Actor
+        id: actor_id
+        name: "Actor Name"
+      - type: Container
+        id: container_id
+        name: "Container Name"
+      - type: DataStore
+        id: datastore_id
+        name: "DataStore Name"
+    steps:
+      - id: S1
+        from: actor_id
+        to: container_id
+        action: "User action / screen intent"
+        type: ui
+      - id: S2
+        from: container_id
+        to: datastore_id
+        action: "Read or write"
+        type: db_read
+        data: ["EntityName"]
+    state_changes:
+      - entity: "EntityName"
+        transitions:
+          - from: "StateA"
+            to: "StateB"
+            when: "Condition/step reference"
+    error_cases:
+      - id: E1
+        name: "High-level error"
+        occurs_at_step: S2
+        handling: "High-level handling outcome"
+        open_point: true
+    non_functionals:
+      correlation_required: true
+      audit_required: false
+      latency_expectation: "interactive"
+    mappings:
+      objectives: ["OBJ-01"]
+      requirements: ["BR-01", "FR-02"]
+      assumptions: ["A-01"]
+    outputs:
+      sequence_diagram:
+        enabled: true
+        format: plantuml # plantuml | mermaid
+        file: "docs/03_architecture/diagrams/src/seq/FLOW-XXX-01.puml"

@@ -5,8 +5,8 @@ inbox/
 # Templates folder is tracked (contains template files and assets)
 # templates/
 
-tools/so-vsix/.vscode/
-tools/so-vsix/dist/
-tools/so-vsix/node_modules/
+.vscode/
+dist/
+node_modules/
 
 .kiro/

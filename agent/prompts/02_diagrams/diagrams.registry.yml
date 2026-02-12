@@ -1,7 +1,0 @@
-diagrams:
-  - diagram_id: c4_context
-    path: docs/03_architecture/diagrams/src/c4_context.puml
-    level: c4_level_1
-  - diagram_id: c4_container
-    path: docs/03_architecture/diagrams/src/c4_container.puml
-    level: c4_level_2
