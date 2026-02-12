@@ -12,7 +12,6 @@ import {
   WorkspaceConfig,
   EndpointConfigurations,
   ResolvedConfig,
-  KrokiEndpointConfig,
   PlantUMLEndpointConfig,
   JavaBackendConfig,
   StructurizrBackendConfig,
@@ -54,7 +53,6 @@ export class ConfigMerger {
     // Merge in order: defaults → VS Code settings → workspace config → environment config
     // This ensures proper precedence (Requirement 3.1, 3.2, 3.3, 3.4, 3.5)
     const resolved: ResolvedConfig = {
-      kroki: this.mergeKrokiConfig(workspaceConfig, envConfig, vscodeConfig),
       plantuml: this.mergePlantUMLConfig(workspaceConfig, envConfig, vscodeConfig),
       java: this.mergeJavaConfig(workspaceConfig, envConfig, vscodeConfig),
       structurizr: this.mergeStructurizrConfig(workspaceConfig, envConfig, vscodeConfig),
@@ -62,54 +60,6 @@ export class ConfigMerger {
     };
 
     return resolved;
-  }
-
-  /**
-   * Merge Kroki configuration
-   * 
-   * Applies precedence rules to Kroki endpoint configuration.
-   * Precedence: environment > workspace > VS Code settings > defaults
-   * 
-   * @param workspaceConfig - Workspace configuration (may be null)
-   * @param envConfig - Environment-specific configuration (may be undefined)
-   * @param vscodeConfig - VS Code workspace configuration
-   * @returns Fully resolved Kroki configuration
-   * 
-   * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5
-   */
-  mergeKrokiConfig(
-    workspaceConfig: WorkspaceConfig | null,
-    envConfig: EndpointConfigurations | undefined,
-    vscodeConfig: vscode.WorkspaceConfiguration
-  ): Required<KrokiEndpointConfig> {
-    // Start with defaults (Requirement 3.4)
-    const defaults: Required<KrokiEndpointConfig> = {
-      url: "https://kroki.io",
-      timeout: 30000,
-      maxConcurrent: 5,
-      enabled: true,
-    };
-
-    // Get VS Code settings (Requirement 3.2)
-    const vscodeKroki = {
-      url: vscodeConfig.get<string>("diagrams.kroki.serviceUrl"),
-      timeout: vscodeConfig.get<number>("diagrams.kroki.timeout"),
-      maxConcurrent: vscodeConfig.get<number>("diagrams.kroki.maxConcurrent"),
-    };
-
-    // Get workspace config (Requirement 3.3)
-    const workspaceKroki = workspaceConfig?.endpoints?.kroki;
-
-    // Get environment config (Requirement 3.1)
-    const envKroki = envConfig?.kroki;
-
-    // Merge with precedence: env > workspace > vscode > defaults (Requirement 3.5)
-    return {
-      url: envKroki?.url ?? workspaceKroki?.url ?? vscodeKroki.url ?? defaults.url,
-      timeout: envKroki?.timeout ?? workspaceKroki?.timeout ?? vscodeKroki.timeout ?? defaults.timeout,
-      maxConcurrent: envKroki?.maxConcurrent ?? workspaceKroki?.maxConcurrent ?? vscodeKroki.maxConcurrent ?? defaults.maxConcurrent,
-      enabled: envKroki?.enabled ?? workspaceKroki?.enabled ?? defaults.enabled,
-    };
   }
 
   /**

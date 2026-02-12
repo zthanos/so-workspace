@@ -57,25 +57,31 @@ export type ExportFormat = 'svg' | 'png';
  */
 export class StructurizrCLI {
   private cliPath: string;
+  private containerName?: string;
+  private workspaceRoot?: string;
 
   /**
    * Create a new Structurizr CLI wrapper
    * @param cliPath - Path to Structurizr CLI executable (defaults to 'structurizr-cli' in PATH)
+   * @param containerName - Docker container name (if using Docker)
+   * @param workspaceRoot - Workspace root path for Docker path mapping
    */
-  constructor(cliPath?: string) {
+  constructor(cliPath?: string, containerName?: string, workspaceRoot?: string) {
     this.cliPath = cliPath || 'structurizr-cli';
+    this.containerName = containerName;
+    this.workspaceRoot = workspaceRoot;
   }
 
   /**
    * Check if Structurizr CLI is available and executable
-   * Attempts to execute the CLI with --version flag
+   * Attempts to execute the CLI with version command
    * 
    * @returns Promise<boolean> - true if CLI is available, false otherwise
    */
   async isAvailable(): Promise<boolean> {
     try {
-      // Try to execute CLI with --version flag
-      const result = await this.executeCommand('--version');
+      // Try to execute CLI with version command
+      const result = await this.executeCommand('version');
       return result.success;
     } catch (error) {
       // CLI not found or not executable
@@ -91,7 +97,7 @@ export class StructurizrCLI {
    */
   async getVersion(): Promise<string> {
     try {
-      const result = await this.executeCommand('--version');
+      const result = await this.executeCommand('version');
       
       if (!result.success) {
         throw new Error(`Failed to get CLI version: ${result.stderr}`);
@@ -144,16 +150,25 @@ export class StructurizrCLI {
       );
     }
 
+    // Convert paths for Docker if needed
+    let workspacePath = dslPath;
+    let outputPath = outputDir;
+    
+    if (this.containerName && this.workspaceRoot) {
+      workspacePath = this.convertToDockerPath(dslPath);
+      outputPath = this.convertToDockerPath(outputDir);
+    }
+
     // Build the export command
     // Format: structurizr-cli export -workspace <dslPath> -format <format> -output <outputDir>
     const args = [
       'export',
       '-workspace',
-      `"${dslPath}"`,
+      `"${workspacePath}"`,
       '-format',
       format,
       '-output',
-      `"${outputDir}"`
+      `"${outputPath}"`
     ];
 
     try {
@@ -171,13 +186,57 @@ export class StructurizrCLI {
   // ==========================================================================
 
   /**
+   * Convert absolute file path to Docker workspace path
+   * 
+   * @param absolutePath - Absolute file path on host
+   * @returns Docker workspace path
+   */
+  private convertToDockerPath(absolutePath: string): string {
+    // The docker-compose mounts ./docs/03_architecture/diagrams/src to /workspace/src
+    // Extract the relative path from the workspace root
+    
+    if (this.workspaceRoot && absolutePath.startsWith(this.workspaceRoot)) {
+      const relativePath = absolutePath.substring(this.workspaceRoot.length);
+      // Convert Windows paths to Unix paths
+      const unixPath = relativePath.replace(/\\/g, "/");
+      
+      // Map to Docker path
+      // Assuming the structure: docs/03_architecture/diagrams/src -> /workspace/src
+      if (unixPath.includes("/docs/03_architecture/diagrams/src/")) {
+        return unixPath.replace(/.*\/docs\/03_architecture\/diagrams\/src\//, "/workspace/src/");
+      }
+      
+      // For output directory
+      if (unixPath.includes("/docs/03_architecture/diagrams/out/")) {
+        return unixPath.replace(/.*\/docs\/03_architecture\/diagrams\/out\//, "/workspace/out/");
+      }
+    }
+
+    // Fallback: extract filename and assume it's in /workspace/src
+    const filename = absolutePath.split(/[/\\]/).pop() || "";
+    return `/workspace/src/${filename}`;
+  }
+
+  /**
    * Execute a Structurizr CLI command
    * 
    * @param args - Command arguments as a string
+   * @param isDockerCommand - Whether this is already a full docker command
    * @returns Promise<CLIResult> - Result of the command execution
    */
-  private async executeCommand(args: string): Promise<CLIResult> {
-    const command = `${this.cliPath} ${args}`;
+  private async executeCommand(args: string, isDockerCommand: boolean = false): Promise<CLIResult> {
+    let command: string;
+    
+    if (isDockerCommand) {
+      // Command is already formatted (for Docker)
+      command = args;
+    } else if (this.containerName) {
+      // Use Docker exec
+      command = `docker exec ${this.containerName} ${this.cliPath} ${args}`;
+    } else {
+      // Use local CLI
+      command = `${this.cliPath} ${args}`;
+    }
 
     try {
       const { stdout, stderr } = await execAsync(command, {

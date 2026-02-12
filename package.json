@@ -57,7 +57,7 @@
         "so-workspace.diagrams.java.mermaidCliPath": {
           "type": "string",
           "default": "mmdc",
-          "description": "Path to Mermaid CLI executable (mmdc)",
+          "description": "Path to Mermaid CLI executable. Default 'mmdc' enables auto-detection (checks project node_modules, then global npm installation). Mermaid CLI must be installed separately: 'npm install -g @mermaid-js/mermaid-cli' (global) or 'npm install --save-dev @mermaid-js/mermaid-cli' (project). Set to a custom path if installed in a non-standard location.",
           "order": 6
         },
         "so-workspace.diagrams.java.javaPath": {
@@ -66,47 +66,25 @@
           "description": "Java executable path (defaults to 'java' in PATH)",
           "order": 7
         },
-        "so-workspace.diagrams.kroki.serviceUrl": {
-          "type": "string",
-          "default": "https://kroki.io",
-          "description": "Kroki service URL",
-          "pattern": "^https?://.*",
-          "order": 8
-        },
-        "so-workspace.diagrams.kroki.maxConcurrent": {
-          "type": "number",
-          "default": 5,
-          "minimum": 1,
-          "maximum": 20,
-          "description": "Maximum concurrent Kroki API requests",
-          "order": 9
-        },
-        "so-workspace.diagrams.kroki.timeout": {
-          "type": "number",
-          "default": 30000,
-          "minimum": 1000,
-          "maximum": 120000,
-          "description": "Request timeout in milliseconds",
-          "order": 10
-        },
+
         "so-workspace.diagrams.structurizrServerUrl": {
           "type": "string",
           "default": "http://localhost:8080",
           "description": "Structurizr server URL for DSL validation (Structurizr Lite or Cloud)",
           "pattern": "^https?://.*",
-          "order": 11
+          "order": 8
         },
         "so-workspace.diagrams.structurizrCliContainer": {
           "type": "string",
           "default": "structurizr-cli",
           "description": "Docker container name for Structurizr CLI",
-          "order": 12
+          "order": 9
         },
         "so-workspace.diagrams.structurizrCliPath": {
           "type": "string",
           "default": "/usr/local/structurizr-cli/structurizr.sh",
           "description": "Path to structurizr.sh script inside the Docker container",
-          "order": 13
+          "order": 10
         }
       }
     },
@@ -181,16 +159,13 @@
       },
       {
         "command": "so-workspace.renderDiagrams",
-        "title": "SO: 3-03 Render Diagrams (Local)"
+        "title": "SO: 3-03 Render Diagrams (Local Tools)"
       },
       {
         "command": "so-workspace.renderDiagramsJava",
-        "title": "SO: 3-03a Render Diagrams (Java)"
+        "title": "SO: 3-03a Render Diagrams (Java + Mermaid CLI)"
       },
-      {
-        "command": "so-workspace.renderDiagramsKroki",
-        "title": "SO: 3-03b Render Diagrams (Kroki)"
-      },
+
       {
         "command": "so-workspace.diagram.eval",
         "title": "SO: 3-04 Diagram Evaluate (Select Diagram)"
@@ -243,10 +218,9 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./ && npm run copy-scripts",
-    "copy-scripts": "node -e \"const fs = require('fs'); const path = require('path'); const src = 'scripts'; const dest = 'dist/scripts'; if (fs.existsSync(src)) { fs.cpSync(src, dest, { recursive: true }); console.log('Scripts copied successfully'); } else { console.warn('Warning: scripts directory not found'); }\"",
-    "watch": "tsc -watch -p ./",
-    "package": "npm run compile && vsce package && npm run verify-vsix",
+    "compile": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
+    "package": "npm run compile && vsce package --no-dependencies && npm run verify-vsix",
     "verify-vsix": "node scripts/verify-vsix-contents.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -261,34 +235,27 @@
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/jsdom": "^27.0.0",
     "@types/markdown-it": "^14.1.2",
-    "@types/mermaid": "^9.1.0",
     "@types/node": "^25.2.2",
-    "@types/pako": "^2.0.3",
     "@types/plantuml-encoder": "^1.4.2",
     "@types/turndown": "^5.0.4",
     "@types/vscode": "^1.109.0",
     "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.20.0",
     "fast-check": "^4.5.3",
     "jest": "^30.2.0",
     "ts-jest": "^29.2.5",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@mermaid-js/mermaid-cli": "^11.4.1",
     "fs-extra": "^11.2.0",
     "js-yaml": "^4.1.0",
-    "jsdom": "^28.0.0",
     "mammoth": "^1.6.0",
     "markdown-it": "^14.1.0",
     "markdown-it-anchor": "^9.2.0",
     "markdown-it-attrs": "^4.2.0",
     "markdown-it-table-of-contents": "^1.1.0",
-    "mermaid": "^11.12.2",
-    "pako": "^2.1.0",
     "plantuml-encoder": "^1.4.0",
-    "puppeteer": "^24.37.2",
     "turndown": "^7.1.2",
     "turndown-plugin-gfm": "^1.0.2"
   }

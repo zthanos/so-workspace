@@ -6,17 +6,9 @@ out/
 **/*.map
 *.tsbuildinfo
 
-# Keep scripts directory for PowerShell scripts
-!scripts/
-!scripts/**/*.ps1
-
-# Node.js - IMPORTANT: Do NOT exclude node_modules
-# Runtime dependencies (like plantuml-wasm) must be included in the package
-# vsce will automatically include only production dependencies from package.json
-# node_modules/ is NOT excluded - it will be included in the VSIX
-npm-debug.log
-yarn-error.log
-pnpm-debug.log
+# Exclude ALL node_modules directory
+# With esbuild bundling, all dependencies are bundled into dist/extension.js
+node_modules/
 
 # IDE / OS
 .vscode/
@@ -41,18 +33,41 @@ jest-coverage/
 # Workspace documentation (project artifacts, not part of the extension)
 docs/
 
-# Locks (optional)
+# Build configuration files
+tsconfig.json
+esbuild.config.js
+jest.config.js
+.eslintrc*
+.prettierrc*
+
+# Locks
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-tsconfig.json
+# Git
+.git/
+.gitignore
+.gitattributes
 
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Scripts (development only)
+scripts/
+
+# Logs
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+*.log
 
 # Keep these (DO NOT ignore):
 # README.md
 # LICENSE*
+# CHANGELOG.md
 # package.json
-# dist/
-# assets/ - Runtime assets (prompts, templates, rules, images) must be included
-!assets/icon.png
+# dist/extension.js (bundled output)
+# assets/ (runtime assets - icon, templates, prompts, rules)

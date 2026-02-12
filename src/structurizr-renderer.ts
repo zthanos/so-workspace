@@ -64,9 +64,11 @@ export class StructurizrRenderer {
   /**
    * Create a new Structurizr renderer
    * @param cliPath - Optional custom path to Structurizr CLI executable
+   * @param containerName - Optional Docker container name
+   * @param workspaceRoot - Optional workspace root for Docker path mapping
    */
-  constructor(cliPath?: string) {
-    this.cli = new StructurizrCLI(cliPath);
+  constructor(cliPath?: string, containerName?: string, workspaceRoot?: string) {
+    this.cli = new StructurizrCLI(cliPath, containerName, workspaceRoot);
   }
 
   /**

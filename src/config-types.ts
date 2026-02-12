@@ -2,7 +2,7 @@
  * Configuration Schema and Types
  * 
  * Defines TypeScript interfaces for workspace-level configuration file support.
- * Enables dynamic management of external service endpoints (Kroki, PlantUML, etc.)
+ * Enables dynamic management of external service endpoints (PlantUML, etc.)
  * through a `.vscode/so-workspace.config.json` file.
  * 
  * Configuration precedence: environment config > workspace config > VS Code settings > defaults
@@ -62,12 +62,6 @@ export interface WorkspaceConfig {
  */
 export interface EndpointConfigurations {
   /**
-   * Kroki cloud service configuration
-   * Used for rendering diagrams via Kroki HTTP API
-   */
-  kroki?: KrokiEndpointConfig;
-
-  /**
    * PlantUML server configuration
    * Used for rendering PlantUML diagrams via HTTP server
    */
@@ -93,49 +87,6 @@ export interface EndpointConfigurations {
 }
 
 // ============================================================================
-// Kroki Endpoint Configuration
-// ============================================================================
-
-/**
- * Kroki endpoint configuration
- * 
- * Configures the Kroki cloud service for diagram rendering.
- * Kroki supports multiple diagram types (Mermaid, PlantUML, Structurizr, etc.)
- * through a unified HTTP API.
- */
-export interface KrokiEndpointConfig {
-  /**
-   * Kroki service URL
-   * @default "https://kroki.io"
-   * @example "https://kroki.io", "http://localhost:8000"
-   */
-  url: string;
-
-  /**
-   * Request timeout in milliseconds
-   * Maximum time to wait for Kroki API response
-   * @default 30000
-   * @example 30000, 60000
-   */
-  timeout?: number;
-
-  /**
-   * Maximum concurrent requests
-   * Limits parallel API calls to prevent overwhelming the service
-   * @default 5
-   * @example 5, 10, 20
-   */
-  maxConcurrent?: number;
-
-  /**
-   * Whether this endpoint is enabled
-   * When false, this backend will not be used for rendering
-   * @default true
-   */
-  enabled?: boolean;
-}
-
-// ============================================================================
 // PlantUML Endpoint Configuration
 // ============================================================================
 
@@ -143,7 +94,6 @@ export interface KrokiEndpointConfig {
  * PlantUML server endpoint configuration
  * 
  * Configures a PlantUML HTTP server for diagram rendering.
- * Alternative to Kroki for PlantUML-specific rendering.
  */
 export interface PlantUMLEndpointConfig {
   /**
@@ -307,12 +257,6 @@ export interface RenderingConfig {
  * All optional fields are resolved to concrete values.
  */
 export interface ResolvedConfig {
-  /**
-   * Resolved Kroki endpoint configuration
-   * All fields have concrete values after merging
-   */
-  kroki: Required<KrokiEndpointConfig>;
-
   /**
    * Resolved PlantUML endpoint configuration
    * All fields have concrete values after merging

@@ -1,0 +1,16 @@
+@startuml
+actor User
+participant "Web Server" as WS
+participant "Database" as DB
+
+User -> WS: HTTP Request
+activate WS
+
+WS -> DB: Query Data
+activate DB
+DB --> WS: Result Set
+deactivate DB
+
+WS --> User: HTTP Response
+deactivate WS
+@enduml

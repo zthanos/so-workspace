@@ -186,40 +186,11 @@ export class ConfigLoader {
    * @throws ConfigValidationError if validation fails
    * 
    * Requirements:
-   * - 2.2: Validate Kroki endpoint properties
    * - 2.3: Validate PlantUML endpoint properties
    * - 2.4: Validate Java backend properties
    * - 6.3: Specify expected type for incorrect types
    */
   private validateEndpoints(endpoints: EndpointConfigurations): void {
-    // Validate Kroki config (Requirement 2.2)
-    if (endpoints.kroki !== undefined) {
-      const kroki = endpoints.kroki;
-      
-      if (typeof kroki !== "object" || kroki === null) {
-        throw new ConfigValidationError("endpoints.kroki", "object", typeof kroki);
-      }
-
-      // url is required
-      if (kroki.url === undefined) {
-        throw new ConfigValidationError("endpoints.kroki.url", "string (required)", "undefined");
-      }
-      if (typeof kroki.url !== "string") {
-        throw new ConfigValidationError("endpoints.kroki.url", "string", typeof kroki.url);
-      }
-
-      // Optional fields
-      if (kroki.timeout !== undefined && typeof kroki.timeout !== "number") {
-        throw new ConfigValidationError("endpoints.kroki.timeout", "number", typeof kroki.timeout);
-      }
-      if (kroki.maxConcurrent !== undefined && typeof kroki.maxConcurrent !== "number") {
-        throw new ConfigValidationError("endpoints.kroki.maxConcurrent", "number", typeof kroki.maxConcurrent);
-      }
-      if (kroki.enabled !== undefined && typeof kroki.enabled !== "boolean") {
-        throw new ConfigValidationError("endpoints.kroki.enabled", "boolean", typeof kroki.enabled);
-      }
-    }
-
     // Validate PlantUML config (Requirement 2.3)
     if (endpoints.plantuml !== undefined) {
       const plantuml = endpoints.plantuml;

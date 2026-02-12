@@ -18,12 +18,6 @@ function getDefaultConfigTemplate(): WorkspaceConfig {
     activeEnvironment: "default",
     
     endpoints: {
-      kroki: {
-        url: "https://kroki.io",
-        timeout: 30000,
-        maxConcurrent: 5,
-        enabled: true
-      },
       plantuml: {
         url: "https://www.plantuml.com/plantuml",
         timeout: 30000,
@@ -35,6 +29,12 @@ function getDefaultConfigTemplate(): WorkspaceConfig {
         javaPath: "java",
         enabled: true
       },
+      structurizr: {
+        structurizrCliPath: "structurizr-cli",
+        structurizrServerUrl: "http://localhost:8080",
+        validateBeforeRender: false,
+        enabled: true
+      },
       rendering: {
         sourceDirectory: "docs/03_architecture/diagrams/src",
         outputDirectory: "docs/03_architecture/diagrams/out",
@@ -44,26 +44,23 @@ function getDefaultConfigTemplate(): WorkspaceConfig {
     
     environments: {
       development: {
-        kroki: {
-          url: "http://localhost:8000",
+        plantuml: {
+          url: "http://localhost:8080/plantuml",
           timeout: 60000,
-          maxConcurrent: 10,
           enabled: true
         }
       },
       staging: {
-        kroki: {
-          url: "https://kroki-staging.example.com",
+        plantuml: {
+          url: "https://plantuml-staging.example.com",
           timeout: 45000,
-          maxConcurrent: 5,
           enabled: true
         }
       },
       production: {
-        kroki: {
-          url: "https://kroki.example.com",
+        plantuml: {
+          url: "https://plantuml.example.com",
           timeout: 30000,
-          maxConcurrent: 3,
           enabled: true
         }
       }
@@ -85,11 +82,6 @@ function formatConfigWithDocumentation(config: WorkspaceConfig): string {
 // - version: Schema version for future compatibility
 // - activeEnvironment: Name of the active environment (references environments section)
 // - endpoints: Default endpoint configurations
-//   - kroki: Kroki cloud service configuration
-//     - url: Service URL (default: https://kroki.io)
-//     - timeout: Request timeout in milliseconds (default: 30000)
-//     - maxConcurrent: Maximum concurrent requests (default: 5)
-//     - enabled: Whether this endpoint is enabled (default: true)
 //   - plantuml: PlantUML server configuration
 //     - url: Server URL (default: https://www.plantuml.com/plantuml)
 //     - timeout: Request timeout in milliseconds (default: 30000)
@@ -98,6 +90,11 @@ function formatConfigWithDocumentation(config: WorkspaceConfig): string {
 //     - plantUmlJarPath: Path to PlantUML JAR file (relative to workspace root)
 //     - mermaidCliPath: Path to Mermaid CLI executable (default: mmdc)
 //     - javaPath: Java executable path (default: java)
+//     - enabled: Whether this backend is enabled (default: true)
+//   - structurizr: Structurizr backend configuration
+//     - structurizrCliPath: Path to Structurizr CLI executable (default: structurizr-cli)
+//     - structurizrServerUrl: Structurizr server URL for validation (default: http://localhost:8080)
+//     - validateBeforeRender: Whether to validate DSL files before rendering (default: false)
 //     - enabled: Whether this backend is enabled (default: true)
 //   - rendering: General rendering settings
 //     - sourceDirectory: Source directory for diagram files (relative to workspace root)

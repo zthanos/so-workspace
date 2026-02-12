@@ -19,7 +19,8 @@ import { StructurizrValidator } from './structurizr-validator';
 import { StructurizrCLI } from './structurizr-cli-wrapper';
 
 describe('C4 Structurizr DSL Migration - Integration Test', () => {
-  const workspaceRoot = path.resolve(__dirname, '../../..');
+  // Use process.cwd() to get the project root when running tests
+  const workspaceRoot = process.cwd();
   const diagramsDir = path.join(workspaceRoot, 'docs/03_architecture/diagrams');
   const srcDir = path.join(diagramsDir, 'src');
   const outDir = path.join(diagramsDir, 'out');

@@ -86,8 +86,17 @@ export class JavaCommandHandler {
       // Create progress reporter
       const progressReporter = new ProgressReporterImpl();
 
-      // Create Structurizr renderer
-      const structurizrRenderer = new StructurizrRenderer();
+      // Get Structurizr CLI configuration from settings
+      const config = vscode.workspace.getConfiguration("so-workspace");
+      const structurizrContainer = config.get<string>("diagrams.structurizrCliContainer") || "structurizr-cli";
+      const structurizrCliPath = config.get<string>("diagrams.structurizrCliPath") || "/usr/local/structurizr-cli/structurizr.sh";
+
+      // Create Structurizr renderer with Docker configuration
+      const structurizrRenderer = new StructurizrRenderer(
+        structurizrCliPath,
+        structurizrContainer,
+        workspaceFolder.uri.fsPath
+      );
 
       // Create Structurizr validator
       const { StructurizrValidator } = await import("./structurizr-validator");

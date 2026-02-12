@@ -2,7 +2,7 @@
  * Backend Strategy Interfaces and Types
  * 
  * Defines the strategy pattern for diagram rendering backends.
- * Supports multiple rendering backends (Java-based local, Kroki cloud service)
+ * Supports multiple rendering backends (Java-based local)
  * for Mermaid, PlantUML, and Structurizr diagrams.
  */
 
