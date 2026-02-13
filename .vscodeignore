@@ -1,0 +1,73 @@
+# Build source (keep dist, ignore src)
+src/
+out/
+**/*.ts
+**/*.tsx
+**/*.map
+*.tsbuildinfo
+
+# Exclude ALL node_modules directory
+# With esbuild bundling, all dependencies are bundled into dist/extension.js
+node_modules/
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Tests
+**/*.test.*
+**/*.spec.*
+tests/
+test/
+coverage/
+.nyc_output/
+jest-coverage/
+
+# Local config
+.env
+.local
+
+# Workspace documentation (project artifacts, not part of the extension)
+docs/
+
+# Build configuration files
+tsconfig.json
+esbuild.config.js
+jest.config.js
+.eslintrc*
+.prettierrc*
+
+# Locks
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Scripts (development only)
+scripts/
+
+# Logs
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+*.log
+
+# Keep these (DO NOT ignore):
+# README.md
+# LICENSE*
+# CHANGELOG.md
+# package.json
+# dist/extension.js (bundled output)
+# assets/ (runtime assets - icon, templates, prompts, rules)

@@ -70,9 +70,7 @@ Open http://localhost:8080 in your browser. You should see the Structurizr Lite 
 #### 3. Run Integration Tests
 
 ```powershell
-cd tools/so-vsix
 npm test -- c4-migration-integration.test.ts
-cd ../..
 ```
 
 #### 4. Validate DSL Files from VSCode
@@ -273,9 +271,7 @@ For automated testing in CI/CD pipelines:
     timeout 30 bash -c 'until curl -f http://localhost:8080; do sleep 2; done'
 
 - name: Run integration tests
-  run: |
-    cd tools/so-vsix
-    npm test -- c4-migration-integration.test.ts
+  run: npm test -- c4-migration-integration.test.ts
 
 - name: Stop Structurizr Lite
   run: docker-compose -f docker-compose.structurizr.yml down

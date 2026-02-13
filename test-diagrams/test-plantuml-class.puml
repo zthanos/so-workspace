@@ -1,0 +1,26 @@
+@startuml
+class User {
+  -id: string
+  -name: string
+  -email: string
+  +login()
+  +logout()
+}
+
+class Order {
+  -id: string
+  -date: Date
+  -total: number
+  +calculate()
+  +submit()
+}
+
+class Product {
+  -id: string
+  -name: string
+  -price: number
+}
+
+User "1" -- "*" Order : places
+Order "*" -- "*" Product : contains
+@enduml

@@ -1,0 +1,9 @@
+sequenceDiagram
+    participant User
+    participant System
+    participant Database
+    
+    User->>System: Request Data
+    System->>Database: Query
+    Database-->>System: Results
+    System-->>User: Response

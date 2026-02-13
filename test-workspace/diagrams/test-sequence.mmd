@@ -1,0 +1,10 @@
+sequenceDiagram
+%% Missing diagram type declaration - should be detected and fixed
+participant User
+participant API
+participant Database
+
+User->>API: Request data
+API->>Database: Query
+Database-->>API: Results
+API-->>User: Response
