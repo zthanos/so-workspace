@@ -10,3 +10,6 @@ dist/
 node_modules/
 
 .kiro/
+
+# Intermediate PlantUML files for DSL to SVG rendering pipeline
+docs/03_architecture/diagrams/temp/

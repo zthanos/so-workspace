@@ -302,7 +302,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // Note: This uses the default orchestrator with local rendering backends
   const { RendererOrchestratorImpl, FileScannerImpl, OutputManagerImpl, ProgressReporterImpl } = require("./diagram_renderer_v2");
   const { JavaRenderBackend } = require("./java-backend");
-  const { StructurizrRenderer } = require("./structurizr-renderer");
+  const { StructurizrPipelineRenderer } = require("./structurizr-pipeline-renderer");
   const { StructurizrValidator } = require("./structurizr-validator");
 
   // Initialize Configuration Manager first (needed for Java backend config)
@@ -381,20 +381,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Get Structurizr CLI configuration from settings
   const structurizrConfig = configurationManager.getConfiguration().structurizr;
-  const structurizrContainer = vscode.workspace.getConfiguration("so-workspace").get<string>("diagrams.structurizrCliContainer") || "structurizr-cli";
-
-  // Create Structurizr renderer and validator with Docker configuration
-  const structurizrRenderer = new StructurizrRenderer(
-    structurizrConfig.structurizrCliPath,
-    structurizrContainer,
-    workspaceRoot
-  );
+  
+  // Create Structurizr pipeline renderer (uses render-dsl-to-svg.cmd script from extension)
+  // This provides higher quality SVG output via DSL → PlantUML → Kroki → SVG pipeline
+  const structurizrRenderer = new StructurizrPipelineRenderer(workspaceRoot, context.extensionPath);
   const structurizrValidator = new StructurizrValidator();
 
   // Log backend initialization
   console.log("Initializing diagram rendering backends:");
   console.log("  - JavaRenderBackend (for Mermaid and PlantUML)");
-  console.log("  - StructurizrRenderer (for Structurizr DSL)");
+  console.log("  - StructurizrPipelineRenderer (for Structurizr DSL via automated pipeline)");
 
   // Check backend availability and log status
   const javaAvailability = await javaBackend.isAvailable();
@@ -411,12 +407,14 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   if (structurizrAvailable) {
-    console.log("✓ StructurizrRenderer is available (Docker-based Structurizr CLI)");
+    console.log("✓ StructurizrPipelineRenderer is available (Docker-based rendering pipeline)");
   } else {
-    console.warn("✗ StructurizrRenderer is not available. Docker may not be running or Structurizr CLI not configured.");
+    console.warn("✗ StructurizrPipelineRenderer is not available. Docker may not be running or render-dsl-to-svg.cmd script not found.");
     vscode.window.showWarningMessage(
-      "Structurizr rendering is not available. Ensure Docker is running and containers are started. " +
-      "Run: docker-compose -f docker-compose.structurizr.yml up -d"
+      "Structurizr rendering pipeline is not available. Ensure:\n" +
+      "1. Docker Desktop is running\n" +
+      "2. render-dsl-to-svg.cmd script exists in workspace root\n" +
+      "3. Run: docker-compose -f docker-compose.structurizr.yml up -d"
     );
   }
 

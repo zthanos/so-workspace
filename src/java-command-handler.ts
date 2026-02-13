@@ -14,7 +14,6 @@ import {
   DiagramRenderConfig,
 } from "./diagram_renderer_v2";
 import { ConfigurationManager } from "./configuration-manager";
-import { StructurizrRenderer } from "./structurizr-renderer";
 
 /**
  * Java Command Handler
@@ -23,6 +22,9 @@ import { StructurizrRenderer } from "./structurizr-renderer";
 export class JavaCommandHandler {
   /** Configuration manager for accessing resolved configuration */
   private configManager: ConfigurationManager;
+  
+  /** Extension context for accessing extension path */
+  private context?: vscode.ExtensionContext;
   
   /** Flag to prevent concurrent rendering operations */
   private isRendering: boolean = false;
@@ -40,6 +42,7 @@ export class JavaCommandHandler {
    * @param context - VS Code extension context
    */
   register(context: vscode.ExtensionContext): void {
+    this.context = context;
     const disposable = vscode.commands.registerCommand(
       "so-workspace.renderDiagramsJava",
       () => this.execute()
@@ -88,21 +91,20 @@ export class JavaCommandHandler {
 
       // Get Structurizr CLI configuration from settings
       const config = vscode.workspace.getConfiguration("so-workspace");
-      const structurizrContainer = config.get<string>("diagrams.structurizrCliContainer") || "structurizr-cli";
-      const structurizrCliPath = config.get<string>("diagrams.structurizrCliPath") || "/usr/local/structurizr-cli/structurizr.sh";
+      const workspaceRoot = workspaceFolder.uri.fsPath;
 
-      // Create Structurizr renderer with Docker configuration
-      const structurizrRenderer = new StructurizrRenderer(
-        structurizrCliPath,
-        structurizrContainer,
-        workspaceFolder.uri.fsPath
+      // Create Structurizr pipeline renderer (uses render-dsl-to-svg.cmd script from extension)
+      const { StructurizrPipelineRenderer } = await import("./structurizr-pipeline-renderer");
+      const structurizrRenderer = new StructurizrPipelineRenderer(
+        workspaceRoot,
+        this.context?.extensionPath || ""
       );
 
       // Create Structurizr validator
       const { StructurizrValidator } = await import("./structurizr-validator");
       const structurizrValidator = new StructurizrValidator();
 
-      // Create orchestrator with Java backend and Structurizr renderer
+      // Create orchestrator with Java backend and Structurizr pipeline renderer
       const orchestrator = new RendererOrchestratorImpl(
         backend,
         undefined, // Use default file scanner

@@ -723,11 +723,13 @@ export class ProgressReporterImpl implements ProgressReporter {
     if (cliAvailability) {
       this.outputChannel.appendLine("");
       this.outputChannel.appendLine("Rendering Backend Availability:");
-      this.outputChannel.appendLine(`  Structurizr CLI: ${cliAvailability.structurizr ? "Available" : "Not Available"}`);
+      this.outputChannel.appendLine(`  Structurizr Pipeline: ${cliAvailability.structurizr ? "Available" : "Not Available"}`);
       
       if (!cliAvailability.structurizr) {
-        this.outputChannel.appendLine("  Note: .dsl files will be skipped. Install Structurizr CLI from:");
-        this.outputChannel.appendLine("        https://github.com/structurizr/cli");
+        this.outputChannel.appendLine("  Note: .dsl files will be skipped. Ensure:");
+        this.outputChannel.appendLine("        1. Docker Desktop is running");
+        this.outputChannel.appendLine("        2. render-dsl-to-svg.cmd script exists in workspace root");
+        this.outputChannel.appendLine("        3. Run: docker-compose -f docker-compose.structurizr.yml up -d");
       }
     }
     
@@ -1168,7 +1170,7 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
   private backend: import("./backend-strategy").RenderBackend;
   
   /** Structurizr renderer for .dsl files */
-  private structurizrRenderer?: import("./structurizr-renderer").StructurizrRenderer;
+  private structurizrRenderer?: import("./structurizr-pipeline-renderer").StructurizrPipelineRenderer;
   
   /** Structurizr validator for pre-render validation */
   private structurizrValidator?: import("./structurizr-validator").StructurizrValidator;
@@ -1184,7 +1186,7 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     fileScanner?: FileScanner,
     outputManager?: OutputManager,
     progressReporter?: ProgressReporter,
-    structurizrRenderer?: import("./structurizr-renderer").StructurizrRenderer,
+    structurizrRenderer?: import("./structurizr-pipeline-renderer").StructurizrPipelineRenderer,
     structurizrValidator?: import("./structurizr-validator").StructurizrValidator
   ) {
     this.backend = backend;
@@ -1275,8 +1277,8 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     // Log warnings for skipped files
     if (structurizrFiles.length > 0 && !structurizrAvailable) {
       console.log(
-        `Skipping ${structurizrFiles.length} Structurizr file(s) - Structurizr CLI not available. ` +
-        `Install from: https://github.com/structurizr/cli`
+        `Skipping ${structurizrFiles.length} Structurizr file(s) - Rendering pipeline not available. ` +
+        `Ensure Docker is running and render-dsl-to-svg.cmd script exists.`
       );
     }
     

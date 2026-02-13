@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
