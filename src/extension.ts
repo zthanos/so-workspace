@@ -46,6 +46,9 @@ import { ConfigurationManager } from "./configuration-manager";
 import { JavaCommandHandler } from "./java-command-handler";
 import { initializeWorkspaceCommand } from "./commands/initialize-workspace-command";
 import { repairMermaidDiagramsCommand } from "./commands/repair-mermaid-diagrams-command";
+import { PanelManager } from "./diagram-previewer/panelManager";
+import { readConfig, onConfigChange } from "./diagram-previewer/config";
+import { initializeLogger, getLogger } from "./diagram-previewer/logger";
 
 // Type definitions for mermaid-cli detection
 
@@ -249,6 +252,23 @@ async function resolveMermaidCLIPath(
 // Store command handler instances for cleanup
 let javaCommandHandler: JavaCommandHandler | undefined;
 let configurationManager: ConfigurationManager | undefined;
+let diagramPreviewerPanelManager: PanelManager | undefined;
+let diagramPreviewerOutputChannel: vscode.OutputChannel | undefined;
+
+/**
+ * Log a message to the Diagram Previewer output channel
+ * @param message - Message to log
+ * @param level - Log level (info, warning, error)
+ */
+function logDiagramPreviewerMessage(message: string, level: 'info' | 'warning' | 'error' = 'info'): void {
+  if (!diagramPreviewerOutputChannel) {
+    return;
+  }
+  
+  const timestamp = new Date().toISOString();
+  const prefix = level === 'error' ? '[ERROR]' : level === 'warning' ? '[WARN]' : '[INFO]';
+  diagramPreviewerOutputChannel.appendLine(`${timestamp} ${prefix} ${message}`);
+}
 
 export async function activate(context: vscode.ExtensionContext) {
   // Create AssetResolver instance
@@ -457,6 +477,100 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("so-workspace.repairMermaidDiagrams", () => repairMermaidDiagramsCommand(configurationManager!))
   );
 
+  // ========================================
+  // Diagram Previewer Feature
+  // ========================================
+  
+  try {
+    // Create output channel for diagram previewer logging
+    diagramPreviewerOutputChannel = vscode.window.createOutputChannel('Diagram Previewer');
+    context.subscriptions.push(diagramPreviewerOutputChannel);
+    
+    // Initialize logger
+    const logger = initializeLogger(diagramPreviewerOutputChannel, false);
+    logger.info('Initializing Diagram Previewer...');
+    
+    // Initialize PanelManager singleton
+    diagramPreviewerPanelManager = PanelManager.getInstance(context);
+    
+    // Register "Open Diagram Preview" command
+    context.subscriptions.push(
+      vscode.commands.registerCommand('diagramPreviewer.openPreview', () => {
+        try {
+          const editor = vscode.window.activeTextEditor;
+          if (!editor) {
+            vscode.window.showWarningMessage('No active editor found. Please open a diagram file first.');
+            logger.warning('Command invoked but no active editor found');
+            return;
+          }
+          
+          logger.info(`Opening preview for: ${editor.document.fileName}`);
+          diagramPreviewerPanelManager!.openPreview(editor);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.error('Error opening preview', error);
+          vscode.window.showErrorMessage(`Failed to open diagram preview: ${errorMessage}`);
+        }
+      })
+    );
+    
+    // Register text document change listeners with debounce
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeTextDocument((event) => {
+        try {
+          const editor = vscode.window.activeTextEditor;
+          if (editor && editor.document === event.document && diagramPreviewerPanelManager) {
+            // Check if this is a supported diagram file
+            const fileExtension = event.document.fileName.split('.').pop()?.toLowerCase();
+            const supportedExtensions = [
+              'mmd', 'mermaid', 'dsl', 'puml', 'plantuml', 'pu', 'dot', 'gv',
+              'bpmn', 'excalidraw', 'vg', 'vl', 'wsd', 'ditaa', 'er', 'nomnoml',
+              'pikchr', 'svgbob', 'umlet', 'vdx', 'wavedrom'
+            ];
+            
+            if (fileExtension && supportedExtensions.includes(fileExtension)) {
+              diagramPreviewerPanelManager.updatePreview(editor);
+            }
+          }
+        } catch (error) {
+          logger.error('Error updating preview', error);
+          // Don't show error message to user for every keystroke - just log it
+        }
+      })
+    );
+    
+    // Load and log configuration
+    const diagramPreviewerConfig = readConfig();
+    logger.configChange(diagramPreviewerConfig);
+    
+    // Listen for configuration changes
+    context.subscriptions.push(
+      onConfigChange((newConfig) => {
+        logger.configChange(newConfig);
+        
+        // Apply configuration changes to panel manager
+        if (diagramPreviewerPanelManager) {
+          diagramPreviewerPanelManager.handleConfigChange();
+        }
+        
+        vscode.window.showInformationMessage('Diagram Previewer configuration updated and applied.');
+      })
+    );
+    
+    logger.info('Diagram Previewer initialized successfully');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('Failed to initialize Diagram Previewer:', error);
+    if (diagramPreviewerOutputChannel) {
+      logDiagramPreviewerMessage(`Failed to initialize: ${errorMessage}`, 'error');
+    }
+    vscode.window.showErrorMessage(`Failed to initialize Diagram Previewer: ${errorMessage}`);
+  }
+  
+  // ========================================
+  // End Diagram Previewer Feature
+  // ========================================
+
   // Listen for configuration changes to validate mermaidCliPath
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(async (event) => {
@@ -506,5 +620,16 @@ export function deactivate() {
   if (configurationManager) {
     configurationManager.dispose();
     configurationManager = undefined;
+  }
+  
+  // Cleanup Diagram Previewer
+  if (diagramPreviewerPanelManager) {
+    diagramPreviewerPanelManager.dispose();
+    diagramPreviewerPanelManager = undefined;
+  }
+  
+  if (diagramPreviewerOutputChannel) {
+    diagramPreviewerOutputChannel.dispose();
+    diagramPreviewerOutputChannel = undefined;
   }
 }
