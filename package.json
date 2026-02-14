@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
@@ -66,7 +66,6 @@
           "description": "Java executable path (defaults to 'java' in PATH)",
           "order": 7
         },
-
         "so-workspace.diagrams.structurizrServerUrl": {
           "type": "string",
           "default": "http://localhost:8080",
@@ -85,6 +84,73 @@
           "default": "/usr/local/structurizr-cli/structurizr.sh",
           "description": "Path to structurizr.sh script inside the Docker container",
           "order": 10
+        },
+        "diagramPreviewer.autoOpenPreview": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically open diagram preview when diagram files are opened",
+          "order": 11
+        },
+        "diagramPreviewer.debounceDelay": {
+          "type": "number",
+          "default": 300,
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "Debounce delay in milliseconds for live preview updates (default: 300ms)",
+          "order": 12
+        },
+        "diagramPreviewer.cacheSize": {
+          "type": "number",
+          "default": 50,
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Maximum number of cached diagram renders (default: 50)",
+          "order": 13
+        },
+        "diagramPreviewer.krokiEndpoint": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "Kroki API endpoint URL for DSL diagram rendering",
+          "pattern": "^https?://.*",
+          "order": 14
+        },
+        "diagramPreviewer.krokiRateLimit": {
+          "type": "number",
+          "default": 500,
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Minimum interval between Kroki API calls in milliseconds (default: 500ms)",
+          "order": 15
+        },
+        "diagramPreviewer.krokiAuth": {
+          "type": "object",
+          "description": "Optional authentication for Kroki API",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["basic", "bearer"],
+              "description": "Authentication type"
+            },
+            "credentials": {
+              "type": "string",
+              "description": "Authentication credentials"
+            }
+          },
+          "order": 16
+        },
+        "diagramPreviewer.mermaidTheme.light": {
+          "type": "string",
+          "default": "default",
+          "enum": ["default", "forest", "dark", "neutral"],
+          "description": "Mermaid theme for light VSCode theme",
+          "order": 17
+        },
+        "diagramPreviewer.mermaidTheme.dark": {
+          "type": "string",
+          "default": "dark",
+          "enum": ["default", "forest", "dark", "neutral"],
+          "description": "Mermaid theme for dark VSCode theme",
+          "order": 18
         }
       }
     },
@@ -165,7 +231,6 @@
         "command": "so-workspace.renderDiagramsJava",
         "title": "SO: 3-03a Render Diagrams (Java + Mermaid CLI)"
       },
-
       {
         "command": "so-workspace.diagram.eval",
         "title": "SO: 3-04 Diagram Evaluate (Select Diagram)"
@@ -213,8 +278,28 @@
       {
         "command": "so-workspace.openGeneratedPdf",
         "title": "5-03 SO: Open Generated PDF"
+      },
+      {
+        "command": "diagramPreviewer.openPreview",
+        "title": "Open Diagram Preview",
+        "icon": "$(open-preview)"
       }
-    ]
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "diagramPreviewer.openPreview",
+          "when": "resourceExtname =~ /\\.(mmd|mermaid|dsl|puml|plantuml|pu|dot|gv|bpmn|excalidraw|vg|vl|wsd|ditaa|er|nomnoml|pikchr|svgbob|umlet|vdx|wavedrom)$/",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "diagramPreviewer.openPreview",
+          "when": "resourceExtname =~ /\\.(mmd|mermaid|dsl|puml|plantuml|pu|dot|gv|bpmn|excalidraw|vg|vl|wsd|ditaa|er|nomnoml|pikchr|svgbob|umlet|vdx|wavedrom)$/"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -225,6 +310,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:vitest": "vitest run",
+    "test:vitest:watch": "vitest",
+    "test:vitest:ui": "vitest --ui",
+    "test:vitest:coverage": "vitest run --coverage",
     "export:pdf": "node dist/pdf-export/pdf-export-cli.js"
   },
   "keywords": [],
@@ -235,17 +324,23 @@
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
+    "@types/jsdom": "^27.0.0",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^25.2.2",
+    "@types/pako": "^2.0.4",
     "@types/plantuml-encoder": "^1.4.2",
     "@types/turndown": "^5.0.4",
     "@types/vscode": "^1.109.0",
+    "@vitest/ui": "^4.0.18",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.20.0",
     "fast-check": "^4.5.3",
     "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "jsdom": "^28.0.0",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "fs-extra": "^11.2.0",
@@ -255,6 +350,8 @@
     "markdown-it-anchor": "^9.2.0",
     "markdown-it-attrs": "^4.2.0",
     "markdown-it-table-of-contents": "^1.1.0",
+    "mermaid": "^11.12.2",
+    "pako": "^2.1.0",
     "plantuml-encoder": "^1.4.0",
     "turndown": "^7.1.2",
     "turndown-plugin-gfm": "^1.0.2"
