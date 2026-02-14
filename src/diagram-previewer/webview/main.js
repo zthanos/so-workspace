@@ -410,11 +410,16 @@
       return;
     }
 
+    // Get the actual SVG/image element dimensions
     const contentRect = content.getBoundingClientRect();
     const containerRect = diagramContainer.getBoundingClientRect();
 
+    // Account for scale transform
+    const actualWidth = contentRect.width / currentScale;
+    const actualHeight = contentRect.height / currentScale;
+
     // Show minimap if content is larger than viewport
-    if (contentRect.width > containerRect.width || contentRect.height > containerRect.height) {
+    if (actualWidth > containerRect.width || actualHeight > containerRect.height) {
       minimap.classList.add('visible');
       
       // Clone content to minimap
@@ -439,16 +444,20 @@
     const containerRect = diagramContainer.getBoundingClientRect();
     const minimapRect = minimapContent.getBoundingClientRect();
 
+    // Account for scale and calculate scroll position
+    const scaledWidth = content.offsetWidth * currentScale;
+    const scaledHeight = content.offsetHeight * currentScale;
+
     // Calculate viewport position and size relative to content
-    const viewportLeft = (diagramContainer.scrollLeft / content.offsetWidth) * minimapRect.width;
-    const viewportTop = (diagramContainer.scrollTop / content.offsetHeight) * minimapRect.height;
+    const viewportLeft = (diagramContainer.scrollLeft / scaledWidth) * minimapRect.width;
+    const viewportTop = (diagramContainer.scrollTop / scaledHeight) * minimapRect.height;
     const viewportWidth = (containerRect.width / contentRect.width) * minimapRect.width;
     const viewportHeight = (containerRect.height / contentRect.height) * minimapRect.height;
 
-    minimapViewport.style.left = `${viewportLeft}px`;
-    minimapViewport.style.top = `${viewportTop}px`;
-    minimapViewport.style.width = `${viewportWidth}px`;
-    minimapViewport.style.height = `${viewportHeight}px`;
+    minimapViewport.style.left = `${Math.max(0, viewportLeft)}px`;
+    minimapViewport.style.top = `${Math.max(0, viewportTop)}px`;
+    minimapViewport.style.width = `${Math.min(minimapRect.width, viewportWidth)}px`;
+    minimapViewport.style.height = `${Math.min(minimapRect.height, viewportHeight)}px`;
   }
 
   /**

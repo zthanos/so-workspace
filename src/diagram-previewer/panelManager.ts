@@ -37,17 +37,17 @@ export class PanelManager {
   private themeManager: ThemeManager;
   private editorChangeDisposable: vscode.Disposable | undefined;
   private disposables: vscode.Disposable[] = [];
-  
+
   // Render state tracking for export functionality
   private currentRenderState: {
     content: string;
     format: 'svg' | 'png';
     hasError: boolean;
   } = {
-    content: '',
-    format: 'svg',
-    hasError: false
-  };
+      content: '',
+      format: 'svg',
+      hasError: false
+    };
 
   /**
    * Private constructor for singleton pattern
@@ -290,7 +290,7 @@ export class PanelManager {
             if (message.content) {
               // Determine format from content
               let format: 'svg' | 'png' = 'svg';
-              
+
               // Check if content contains an img tag with data URL (PNG)
               if (message.content.includes('<img') && message.content.includes('data:image/png')) {
                 format = 'png';
@@ -837,10 +837,10 @@ export class PanelManager {
       }
 
       // Prompt for save location
-      const defaultFileName = this.currentEditor 
+      const defaultFileName = this.currentEditor
         ? path.basename(this.currentEditor.document.fileName, path.extname(this.currentEditor.document.fileName))
         : 'diagram';
-      
+
       const fileUri = await vscode.window.showSaveDialog({
         defaultUri: vscode.Uri.file(`${defaultFileName}.${exportFormat}`),
         filters: {
@@ -908,15 +908,15 @@ export class PanelManager {
         if (svgTagMatch) {
           const svgTag = svgTagMatch[0];
           const svgTagEnd = svgContent.indexOf(svgTag) + svgTag.length;
-          
+
           // Extract width and height from svg tag
           const widthMatch = svgTag.match(/width="([^"]+)"/);
           const heightMatch = svgTag.match(/height="([^"]+)"/);
           const viewBoxMatch = svgTag.match(/viewBox="([^"]+)"/);
-          
+
           let width = '100%';
           let height = '100%';
-          
+
           if (viewBoxMatch) {
             const viewBox = viewBoxMatch[1].split(' ');
             width = viewBox[2];
@@ -925,7 +925,7 @@ export class PanelManager {
             if (widthMatch) width = widthMatch[1];
             if (heightMatch) height = heightMatch[1];
           }
-          
+
           // Add white background rectangle as the first element
           const backgroundRect = `<rect width="${width}" height="${height}" fill="white"/>`;
           svgContent = svgContent.slice(0, svgTagEnd) + backgroundRect + svgContent.slice(svgTagEnd);
@@ -1127,9 +1127,19 @@ export class PanelManager {
       background-color: var(--vscode-button-background);
       color: var(--vscode-button-foreground);
       border: none;
-      padding: 4px 12px;
+      padding: 6px 8px;
       cursor: pointer;
       border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 28px;
+    }
+    button svg {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
     button:hover:not(:disabled) {
       background-color: var(--vscode-button-hoverBackground);
@@ -1143,10 +1153,33 @@ export class PanelManager {
 <body>
   <div id="container">
     <div id="toolbar">
-      <button id="zoom-in" title="Zoom In">+</button>
-      <button id="zoom-out" title="Zoom Out">-</button>
-      <button id="fit-screen" title="Fit to Screen">Fit</button>
-      <button id="export" title="Export">Export</button>
+      <button id="zoom-in" title="Zoom In (Ctrl/Cmd +)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </button>
+      <button id="zoom-out" title="Zoom Out (Ctrl/Cmd -)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </button>
+      <button id="fit-screen" title="Fit to Screen (Ctrl/Cmd 0)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+        </svg>
+      </button>
+      <button id="export" title="Export Diagram">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+          <polyline points="16 6 12 2 8 6"></polyline>
+          <line x1="12" y1="2" x2="12" y2="15"></line>
+        </svg>
+      </button>
       <input type="text" id="search" placeholder="Search..." style="margin-left: auto; padding: 4px 8px; background-color: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border);">
     </div>
     <div id="diagram-container">
