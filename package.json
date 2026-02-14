@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
@@ -283,12 +283,24 @@
         "command": "diagramPreviewer.openPreview",
         "title": "Open Diagram Preview",
         "icon": "$(open-preview)"
+      },
+      {
+        "command": "diagramPreviewer.openPreviewFromExplorer",
+        "title": "Open Preview",
+        "icon": "$(open-preview)"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "diagramPreviewer.openPreview",
+          "when": "resourceExtname =~ /\\.(mmd|mermaid|dsl|puml|plantuml|pu|dot|gv|bpmn|excalidraw|vg|vl|wsd|ditaa|er|nomnoml|pikchr|svgbob|umlet|vdx|wavedrom)$/",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "diagramPreviewer.openPreviewFromExplorer",
           "when": "resourceExtname =~ /\\.(mmd|mermaid|dsl|puml|plantuml|pu|dot|gv|bpmn|excalidraw|vg|vl|wsd|ditaa|er|nomnoml|pikchr|svgbob|umlet|vdx|wavedrom)$/",
           "group": "navigation"
         }

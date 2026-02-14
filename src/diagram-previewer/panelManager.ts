@@ -28,6 +28,7 @@ export class PanelManager {
   private static instance: PanelManager | undefined;
   private panel: vscode.WebviewPanel | undefined;
   private currentEditor: vscode.TextEditor | undefined;
+  private currentSourceFile: string | undefined;
   private updateTimeout: NodeJS.Timeout | undefined;
   private context: vscode.ExtensionContext;
   private cache: RenderCache;
@@ -36,6 +37,17 @@ export class PanelManager {
   private themeManager: ThemeManager;
   private editorChangeDisposable: vscode.Disposable | undefined;
   private disposables: vscode.Disposable[] = [];
+
+  // Render state tracking for export functionality
+  private currentRenderState: {
+    content: string;
+    format: 'svg' | 'png';
+    hasError: boolean;
+  } = {
+      content: '',
+      format: 'svg',
+      hasError: false
+    };
 
   /**
    * Private constructor for singleton pattern
@@ -92,7 +104,52 @@ export class PanelManager {
     }
 
     this.currentEditor = editor;
+    this.currentSourceFile = editor.document.fileName;
+    this.updatePanelTitle(this.currentSourceFile);
     this.updatePreview(editor);
+  }
+
+  /**
+   * Open preview from file explorer context menu
+   * @param fileUri - URI of the file to preview
+   */
+  async openPreviewFromExplorer(fileUri: vscode.Uri): Promise<void> {
+    const logger = getLogger();
+
+    try {
+      logger?.info('Opening preview from explorer', {
+        filePath: fileUri.fsPath
+      });
+
+      // Check if the file is already open in an editor
+      const existingEditor = vscode.window.visibleTextEditors.find(
+        editor => editor.document.uri.toString() === fileUri.toString()
+      );
+
+      let editor: vscode.TextEditor;
+
+      if (existingEditor) {
+        // File is already open, use the existing editor without focusing it
+        editor = existingEditor;
+        logger?.debug('File already open, reusing existing editor');
+      } else {
+        // Open the file in an editor without stealing focus
+        const document = await vscode.workspace.openTextDocument(fileUri);
+        editor = await vscode.window.showTextDocument(document, {
+          viewColumn: vscode.ViewColumn.One,
+          preserveFocus: true, // Don't steal focus from the preview
+          preview: false // Open as a permanent tab
+        });
+        logger?.debug('Opened file in new editor');
+      }
+
+      // Open the preview (this will focus the preview panel)
+      this.openPreview(editor);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger?.error('Failed to open preview from explorer', error);
+      vscode.window.showErrorMessage(`Failed to open diagram preview: ${errorMessage}`);
+    }
   }
 
   /**
@@ -223,6 +280,45 @@ export class PanelManager {
     panel.webview.html = this.getWebviewContent(panel.webview);
 
     console.log('[PanelManager] HTML content set');
+
+    // Handle messages from webview
+    panel.webview.onDidReceiveMessage(
+      async (message) => {
+        switch (message.type) {
+          case 'export':
+            // Update render state with content from webview
+            if (message.content) {
+              // Determine format from content
+              let format: 'svg' | 'png' = 'svg';
+
+              // Check if content contains an img tag with data URL (PNG)
+              if (message.content.includes('<img') && message.content.includes('data:image/png')) {
+                format = 'png';
+                // Extract the data URL from the img tag
+                const match = message.content.match(/src="(data:image\/png;base64,[^"]+)"/);
+                if (match) {
+                  this.currentRenderState = {
+                    content: match[1],
+                    format: 'png',
+                    hasError: false
+                  };
+                }
+              } else {
+                // It's SVG content
+                this.currentRenderState = {
+                  content: message.content,
+                  format: 'svg',
+                  hasError: false
+                };
+              }
+            }
+            await this.exportDiagram();
+            break;
+        }
+      },
+      null,
+      this.disposables
+    );
 
     // Handle panel disposal
     panel.onDidDispose(() => {
@@ -480,6 +576,12 @@ export class PanelManager {
 
     const logger = getLogger();
 
+    // Update current source file and title when switching files
+    if (this.currentSourceFile !== editor.document.fileName) {
+      this.currentSourceFile = editor.document.fileName;
+      this.updatePanelTitle(this.currentSourceFile);
+    }
+
     try {
       // Show loading indicator
       this.showLoading(true);
@@ -594,6 +696,27 @@ export class PanelManager {
   }
 
   /**
+   * Update panel title with source file name
+   * @param filePath - Path to the source file
+   * @private
+   */
+  private updatePanelTitle(filePath: string | undefined): void {
+    if (!this.panel) {
+      return;
+    }
+
+    // Handle edge cases
+    if (!filePath || filePath.trim() === '') {
+      this.panel.title = 'Diagram Preview';
+      return;
+    }
+
+    // Extract base filename and update title
+    const filename = path.basename(filePath);
+    this.panel.title = `Diagram Preview - ${filename}`;
+  }
+
+  /**
    * Show diagram in webview
    * @param content - Diagram content (SVG or PNG data URL)
    * @param type - Content type ('svg' or 'png')
@@ -627,6 +750,13 @@ export class PanelManager {
       format: type,
     });
 
+    // Update render state
+    this.currentRenderState = {
+      content,
+      format: type,
+      hasError: false
+    };
+
     console.log('[PanelManager] ✅ Message posted to webview');
   }
 
@@ -639,6 +769,13 @@ export class PanelManager {
     if (!this.panel) {
       return;
     }
+
+    // Update render state
+    this.currentRenderState = {
+      content: '',
+      format: 'svg',
+      hasError: true
+    };
 
     this.panel.webview.postMessage({
       type: 'error',
@@ -660,6 +797,195 @@ export class PanelManager {
       type: 'loading',
       isLoading,
     });
+  }
+
+  /**
+   * Export diagram to file
+   * @param format - Optional export format ('png' or 'svg'). If not provided, user will be prompted
+   */
+  async exportDiagram(format?: 'png' | 'svg'): Promise<void> {
+    const logger = getLogger();
+
+    try {
+      // Check if there's content to export
+      if (!this.currentRenderState.content || this.currentRenderState.hasError) {
+        vscode.window.showErrorMessage('No diagram content to export');
+        logger?.warning('Export attempted with no content or error state');
+        return;
+      }
+
+      // Prompt for format if not provided
+      let exportFormat = format;
+      if (!exportFormat) {
+        const selection = await vscode.window.showQuickPick(
+          [
+            { label: 'PNG', value: 'png' as const },
+            { label: 'SVG', value: 'svg' as const }
+          ],
+          {
+            placeHolder: 'Select export format',
+            title: 'Export Diagram'
+          }
+        );
+
+        if (!selection) {
+          logger?.debug('Export cancelled by user - no format selected');
+          return;
+        }
+
+        exportFormat = selection.value;
+      }
+
+      // Prompt for save location
+      const defaultFileName = this.currentEditor
+        ? path.basename(this.currentEditor.document.fileName, path.extname(this.currentEditor.document.fileName))
+        : 'diagram';
+
+      const fileUri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(`${defaultFileName}.${exportFormat}`),
+        filters: {
+          'PNG Image': ['png'],
+          'SVG Image': ['svg']
+        }
+      });
+
+      if (!fileUri) {
+        logger?.debug('Export cancelled by user - no save location selected');
+        return;
+      }
+
+      logger?.info('Exporting diagram', {
+        format: exportFormat,
+        path: fileUri.fsPath
+      });
+
+      // Call appropriate export method
+      let success = false;
+      if (exportFormat === 'svg') {
+        success = await this.exportAsSvg(fileUri.fsPath);
+      } else {
+        success = await this.exportAsPng(fileUri.fsPath);
+      }
+
+      if (success) {
+        // Show success notification with "Open File" action
+        const action = await vscode.window.showInformationMessage(
+          `Diagram exported successfully to ${path.basename(fileUri.fsPath)}`,
+          'Open File'
+        );
+
+        if (action === 'Open File') {
+          await vscode.env.openExternal(fileUri);
+        }
+
+        logger?.info('Export completed successfully', { path: fileUri.fsPath });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`Export failed: ${errorMessage}`);
+      logger?.error('Export failed', error);
+    }
+  }
+
+  /**
+   * Export diagram as SVG
+   * @param filePath - Path to save the SVG file
+   * @returns True if export succeeded, false otherwise
+   * @private
+   */
+  private async exportAsSvg(filePath: string): Promise<boolean> {
+    const logger = getLogger();
+    const fs = require('fs').promises;
+
+    try {
+      let svgContent = this.currentRenderState.content;
+
+      // Add white background to SVG for better readability
+      // Parse the SVG to add a background rectangle
+      if (svgContent.includes('<svg')) {
+        // Find the opening svg tag
+        const svgTagMatch = svgContent.match(/<svg[^>]*>/);
+        if (svgTagMatch) {
+          const svgTag = svgTagMatch[0];
+          const svgTagEnd = svgContent.indexOf(svgTag) + svgTag.length;
+
+          // Extract width and height from svg tag
+          const widthMatch = svgTag.match(/width="([^"]+)"/);
+          const heightMatch = svgTag.match(/height="([^"]+)"/);
+          const viewBoxMatch = svgTag.match(/viewBox="([^"]+)"/);
+
+          let width = '100%';
+          let height = '100%';
+
+          if (viewBoxMatch) {
+            const viewBox = viewBoxMatch[1].split(' ');
+            width = viewBox[2];
+            height = viewBox[3];
+          } else {
+            if (widthMatch) width = widthMatch[1];
+            if (heightMatch) height = heightMatch[1];
+          }
+
+          // Add white background rectangle as the first element
+          const backgroundRect = `<rect width="${width}" height="${height}" fill="white"/>`;
+          svgContent = svgContent.slice(0, svgTagEnd) + backgroundRect + svgContent.slice(svgTagEnd);
+        }
+      }
+
+      // Write SVG content to file
+      await fs.writeFile(filePath, svgContent, 'utf-8');
+      logger?.debug('SVG export completed with white background', { path: filePath });
+      return true;
+    } catch (error) {
+      logger?.error('SVG export failed', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Export diagram as PNG
+   * @param filePath - Path to save the PNG file
+   * @returns True if export succeeded, false otherwise
+   * @private
+   */
+  private async exportAsPng(filePath: string): Promise<boolean> {
+    const logger = getLogger();
+    const fs = require('fs').promises;
+
+    try {
+      // If current format is already PNG (data URL), extract and save
+      if (this.currentRenderState.format === 'png') {
+        // Extract base64 data from data URL
+        const base64Data = this.currentRenderState.content.replace(/^data:image\/png;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        await fs.writeFile(filePath, buffer);
+        logger?.debug('PNG export completed (from data URL)', { path: filePath });
+        return true;
+      }
+
+      // If current format is SVG, convert to PNG
+      // For now, we'll use a simple approach with sharp library if available
+      // Otherwise, save as SVG and inform user
+      try {
+        const sharp = require('sharp');
+        const svgBuffer = Buffer.from(this.currentRenderState.content, 'utf-8');
+        await sharp(svgBuffer)
+          .png()
+          .toFile(filePath);
+        logger?.debug('PNG export completed (converted from SVG)', { path: filePath });
+        return true;
+      } catch (sharpError) {
+        // Sharp not available, inform user and suggest SVG export
+        logger?.warning('Sharp library not available for PNG conversion', sharpError);
+        vscode.window.showWarningMessage(
+          'PNG export from SVG requires the "sharp" library. Please export as SVG instead or install sharp: npm install sharp'
+        );
+        return false;
+      }
+    } catch (error) {
+      logger?.error('PNG export failed', error);
+      throw error;
+    }
   }
 
   /**
@@ -759,13 +1085,27 @@ export class PanelManager {
       flex: 1;
       overflow: auto;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      align-items: flex-start;
+      justify-content: flex-start;
+      background-color: #f5f5f5;
     }
     #diagram-content {
+      background-color: white;
+      min-width: 100%;
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #diagram-content svg {
+      display: block;
       max-width: 100%;
-      max-height: 100%;
+      height: auto;
+    }
+    #diagram-content img {
+      display: block;
+      max-width: 100%;
+      height: auto;
     }
     #error-container {
       flex: 1;
@@ -787,22 +1127,59 @@ export class PanelManager {
       background-color: var(--vscode-button-background);
       color: var(--vscode-button-foreground);
       border: none;
-      padding: 4px 12px;
+      padding: 6px 8px;
       cursor: pointer;
       border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 28px;
     }
-    button:hover {
+    button svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    button:hover:not(:disabled) {
       background-color: var(--vscode-button-hoverBackground);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
   <div id="container">
     <div id="toolbar">
-      <button id="zoom-in" title="Zoom In">+</button>
-      <button id="zoom-out" title="Zoom Out">-</button>
-      <button id="fit-screen" title="Fit to Screen">Fit</button>
-      <button id="export" title="Export">Export</button>
+      <button id="zoom-in" title="Zoom In (Ctrl/Cmd +)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="11" y1="8" x2="11" y2="14"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </button>
+      <button id="zoom-out" title="Zoom Out (Ctrl/Cmd -)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </button>
+      <button id="fit-screen" title="Fit to Screen (Ctrl/Cmd 0)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path>
+        </svg>
+      </button>
+      <button id="export" title="Export Diagram">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+          <polyline points="16 6 12 2 8 6"></polyline>
+          <line x1="12" y1="2" x2="12" y2="15"></line>
+        </svg>
+      </button>
       <input type="text" id="search" placeholder="Search..." style="margin-left: auto; padding: 4px 8px; background-color: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border);">
     </div>
     <div id="diagram-container">
@@ -819,6 +1196,7 @@ export class PanelManager {
       const diagramContent = document.getElementById('diagram-content');
       const errorContainer = document.getElementById('error-container');
       const errorMessage = document.getElementById('error-message');
+      const exportButton = document.getElementById('export');
 
       // Handle messages from extension
       window.addEventListener('message', event => {
@@ -843,6 +1221,9 @@ export class PanelManager {
         } else if (format === 'png') {
           diagramContent.innerHTML = '<img src="' + content + '" alt="Diagram" />';
         }
+
+        // Enable export button when valid content is shown
+        exportButton.disabled = false;
       }
 
       function showError(message) {
@@ -850,6 +1231,9 @@ export class PanelManager {
         errorContainer.classList.remove('hidden');
         errorContainer.style.display = 'flex';
         errorMessage.textContent = message;
+
+        // Disable export button when error is shown
+        exportButton.disabled = true;
       }
 
       // Toolbar button handlers (placeholder for now)
@@ -865,8 +1249,8 @@ export class PanelManager {
         // TODO: Implement fit to screen
       });
 
-      document.getElementById('export').addEventListener('click', () => {
-        vscode.postMessage({ type: 'export', format: 'png' });
+      exportButton.addEventListener('click', () => {
+        vscode.postMessage({ type: 'export' });
       });
 
       document.getElementById('search').addEventListener('input', (e) => {
