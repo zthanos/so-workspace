@@ -183,7 +183,10 @@
 
   // Export functionality
   exportBtn.addEventListener('click', () => {
-    if (!currentContent || !currentFormat) {
+    // Get the actual rendered content from the DOM
+    const renderedContent = diagramContent.innerHTML;
+    
+    if (!renderedContent || renderedContent.trim() === '') {
       vscode.postMessage({
         type: 'error',
         message: 'No diagram to export'
@@ -191,11 +194,20 @@
       return;
     }
 
-    // Send export request to extension
+    // Determine the actual format from the rendered content
+    let actualFormat = 'svg';
+    
+    // Check if it's an image (PNG)
+    const imgElement = diagramContent.querySelector('img');
+    if (imgElement && imgElement.src) {
+      actualFormat = 'png';
+    }
+
+    // Send export request to extension with rendered content
     vscode.postMessage({
       type: 'export',
-      content: currentContent,
-      format: currentFormat
+      content: renderedContent,
+      format: actualFormat
     });
   });
 

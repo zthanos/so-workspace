@@ -514,6 +514,40 @@ export async function activate(context: vscode.ExtensionContext) {
       })
     );
     
+    // Register "Open Preview from Explorer" command
+    context.subscriptions.push(
+      vscode.commands.registerCommand('diagramPreviewer.openPreviewFromExplorer', async (uri: vscode.Uri) => {
+        try {
+          if (!uri) {
+            vscode.window.showWarningMessage('No file selected for preview.');
+            logger.warning('Command invoked but no file URI provided');
+            return;
+          }
+          
+          logger.info(`Opening preview from explorer for: ${uri.fsPath}`);
+          await diagramPreviewerPanelManager!.openPreviewFromExplorer(uri);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.error('Error opening preview from explorer', error);
+          vscode.window.showErrorMessage(`Failed to open diagram preview: ${errorMessage}`);
+        }
+      })
+    );
+    
+    // Register "Export Diagram" command
+    context.subscriptions.push(
+      vscode.commands.registerCommand('diagramPreviewer.export', async () => {
+        try {
+          logger.info('Export diagram command invoked');
+          await diagramPreviewerPanelManager!.exportDiagram();
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.error('Error exporting diagram', error);
+          vscode.window.showErrorMessage(`Failed to export diagram: ${errorMessage}`);
+        }
+      })
+    );
+    
     // Register text document change listeners with debounce
     context.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument((event) => {
