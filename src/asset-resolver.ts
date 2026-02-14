@@ -1,8 +1,9 @@
 import * as vscode from "vscode";
+import * as path from "path";
 
 /**
- * Resolves paths to extension assets (prompts, templates, rules, images)
- * using the VS Code extension installation path.
+ * Resolves asset paths inside the installed extension.
+ * Ensures deterministic access to packaged prompts, templates, and rules.
  */
 export class AssetResolver {
   private extensionContext: vscode.ExtensionContext;
@@ -12,70 +13,84 @@ export class AssetResolver {
   }
 
   /**
-   * Resolves a path to a prompt file
-   * @param relativePath - Path relative to assets/agent/prompts/
-   * @returns Absolute URI to the prompt file
+   * Returns the base URI of the extension installation.
    */
-  getPromptPath(relativePath: string): vscode.Uri {
+  private getExtensionBaseUri(): vscode.Uri {
+    return this.extensionContext.extensionUri;
+  }
+
+  /**
+   * Resolves a file inside assets/templates/
+   */
+  getTemplatePath(fileName: string): vscode.Uri {
     return vscode.Uri.joinPath(
-      this.extensionContext.extensionUri,
-      'assets',
-      'agent',
-      'prompts',
-      relativePath
+      this.getExtensionBaseUri(),
+      "assets",
+      "templates",
+      fileName
     );
   }
 
   /**
-   * Resolves a path to a template file
-   * @param relativePath - Path relative to assets/templates/
-   * @returns Absolute URI to the template file
+   * Resolves a file inside assets/agent/prompts/
    */
-  getTemplatePath(relativePath: string): vscode.Uri {
+  getPromptPath(fileName: string): vscode.Uri {
     return vscode.Uri.joinPath(
-      this.extensionContext.extensionUri,
-      'assets',
-      'templates',
-      relativePath
+      this.getExtensionBaseUri(),
+      "assets",
+      "agent",
+      "prompts",
+      fileName
     );
   }
 
   /**
-   * Resolves a path to a rules file
-   * @param relativePath - Path relative to assets/agent/rules/
-   * @returns Absolute URI to the rules file
+   * Resolves the SO agent context template (extension baseline).
+   * Used as fallback when workspace docs/so_agent_context.md is not present.
    */
-  getRulesPath(relativePath: string): vscode.Uri {
+  getAgentContextTemplatePath(): vscode.Uri {
     return vscode.Uri.joinPath(
-      this.extensionContext.extensionUri,
-      'assets',
-      'agent',
-      'rules',
-      relativePath
+      this.getExtensionBaseUri(),
+      "assets",
+      "templates",
+      "so_agent_context.md"
     );
   }
 
   /**
-   * Resolves a path to an image asset
-   * @param relativePath - Path relative to assets/templates/
-   * @returns Absolute URI to the image file
+   * Resolves a file inside assets/agent/rules/
    */
-  getImagePath(relativePath: string): vscode.Uri {
+  getRulePath(fileName: string): vscode.Uri {
     return vscode.Uri.joinPath(
-      this.extensionContext.extensionUri,
-      'assets',
-      'templates',
-      relativePath
+      this.getExtensionBaseUri(),
+      "assets",
+      "agent",
+      "rules",
+      fileName
     );
   }
 
   /**
-   * Reads the content of an asset file
-   * @param uri - URI to the asset file
-   * @returns File content as string
+   * Reads an asset file as string.
    */
   async readAsset(uri: vscode.Uri): Promise<string> {
-    const bytes = await vscode.workspace.fs.readFile(uri);
-    return new TextDecoder('utf-8').decode(bytes);
+    try {
+      const data = await vscode.workspace.fs.readFile(uri);
+      return Buffer.from(data).toString("utf-8");
+    } catch (error) {
+      throw new Error(`Asset not found or unreadable: ${uri.fsPath}`);
+    }
+  }
+
+  /**
+   * Checks if an asset exists.
+   */
+  async assetExists(uri: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.workspace.fs.stat(uri);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

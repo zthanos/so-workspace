@@ -2,6 +2,7 @@ import { openChatWithPrompt } from "./chat_open";
 import { wrapForAgent } from "./prompt_envelope";
 import * as vscode from "vscode";
 import { AssetResolver } from "./asset-resolver";
+import { loadSoAgentContext } from "./so_agent_context";
 
 let assetResolver: AssetResolver;
 
@@ -21,14 +22,23 @@ const DIAGRAM_GENERATION_PROMPTS: Record<string, string> = {
   "c4_container": "02_diagrams/06_generate_c4_container.prompt.md"
 };
 
-async function compose(baseRel: string, specificRel: string, extraHeader?: string): Promise<string> {
+async function compose(
+  baseRel: string,
+  specificRel: string,
+  extraHeader?: string,
+  agentContext?: string
+): Promise<string> {
   const baseUri = assetResolver.getPromptPath(baseRel);
   const specificUri = assetResolver.getPromptPath(specificRel);
-  
+
   const base = await assetResolver.readAsset(baseUri);
   const spec = await assetResolver.readAsset(specificUri);
-  
-  const combined = extraHeader ? `${base}\n\n${extraHeader}\n\n${spec}` : `${base}\n\n${spec}`;
+
+  let combined =
+    extraHeader ? `${base}\n\n${extraHeader}\n\n${spec}` : `${base}\n\n${spec}`;
+  if (agentContext) {
+    combined = `${agentContext}\n\n---\n\n${combined}`;
+  }
   return wrapForAgent(combined);
 }
 
@@ -60,7 +70,11 @@ async function pickDiagram(): Promise<DiagramPick | undefined> {
 export async function diagramGenerateC4ContextOpenChat(): Promise<void> {
   const specific = "02_diagrams/05_generate_c4_context.prompt.md";
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, undefined, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);
@@ -73,7 +87,11 @@ export async function diagramGenerateC4ContextOpenChat(): Promise<void> {
 export async function diagramGenerateC4ContainerOpenChat(): Promise<void> {
   const specific = "02_diagrams/06_generate_c4_container.prompt.md";
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, undefined, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);
@@ -99,7 +117,11 @@ export async function diagramEvalOpenChat(): Promise<void> {
   ].join("\n");
 
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific, header);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, header, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);
@@ -134,7 +156,11 @@ export async function diagramRecheckOpenChat(): Promise<void> {
   ].join("\n");
 
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific, header);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, header, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);
@@ -175,7 +201,11 @@ export async function diagramPatchOpenChat(): Promise<void> {
   ].join("\n");
 
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific, header);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, header, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);

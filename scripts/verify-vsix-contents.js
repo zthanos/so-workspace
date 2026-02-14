@@ -43,7 +43,8 @@ const REQUIRED_ASSETS = [
   'extension/assets/agent/rules/rules.yaml',
   'extension/assets/templates/flows.yaml.template',
   'extension/assets/templates/README_SO_Workspace.md',
-  'extension/assets/templates/logo.png'
+  'extension/assets/templates/logo.png',
+  'extension/assets/templates/so_agent_context.md'
 ];
 
 // Paths that must NOT exist in the VSIX

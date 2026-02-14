@@ -31,8 +31,8 @@ This extension packages all runtime assets (prompts, templates, rules) internall
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd <repository-name>
+git clone https://github.com/zthanos/so-workspace.git
+cd so-workspace
 
 # Install dependencies
 npm install
@@ -48,7 +48,7 @@ npm run package
 
 ### Required Local Tools for Diagram Rendering
 
-The extension uses **local rendering only** for all diagram types, with no external API dependencies. This ensures offline operation and data privacy.
+The extension uses **local rendering** for all diagram types by default, with no external API dependencies—ensuring offline operation and data privacy. Server URLs (PlantUML, Structurizr) exist in settings for optional use; the recommended path is local tools only.
 
 #### Required Tools
 
@@ -127,14 +127,18 @@ Open an empty folder in VS Code and run:
 This creates the required folder structure and template files:
 
 ```
+inbox/
+ └─ brd/
 docs/
+ ├─ 00_brd/
  ├─ 01_requirements/
  ├─ 02_objectives/
  │   └─ flows.yaml
  ├─ 03_architecture/
  │   └─ diagrams/
- │       ├─ src/seq/
- │       └─ src/flow/
+ │       └─ src/
+ │           ├─ seq/
+ │           └─ flow/
  ├─ project_information.md
  ├─ README_SO_Workspace.md
  └─ .so-workspace.json
@@ -143,6 +147,33 @@ docs/
 ### 2. Follow the Ordered Workflow
 
 The extension provides numbered commands that should be executed in sequence. See the complete workflow in your workspace's `docs/README_SO_Workspace.md` after initialization.
+
+### 3. How It Works (Standard User Journey)
+
+The SO Workspace extension provides a structured and deterministic workflow for transforming a Business Requirements Document (BRD) into a validated Solution Outline package.
+
+A typical architect journey follows these steps:
+
+1. Install the extension in VS Code.
+2. Create an empty workspace folder.
+3. Run the **Initialize SO Workspace Structure** command.
+4. Place the BRD document into the `inbox/brd/` folder.
+5. Execute the **Convert Word to Markdown** command to produce a canonical BRD version.
+6. Progress through each stage of the workflow (Requirements → Objectives → Architecture → Decisions) using the **Generate → Evaluate → Patch → Recheck** sequence.
+7. Use the `discussions/` folder to capture meeting clarifications and project-specific updates not originally present in the BRD.
+8. Use the `references/` folder to apply approved reference architectures, patterns, and decision tables.
+9. Produce a structured, review-ready Solution Outline with diagrams and supporting artifacts.
+
+This structured approach ensures:
+
+- **Consistency** across projects
+- **Traceability** from requirements to architecture
+- **Controlled updates** and iterative refinement
+- **Alignment** between business, architecture, and engineering teams
+
+The result is not just a document, but a standardized architectural artifact set ready for enterprise communication and governance.
+
+![Standard user journey flowchart](assets/standard-user-journey.png)
 
 ---
 
@@ -227,6 +258,10 @@ The extension renders all diagrams locally using the following tools:
 
 All diagrams are validated before rendering to catch syntax errors early. No external APIs or cloud services are used for rendering, ensuring complete offline operation and data privacy.
 
+### Diagram Preview
+
+The extension includes a **Diagram Preview** that renders Mermaid and other diagram sources in a side panel. You can open it from the editor or via the preview command. Settings under SO Workspace Diagrams control behavior: `diagramPreviewer.autoOpenPreview` (open preview when diagram files are opened), `diagramPreviewer.debounceDelay` (live-update delay in ms), and `diagramPreviewer.cacheSize` (number of rendered diagrams to cache).
+
 ---
 
 ## Extension Development
@@ -235,7 +270,7 @@ All diagrams are validated before rendering to catch syntax errors early. No ext
 
 - Node.js 16.x or higher
 - npm 8.x or higher
-- VS Code 1.80.0 or higher
+- VS Code 1.109.0 or higher
 
 ### Project Structure
 
@@ -307,6 +342,8 @@ All assets are resolved using the extension installation path, ensuring they wor
 ---
 
 ## Contributing
+
+For the Diagram Previewer feature (webview, renderers, cache), see [src/diagram-previewer/README.md](src/diagram-previewer/README.md).
 
 ### Adding New Commands
 
@@ -401,7 +438,7 @@ If workspace initialization fails:
 
 ## License
 
-[Your License Here]
+See [LICENSE.md](LICENSE.md) in the repository.
 
 ---
 

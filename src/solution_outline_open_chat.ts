@@ -2,6 +2,7 @@ import { openChatWithPrompt } from "./chat_open";
 import { wrapForAgent } from "./prompt_envelope";
 import * as vscode from "vscode";
 import { AssetResolver } from "./asset-resolver";
+import { loadSoAgentContext } from "./so_agent_context";
 
 let assetResolver: AssetResolver;
 
@@ -9,14 +10,23 @@ export function initializeSolutionOutlineAssetResolver(resolver: AssetResolver):
   assetResolver = resolver;
 }
 
-async function compose(baseRel: string, specificRel: string, extraHeader?: string): Promise<string> {
+async function compose(
+  baseRel: string,
+  specificRel: string,
+  extraHeader?: string,
+  agentContext?: string
+): Promise<string> {
   const baseUri = assetResolver.getPromptPath(baseRel);
   const specificUri = assetResolver.getPromptPath(specificRel);
-  
+
   const base = await assetResolver.readAsset(baseUri);
   const spec = await assetResolver.readAsset(specificUri);
-  
-  const combined = extraHeader ? `${base}\n\n${extraHeader}\n\n${spec}` : `${base}\n\n${spec}`;
+
+  let combined =
+    extraHeader ? `${base}\n\n${extraHeader}\n\n${spec}` : `${base}\n\n${spec}`;
+  if (agentContext) {
+    combined = `${agentContext}\n\n---\n\n${combined}`;
+  }
   return wrapForAgent(combined);
 }
 
@@ -33,7 +43,11 @@ async function compose(baseRel: string, specificRel: string, extraHeader?: strin
 export async function soGenerateOpenChat(): Promise<void> {
   const specific = "04_solution_outline/20_generate_solution_outline.prompt.md";
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, undefined, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);
@@ -46,7 +60,11 @@ export async function soGenerateOpenChat(): Promise<void> {
 export async function soEvalOpenChat(): Promise<void> {
   const specific = "04_solution_outline/21_evaluate_solution_outline.prompt.md";
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, undefined, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);
@@ -79,7 +97,16 @@ export async function soPatchOpenChat(): Promise<void> {
 
   const specific = "04_solution_outline/22_patch_solution_outline.prompt.md";
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific, scopedHeader);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose(
+      "00_EXECUTE.prompt.md",
+      specific,
+      scopedHeader,
+      soCtx
+    );
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);
@@ -92,7 +119,11 @@ export async function soPatchOpenChat(): Promise<void> {
 export async function soFinalReviewOpenChat(): Promise<void> {
   const specific = "04_solution_outline/24_final_review_solution_outline.prompt.md";
   try {
-    const prompt = await compose("00_EXECUTE.prompt.md", specific);
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+    const soCtx = workspaceRoot
+      ? await loadSoAgentContext(workspaceRoot, assetResolver)
+      : undefined;
+    const prompt = await compose("00_EXECUTE.prompt.md", specific, undefined, soCtx);
     await openChatWithPrompt(prompt);
   } catch (error) {
     console.error(`Failed to load prompt: ${specific}`, error);

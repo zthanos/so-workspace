@@ -101,8 +101,8 @@ function Test-PathReferences {
     }
     
     # Get context files
-    if (Test-Path "agent/so_agent_context.md") {
-        $filesToCheck += Get-Item "agent/so_agent_context.md"
+    if (Test-Path "templates/so_agent_context.md") {
+        $filesToCheck += Get-Item "templates/so_agent_context.md"
     }
     
     # Get diagram registry

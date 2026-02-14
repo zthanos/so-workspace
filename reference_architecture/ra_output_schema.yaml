@@ -1,0 +1,79 @@
+reference_id:
+title:
+version:
+owner:
+
+extraction_confidence:
+  overall: # 0-1
+  systems:
+  topology:
+  integrations:
+  decision_tables:
+  standards:
+  constraints:
+  patterns:
+
+ambiguities:
+  - description:
+    affected_section:
+
+systems:
+  - name:
+    description:
+    responsibilities:
+    interfaces:
+    data_domains:
+    confidence: # 0-1
+
+topology:
+  layers:
+    - name:
+      purpose:
+      confidence:
+  deployment_model:
+    value:
+    confidence:
+  network_zones:
+  trust_boundaries:
+  confidence:
+
+integrations:
+  - source:
+    target:
+    type:
+    protocol:
+    data_format:
+    security:
+    notes:
+    confidence:
+
+decision_tables:
+  - name:
+    context:
+    drivers:
+    options:
+      - option:
+        when_to_use:
+        tradeoffs:
+    default_option:
+    confidence:
+
+standards:
+  security:
+  logging:
+  monitoring:
+  naming_conventions:
+  confidence:
+
+constraints:
+  technical:
+  regulatory:
+  performance:
+  confidence:
+
+patterns:
+  - name:
+    description:
+    when_to_use:
+    when_to_avoid:
+    confidence:
