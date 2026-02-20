@@ -187,7 +187,7 @@ All Mermaid diagram files (`.mmd`) **must** begin with a valid diagram type decl
 
 **Valid diagram type declarations:**
 
-```mermaid
+```
 sequenceDiagram
 flowchart TD
 graph LR
@@ -223,7 +223,7 @@ sequenceDiagram
 
 **Example invalid Mermaid file (missing type):**
 
-```mermaid
+```
 %% This will fail validation
 participant User
 participant System
