@@ -18,11 +18,7 @@ import {
   reqInventoryEvalOpenChat,
   reqInventoryPatchOpenChat,
   reqInventoryRecheckOpenChat,
-  initializeRequirementsAssetResolver,
-  createRequirementsInventory,
-  evaluateRequirementsInventory,
-  patchRequirementsInventory,
-  showIntegrationRequirements,
+  initializeRequirementsAssetResolver
 } from "./requirements_open_chat";
 import {
   diagramGenerateC4ContextOpenChat,
@@ -42,7 +38,6 @@ import {
 import { registerPaletteBuildCommands } from "./build_open_tasks";
 import { CommandHandlerImpl } from "./diagram_renderer_v2";
 import { registerWordToMarkdownCommand } from "./word_to_markdown";
-import { registerSoParticipant } from "./so_participant";
 import { registerResetGeneratedFilesCommand } from "./reset_generated_files";
 import { registerGenerateConfigCommand } from "./generate-config-command";
 import { registerSwitchEnvironmentCommand } from "./switch-environment-command";
@@ -294,14 +289,6 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("so-workspace.req.recheck", reqInventoryRecheckOpenChat)
   );
 
-  // Requirements context-menu commands (right-click on brd.md / requirements.inventory.md)
-  context.subscriptions.push(
-    vscode.commands.registerCommand("so.createRequirementsInventory",   createRequirementsInventory),
-    vscode.commands.registerCommand("so.evaluateRequirementsInventory", evaluateRequirementsInventory),
-    vscode.commands.registerCommand("so.patchRequirementsInventory",    patchRequirementsInventory),
-    vscode.commands.registerCommand("so.showIntegrationRequirements",   showIntegrationRequirements),
-  );
-
   // Objectives
   context.subscriptions.push(
     vscode.commands.registerCommand("so-workspace.obj.generate", objectivesGenerateOpenChat),
@@ -468,9 +455,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Word to Markdown conversion
   registerWordToMarkdownCommand(context);
-
-  // SO Chat Participant (uses so_agent_context.md + skills)
-  registerSoParticipant(context);
 
   // Reset generated files command
   registerResetGeneratedFilesCommand(context);

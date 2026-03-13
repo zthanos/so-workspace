@@ -172,25 +172,7 @@
         "id": "so-workspace.so",
         "name": "so",
         "description": "SO workspace documentation and build assistant",
-        "isSticky": true,
-        "commands": [
-          {
-            "name": "generate",
-            "description": "Extract and create Requirements Inventory from the BRD"
-          },
-          {
-            "name": "eval",
-            "description": "Evaluate Requirements Inventory against the BRD"
-          },
-          {
-            "name": "patch",
-            "description": "Apply fixes based on the latest inconsistencies report"
-          },
-          {
-            "name": "recheck",
-            "description": "Re-evaluate the patched inventory and update the report"
-          }
-        ]
+        "isSticky": true
       }
     ],
     "commands": [
@@ -399,9 +381,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "extensionDependencies": [
-    "github.copilot-chat"
-  ],
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "@types/fs-extra": "^11.0.4",

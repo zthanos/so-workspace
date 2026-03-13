@@ -53,18 +53,10 @@ async function offerToOpenFile(filePath: string): Promise<void> {
 /**
  * Main command handler for Word to Markdown conversion.
  * Orchestrates the entire conversion process from file selection to output.
- *
- * @param contextUri - Optional URI provided when invoked from the Explorer context
- *                     menu. When present, skips the inbox/brd file-picker and uses
- *                     this file directly. When absent (Command Palette), the original
- *                     inbox/brd scanning and selection flow is used.
  */
-async function convertWordToMarkdown(contextUri?: vscode.Uri): Promise<void> {
+async function convertWordToMarkdown(): Promise<void> {
   outputChannel.appendLine("[INFO] ========================================");
   outputChannel.appendLine("[INFO] Word to Markdown conversion started");
-  outputChannel.appendLine(contextUri
-    ? `[INFO] Invoked from context menu: ${contextUri.fsPath}`
-    : "[INFO] Invoked from Command Palette");
   outputChannel.appendLine("[INFO] ========================================");
   
   try {
@@ -78,40 +70,29 @@ async function convertWordToMarkdown(contextUri?: vscode.Uri): Promise<void> {
     }
     
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
-
-    // Determine the source .docx file.
-    // Context menu path: use the right-clicked file directly.
-    // Command Palette path: scan inbox/brd and show a file picker (original behaviour).
-    let selectedFile: string;
-    if (contextUri) {
-      selectedFile = contextUri.fsPath;
-      outputChannel.appendLine(`[INFO] Using file from context menu: ${path.basename(selectedFile)}`);
-    } else {
-      const inboxPath = path.join(workspaceRoot, "inbox", "brd");
-
-      // Find .docx files
-      let docxFiles: string[];
-      try {
-        docxFiles = await findDocxFiles(inboxPath);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        outputChannel.appendLine(`[ERROR] Failed to scan for Word documents: ${errorMessage}`);
-        if (error instanceof Error && error.stack) {
-          outputChannel.appendLine(`[ERROR] Stack trace: ${error.stack}`);
-        }
-        vscode.window.showErrorMessage(`Failed to scan for Word documents: ${errorMessage}`);
-        return;
+    const inboxPath = path.join(workspaceRoot, "inbox", "brd");
+    
+    // Find .docx files
+    let docxFiles: string[];
+    try {
+      docxFiles = await findDocxFiles(inboxPath);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      outputChannel.appendLine(`[ERROR] Failed to scan for Word documents: ${errorMessage}`);
+      if (error instanceof Error && error.stack) {
+        outputChannel.appendLine(`[ERROR] Stack trace: ${error.stack}`);
       }
-
-      // Select file
-      const picked = await selectDocxFile(docxFiles);
-      if (!picked) {
-        // User cancelled or no files found - graceful termination without error
-        outputChannel.appendLine("[INFO] Conversion cancelled or no files available");
-        outputChannel.appendLine("[INFO] ========================================");
-        return;
-      }
-      selectedFile = picked;
+      vscode.window.showErrorMessage(`Failed to scan for Word documents: ${errorMessage}`);
+      return;
+    }
+    
+    // Select file
+    const selectedFile = await selectDocxFile(docxFiles);
+    if (!selectedFile) {
+      // User cancelled or no files found - graceful termination without error
+      outputChannel.appendLine("[INFO] Conversion cancelled or no files available");
+      outputChannel.appendLine("[INFO] ========================================");
+      return;
     }
     
     // Prompt for output path
@@ -598,12 +579,9 @@ export function registerWordToMarkdownCommand(context: vscode.ExtensionContext):
   outputChannel = vscode.window.createOutputChannel("SO Workspace - Word to Markdown");
   
   // Register the command
-  // The optional `uri` parameter is provided when invoked from the Explorer context menu.
-  // When invoked from the Command Palette, `uri` is undefined and the original
-  // inbox/brd file-picker flow is used instead.
   const disposable = vscode.commands.registerCommand(
     "so-workspace.convertWordToMarkdown",
-    (uri?: vscode.Uri) => convertWordToMarkdown(uri)
+    convertWordToMarkdown
   );
   
   // Add to subscriptions for proper cleanup

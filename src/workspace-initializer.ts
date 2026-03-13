@@ -122,6 +122,15 @@ List the references used in this project.
   async createFolderStructure(workspaceRoot: vscode.Uri): Promise<void> {
     const folders = [
       "inbox/brd",
+
+      ".github",
+      ".github/skills",
+      ".github/skills/requirements-inventory",
+      // ".github/skills/objectives",
+      // ".github/skills/solution-outline",
+      // ".github/skills/diagrams",
+      // ".github/skills/adr",
+
       "docs/00_brd",
       "docs/01_requirements",
       "docs/02_objectives",
@@ -144,6 +153,50 @@ List the references used in this project.
     }
   }
 
+  async copyDirectoryRecursive(
+    source: vscode.Uri,
+    target: vscode.Uri,
+    overwrite: boolean
+  ): Promise<void> {
+    console.log(`[copyDir] source: ${source.fsPath}`);
+    console.log(`[copyDir] target: ${target.fsPath}`);
+    
+    // Check if source exists first
+    const sourceExists = await this.exists(source);
+    if (!sourceExists) {
+      console.error(`[copyDir] Source directory does not exist: ${source.fsPath}`);
+      throw new Error(`Source directory does not exist: ${source.fsPath}`);
+    }
+
+    let entries: [string, vscode.FileType][];
+
+    try {
+      entries = await vscode.workspace.fs.readDirectory(source);
+      console.log(`[copyDir] entries found: ${entries.length}`);
+    } catch (e) {
+      console.error(`[copyDir] FAILED to read source: ${e}`);
+      throw new Error(`Failed to read source directory: ${source.fsPath}`);
+    }
+
+    // Create target directory if it doesn't exist
+    try {
+      await vscode.workspace.fs.createDirectory(target);
+    } catch { }
+
+    for (const [name, type] of entries) {
+      const src = vscode.Uri.joinPath(source, name);
+      const dst = vscode.Uri.joinPath(target, name);
+
+      if (type === vscode.FileType.Directory) {
+        await this.copyDirectoryRecursive(src, dst, overwrite);
+      }
+
+      if (type === vscode.FileType.File) {
+        await this.copyFileIfNeeded(src, dst, overwrite);
+      }
+    }
+  }
+
   /**
    * Copies template files to the workspace
    * @param workspaceRoot - Root URI of the workspace
@@ -157,8 +210,32 @@ List the references used in this project.
 
     // README_SO_Workspace.md
     const readmeTemplateUri = this.assetResolver.getTemplatePath("README_SO_Workspace.md");
-    const readmeTargetUri = vscode.Uri.joinPath(workspaceRoot, "docs", "README_SO_Workspace.md");
+    const readmeTargetUri = vscode.Uri.joinPath(workspaceRoot, "README_SO_Workspace.md");
     await this.copyFileIfNeeded(readmeTemplateUri, readmeTargetUri, overwrite);
+
+    // Copy all skills
+    const skillsTemplateUri = this.assetResolver.getTemplatePath("skills");
+    console.log(`[skills] template URI: ${skillsTemplateUri.fsPath}`);
+    const skillsExists = await this.assetResolver.assetExists(skillsTemplateUri);
+    console.log(`[skills] template exists: ${skillsExists}`);
+    
+    if (skillsExists) {
+      const skillsTargetUri = vscode.Uri.joinPath(
+        workspaceRoot,
+        ".github",
+        "skills"
+      );
+      console.log(`[skills] target URI: ${skillsTargetUri.fsPath}`);
+      console.log(`[skills] Starting copy operation...`);
+      await this.copyDirectoryRecursive(skillsTemplateUri, skillsTargetUri, overwrite);
+      console.log(`[skills] Copy operation completed`);
+    } else {
+      const msg = `Skills template directory not found at: ${skillsTemplateUri.fsPath}`;
+      console.warn(`[skills] ${msg}`);
+      vscode.window.showWarningMessage(msg);
+    }
+
+
 
     // so_agent_context.md (recommended: keep deterministic + versioned via template)
     try {
