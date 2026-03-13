@@ -1,10 +1,6 @@
 import * as vscode from "vscode";
 import { AssetResolver } from "./asset-resolver";
 
-// ---------------------------------------------------------------------------
-// Types — mirror the frontmatter schema in skill.md files
-// ---------------------------------------------------------------------------
-
 export type SkillOperation = "generate" | "eval" | "patch" | "recheck" | string;
 
 export interface QuickPickOption {
@@ -39,10 +35,17 @@ export interface SkillConfig {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Minimal YAML frontmatter parser (no external dependency)
-// Handles: scalars, arrays (inline + block), nested objects, empty maps {}
-// ---------------------------------------------------------------------------
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function asString(value: unknown, fallback?: string): string {
+  return typeof value === "string" ? value : (fallback ?? "");
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+}
 
 function parseFrontmatter(content: string): Record<string, unknown> {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -59,33 +62,42 @@ function parseYamlBlock(
 
   while (i < lines.length) {
     const line = lines[i];
-    if (line.trim() === "" || line.trim().startsWith("#")) { i++; continue; }
+    if (line.trim() === "" || line.trim().startsWith("#")) {
+      i++;
+      continue;
+    }
 
     const indent = line.search(/\S/);
-    if (indent < baseIndent) break; // back to parent
+    if (indent < baseIndent) break;
 
     const keyMatch = line.match(/^(\s*)([\w-]+):\s*(.*)/);
-    if (!keyMatch) { i++; continue; }
+    if (!keyMatch) {
+      throw new Error(`Unsupported frontmatter line: "${line}"`);
+    }
 
-    const key   = keyMatch[2];
+    const key = keyMatch[2];
     const inline = keyMatch[3].trim();
     i++;
 
-    if (inline === "{}" || inline === "") {
-      if (inline === "{}") {
-        result[key] = {};
-        continue;
-      }
-      // block value — collect children at indent+2
+    if (inline === "{}") {
+      result[key] = {};
+      continue;
+    }
+
+    if (inline === "") {
       const children: string[] = [];
       while (i < lines.length) {
         const childLine = lines[i];
-        if (childLine.trim() === "") { i++; continue; }
+        if (childLine.trim() === "") {
+          i++;
+          continue;
+        }
         const childIndent = childLine.search(/\S/);
         if (childIndent <= indent) break;
         children.push(childLine);
         i++;
       }
+
       if (children.length === 0) {
         result[key] = undefined;
       } else if (children[0].trim().startsWith("- ")) {
@@ -93,16 +105,19 @@ function parseYamlBlock(
       } else {
         result[key] = parseYamlBlock(children, children[0].search(/\S/)).value;
       }
-    } else if (inline.startsWith("[") && inline.endsWith("]")) {
-      // inline sequence: [a, b, c]
+      continue;
+    }
+
+    if (inline.startsWith("[") && inline.endsWith("]")) {
       result[key] = inline
         .slice(1, -1)
         .split(",")
-        .map(s => unquote(s.trim()))
+        .map((s) => unquote(s.trim()))
         .filter(Boolean);
-    } else {
-      result[key] = unquote(inline);
+      continue;
     }
+
+    result[key] = unquote(inline);
   }
 
   return { value: result, consumed: i };
@@ -111,43 +126,72 @@ function parseYamlBlock(
 function parseBlockSequence(lines: string[]): unknown[] {
   const items: unknown[] = [];
   let i = 0;
+
   while (i < lines.length) {
     const line = lines[i];
-    if (line.trim() === "") { i++; continue; }
+    if (line.trim() === "") {
+      i++;
+      continue;
+    }
+
     const seqMatch = line.match(/^(\s*)-\s+(.*)/);
-    if (!seqMatch) { i++; continue; }
+    if (!seqMatch) {
+      throw new Error(`Unsupported sequence line: "${line}"`);
+    }
 
     const inline = seqMatch[2].trim();
+    const seqIndent = line.search(/\S/);
     i++;
 
     if (inline === "" || inline === "{}") {
-      // block map item — collect continuation lines
       const children: string[] = [];
-      const baseIndent = (line.search(/\S/)) + 2;
-      while (i < lines.length && lines[i].search(/\S/) >= baseIndent) {
-        children.push(lines[i]);
+      const baseIndent = seqIndent + 2;
+
+      while (i < lines.length) {
+        const childLine = lines[i];
+        if (childLine.trim() === "") {
+          i++;
+          continue;
+        }
+        const childIndent = childLine.search(/\S/);
+        if (childIndent < baseIndent) break;
+        children.push(childLine);
         i++;
       }
+
       items.push(children.length ? parseYamlBlock(children, baseIndent).value : {});
-    } else if (inline.includes(": ")) {
-      // single-line map item: "- key: value"
-      const obj: Record<string, string> = {};
+      continue;
+    }
+
+    if (inline.includes(": ")) {
+      const obj: Record<string, unknown> = {};
       const pairs = [inline];
-      while (i < lines.length && !lines[i].trim().startsWith("- ")) {
-        const cont = lines[i].trim();
-        if (cont === "" || lines[i].search(/\S/) <= line.search(/\S/)) break;
-        pairs.push(cont);
+
+      while (i < lines.length) {
+        const next = lines[i];
+        if (next.trim().startsWith("- ")) break;
+        if (next.trim() === "") {
+          i++;
+          continue;
+        }
+        const nextIndent = next.search(/\S/);
+        if (nextIndent <= seqIndent) break;
+        pairs.push(next.trim());
         i++;
       }
+
       for (const pair of pairs) {
         const m = pair.match(/^([\w-]+):\s*(.*)/);
         if (m) obj[m[1]] = unquote(m[2].trim());
       }
+
       items.push(obj);
-    } else {
-      items.push(unquote(inline));
+      continue;
     }
+
+    items.push(unquote(inline));
   }
+
   return items;
 }
 
@@ -155,13 +199,73 @@ function unquote(s: string): string {
   return s.replace(/^["']|["']$/g, "");
 }
 
-// ---------------------------------------------------------------------------
-// Loader & cache
-// ---------------------------------------------------------------------------
+function normalizeSkillConfig(fm: Record<string, unknown>, skillFolder: string): SkillConfig {
+  let operations: Record<SkillOperation, OperationConfig> = {};
+  const rawOps = fm.operations;
+
+  if (Array.isArray(rawOps)) {
+    for (const op of rawOps) {
+      if (typeof op === "string") operations[op] = {};
+    }
+  } else if (isRecord(rawOps)) {
+    operations = rawOps as Record<SkillOperation, OperationConfig>;
+  }
+
+  const quickPickRaw = isRecord(fm.quickPick) ? fm.quickPick : undefined;
+  const inputsRaw = isRecord(fm.inputs) ? fm.inputs : undefined;
+
+  return {
+    id: asString(fm.id, skillFolder),
+    name: asString(fm.name, skillFolder),
+    description: asString(fm.description, ""),
+    participant: asString(fm.participant, "so"),
+    operations,
+    inputs: inputsRaw as SkillConfig["inputs"] | undefined,
+    quickPick: quickPickRaw as SkillConfig["quickPick"] | undefined,
+  };
+}
+
+function validateSkillConfig(config: SkillConfig, skillFolder: string): void {
+  if (!config.id) {
+    throw new Error(`Skill "${skillFolder}" is missing "id" in frontmatter.`);
+  }
+
+  if (!config.name) {
+    throw new Error(`Skill "${skillFolder}" is missing "name" in frontmatter.`);
+  }
+
+  if (!Object.keys(config.operations).length) {
+    throw new Error(`Skill "${skillFolder}" must define at least one operation.`);
+  }
+
+  if (config.quickPick) {
+    if (!config.quickPick.paramName) {
+      throw new Error(`Skill "${skillFolder}" quickPick is missing "paramName".`);
+    }
+    if (!config.quickPick.title) {
+      throw new Error(`Skill "${skillFolder}" quickPick is missing "title".`);
+    }
+    if (!Array.isArray(config.quickPick.forOperations)) {
+      throw new Error(`Skill "${skillFolder}" quickPick.forOperations must be an array.`);
+    }
+    if (!Array.isArray(config.quickPick.options) || config.quickPick.options.length === 0) {
+      throw new Error(`Skill "${skillFolder}" quickPick.options must contain at least one option.`);
+    }
+  }
+
+  if (config.inputs) {
+    for (const [inputKey, inputCfg] of Object.entries(config.inputs)) {
+      if (!inputCfg.forOperations?.length) {
+        throw new Error(`Skill "${skillFolder}" input "${inputKey}" is missing forOperations.`);
+      }
+      if (inputCfg.type !== "text") {
+        throw new Error(`Skill "${skillFolder}" input "${inputKey}" has unsupported type "${inputCfg.type}".`);
+      }
+    }
+  }
+}
 
 let assetResolver: AssetResolver;
-
-// Cache: skillFolder → { config, watchDisposable }
 const cache = new Map<string, { config: SkillConfig; watcher?: vscode.Disposable }>();
 
 export function initializeSkillLoader(resolver: AssetResolver): void {
@@ -177,37 +281,19 @@ export function invalidateCache(): void {
 export async function loadSkillConfig(skillFolder: string): Promise<SkillConfig> {
   if (cache.has(skillFolder)) return cache.get(skillFolder)!.config;
 
-  const uri   = assetResolver.getSkillPath(`${skillFolder}/skill.md`);
-  const raw   = await assetResolver.readAsset(uri);
-  const fm    = parseFrontmatter(raw) as Record<string, unknown>;
+  const uri = assetResolver.getSkillPath(`${skillFolder}/skill.md`);
+  const raw = await assetResolver.readAsset(uri);
+  const fm = parseFrontmatter(raw);
 
-  // Normalise operations: list → object, object stays object
-  let operations: Record<string, OperationConfig> = {};
-  const rawOps = fm.operations;
-  if (Array.isArray(rawOps)) {
-    for (const op of rawOps as string[]) operations[op] = {};
-  } else if (rawOps && typeof rawOps === "object") {
-    operations = rawOps as Record<string, OperationConfig>;
-  }
+  const config = normalizeSkillConfig(fm, skillFolder);
+  validateSkillConfig(config, skillFolder);
 
-  const config: SkillConfig = {
-    id:          fm.id          as string ?? skillFolder,
-    name:        fm.name        as string,
-    description: fm.description as string,
-    participant: fm.participant  as string ?? "so",
-    operations,
-    inputs:    fm.inputs    as SkillConfig["inputs"],
-    quickPick: fm.quickPick as SkillConfig["quickPick"],
-  };
-
-  // Watch for file changes in development (invalidate on save)
-  let watcher: vscode.Disposable | undefined;
-  const pattern = new vscode.RelativePattern(
-    vscode.Uri.joinPath(uri, ".."),
-    "skill.md"
+  const skillDir = vscode.Uri.joinPath(uri, "..");
+  const fsWatcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(skillDir, "skill.md")
   );
-  const fsWatcher = vscode.workspace.createFileSystemWatcher(pattern);
-  watcher = fsWatcher.onDidChange(() => {
+
+  const watcher = fsWatcher.onDidChange(() => {
     cache.delete(skillFolder);
     fsWatcher.dispose();
   });
@@ -233,7 +319,7 @@ export async function resolveQuickPick(
   if (!qp || !qp.forOperations.includes(operation)) return undefined;
 
   const picked = await vscode.window.showQuickPick(
-    qp.options.map(o => ({ label: o.label, detail: o.value })),
+    qp.options.map((o) => ({ label: o.label, detail: o.value })),
     { title: qp.title, ignoreFocusOut: true }
   );
   if (!picked) return null; // cancelled
@@ -258,15 +344,18 @@ export async function resolveInputs(
     if (!inputCfg.forOperations.includes(operation)) continue;
 
     const value = await vscode.window.showInputBox({
-      title:          inputCfg.title,
-      prompt:         inputCfg.prompt,
-      placeHolder:    inputCfg.placeholder,
+      title: inputCfg.title,
+      prompt: inputCfg.prompt,
+      placeHolder: inputCfg.placeholder,
       ignoreFocusOut: true,
     });
     if (!value?.trim()) return null; // cancelled or empty
 
-    const ids = value.split(",").map(x => x.trim()).filter(Boolean).join(", ");
-    // key → param name: "issueIds" → "IssueIds"
+    const ids = value
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .join(", ");
     const paramName = inputKey.charAt(0).toUpperCase() + inputKey.slice(1);
     parts.push(`${paramName}: ${ids}`);
   }

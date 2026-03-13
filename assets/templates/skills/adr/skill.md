@@ -1,9 +1,24 @@
 ---
-name: architecture-decision-records
+id: architecture-decision-records
+name: Architecture Decision Records
 description: Generate, evaluate, patch, and recheck Architecture Decision Records (ADRs) derived from Objectives, diagrams, and the Solution Outline.
----
+participant: so
 
-# Architecture Decision Records Skill
+operations:
+  generate: {}
+  eval: {}
+  patch:
+    requiresIssueIds: true
+  recheck: {}
+
+inputs:
+  issueIds:
+    forOperations: [patch]
+    type: text
+    title: "Patch ADR"
+    prompt: "IssueIds to patch (comma-separated), e.g. ADR-001"
+    placeholder: "ADR-001"
+---
 
 Use this skill when the user asks to:
 - create an architecture decision record

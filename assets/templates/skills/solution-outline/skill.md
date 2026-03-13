@@ -1,9 +1,24 @@
 ---
-name: solution-outline
+id: solution-outline
+name: Solution Outline
 description: Generate, evaluate, patch, recheck, and final-review the Solution Outline document derived from Objectives and validated Structurizr DSL diagrams.
----
+participant: so
 
-# Solution Outline Skill
+operations:
+  generate: {}
+  eval: {}
+  patch:
+    requiresIssueIds: true
+  recheck: {}
+
+inputs:
+  issueIds:
+    forOperations: [patch]
+    type: text
+    title: "Patch Solution Outline"
+    prompt: "IssueIds to patch (comma-separated), e.g. SO-001"
+    placeholder: "SO-001"
+---
 
 Use this skill when the user asks to:
 - generate the solution outline

@@ -35,6 +35,14 @@ export async function executeSkillOperation(
   extraParams?: string
 ): Promise<void> {
   const config = await loadSkillConfig(skillFolder);
+
+  if (!config.operations[operation]) {
+    vscode.window.showErrorMessage(
+      `Operation "${operation}" is not supported by skill "${config.id}".`
+    );
+    return;
+  }
+
   const parts: string[] = [];
 
   if (extraParams) parts.push(extraParams);
@@ -60,19 +68,19 @@ export async function executeSkillOperation(
 // Requirements Inventory
 // ---------------------------------------------------------------------------
 
-export const reqInventoryGenerateOpenChat  = () => executeSkillOperation("requirements-inventory", "generate");
-export const reqInventoryEvalOpenChat      = () => executeSkillOperation("requirements-inventory", "eval");
-export const reqInventoryPatchOpenChat     = () => executeSkillOperation("requirements-inventory", "patch");
-export const reqInventoryRecheckOpenChat   = () => executeSkillOperation("requirements-inventory", "recheck");
+export const reqInventoryGenerateOpenChat = () => executeSkillOperation("requirements-inventory", "generate");
+export const reqInventoryEvalOpenChat     = () => executeSkillOperation("requirements-inventory", "eval");
+export const reqInventoryPatchOpenChat    = () => executeSkillOperation("requirements-inventory", "patch");
+export const reqInventoryRecheckOpenChat  = () => executeSkillOperation("requirements-inventory", "recheck");
 
 // ---------------------------------------------------------------------------
 // Objectives
 // ---------------------------------------------------------------------------
 
-export const objectivesGenerateOpenChat  = () => executeSkillOperation("objectives", "generate");
-export const objectivesEvalOpenChat      = () => executeSkillOperation("objectives", "eval");
-export const objectivesPatchOpenChat     = () => executeSkillOperation("objectives", "patch");
-export const objectivesRecheckOpenChat   = () => executeSkillOperation("objectives", "recheck");
+export const objectivesGenerateOpenChat = () => executeSkillOperation("objectives", "generate");
+export const objectivesEvalOpenChat     = () => executeSkillOperation("objectives", "eval");
+export const objectivesPatchOpenChat    = () => executeSkillOperation("objectives", "patch");
+export const objectivesRecheckOpenChat  = () => executeSkillOperation("objectives", "recheck");
 
 // ---------------------------------------------------------------------------
 // Diagrams  (generate variants bypass QuickPick — diagram_id is statically known)
@@ -88,16 +96,16 @@ export const diagramRecheckOpenChat             = () => executeSkillOperation("d
 // Solution Outline
 // ---------------------------------------------------------------------------
 
-export const solutionOutlineGenerateOpenChat  = () => executeSkillOperation("solution-outline", "generate");
-export const solutionOutlineEvalOpenChat      = () => executeSkillOperation("solution-outline", "eval");
-export const solutionOutlinePatchOpenChat     = () => executeSkillOperation("solution-outline", "patch");
-export const solutionOutlineRecheckOpenChat   = () => executeSkillOperation("solution-outline", "recheck");
+export const solutionOutlineGenerateOpenChat = () => executeSkillOperation("solution-outline", "generate");
+export const solutionOutlineEvalOpenChat     = () => executeSkillOperation("solution-outline", "eval");
+export const solutionOutlinePatchOpenChat    = () => executeSkillOperation("solution-outline", "patch");
+export const solutionOutlineRecheckOpenChat  = () => executeSkillOperation("solution-outline", "recheck");
 
 // ---------------------------------------------------------------------------
 // ADR
 // ---------------------------------------------------------------------------
 
-export const adrGenerateOpenChat  = () => executeSkillOperation("architecture-decision-records", "generate");
-export const adrEvalOpenChat      = () => executeSkillOperation("architecture-decision-records", "eval");
-export const adrPatchOpenChat     = () => executeSkillOperation("architecture-decision-records", "patch");
-export const adrRecheckOpenChat   = () => executeSkillOperation("architecture-decision-records", "recheck");
+export const adrGenerateOpenChat = () => executeSkillOperation("architecture-decision-records", "generate");
+export const adrEvalOpenChat     = () => executeSkillOperation("architecture-decision-records", "eval");
+export const adrPatchOpenChat    = () => executeSkillOperation("architecture-decision-records", "patch");
+export const adrRecheckOpenChat  = () => executeSkillOperation("architecture-decision-records", "recheck");

@@ -7,38 +7,16 @@ import { AssetResolver } from "./asset-resolver";
 
 const execAsync = promisify(exec);
 import {
-  objectivesGenerateOpenChat,
-  objectivesEvalOpenChat,
-  objectivesPatchOpenChat,
-  objectivesRecheckOpenChat,
-  initializeObjectivesAssetResolver
-} from "./objectives_open_chat";
-import {
-  reqInventoryGenerateOpenChat,
-  reqInventoryEvalOpenChat,
-  reqInventoryPatchOpenChat,
-  reqInventoryRecheckOpenChat,
-  initializeRequirementsAssetResolver,
-  createRequirementsInventory,
-  evaluateRequirementsInventory,
-  patchRequirementsInventory,
-  showIntegrationRequirements,
-} from "./requirements_open_chat";
-import {
-  diagramGenerateC4ContextOpenChat,
-  diagramGenerateC4ContainerOpenChat,
-  diagramEvalOpenChat,
-  diagramPatchOpenChat,
-  diagramRecheckOpenChat,
-  initializeDiagramsAssetResolver
-} from "./diagrams_open_chat";
-import {
-  soGenerateOpenChat,
-  soEvalOpenChat,
-  soPatchOpenChat,
-  soFinalReviewOpenChat,
-  initializeSolutionOutlineAssetResolver
-} from "./solution_outline_open_chat";
+  reqInventoryGenerateOpenChat, reqInventoryEvalOpenChat,
+  reqInventoryPatchOpenChat, reqInventoryRecheckOpenChat,
+  objectivesGenerateOpenChat, objectivesEvalOpenChat,
+  objectivesPatchOpenChat, objectivesRecheckOpenChat,
+  diagramGenerateC4ContextOpenChat, diagramGenerateC4ContainerOpenChat,
+  diagramEvalOpenChat, diagramPatchOpenChat, diagramRecheckOpenChat,
+  solutionOutlineGenerateOpenChat, solutionOutlineEvalOpenChat,
+  solutionOutlinePatchOpenChat, solutionOutlineRecheckOpenChat,
+} from "./skill_open_chat";
+import { initializeSkillLoader } from "./skill-loader";
 import { registerPaletteBuildCommands } from "./build_open_tasks";
 import { CommandHandlerImpl } from "./diagram_renderer_v2";
 import { registerWordToMarkdownCommand } from "./word_to_markdown";
@@ -280,10 +258,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const assetResolver = new AssetResolver(context);
 
   // Initialize command handlers with AssetResolver
-  initializeRequirementsAssetResolver(assetResolver);
-  initializeObjectivesAssetResolver(assetResolver);
-  initializeDiagramsAssetResolver(assetResolver);
-  initializeSolutionOutlineAssetResolver(assetResolver);
+  initializeSkillLoader(assetResolver);
 
   // Workspace Initialization
   context.subscriptions.push(
@@ -294,12 +269,17 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("so-workspace.req.recheck", reqInventoryRecheckOpenChat)
   );
 
+  
   // Requirements context-menu commands (right-click on brd.md / requirements.inventory.md)
   context.subscriptions.push(
-    vscode.commands.registerCommand("so.createRequirementsInventory",   createRequirementsInventory),
-    vscode.commands.registerCommand("so.evaluateRequirementsInventory", evaluateRequirementsInventory),
-    vscode.commands.registerCommand("so.patchRequirementsInventory",    patchRequirementsInventory),
-    vscode.commands.registerCommand("so.showIntegrationRequirements",   showIntegrationRequirements),
+    vscode.commands.registerCommand("so.createRequirementsInventory", reqInventoryGenerateOpenChat),
+    vscode.commands.registerCommand("so.evaluateRequirementsInventory", reqInventoryEvalOpenChat),
+    vscode.commands.registerCommand("so.patchRequirementsInventory", reqInventoryPatchOpenChat),
+    vscode.commands.registerCommand("so.showIntegrationRequirements", () =>
+      vscode.commands.executeCommand("workbench.action.chat.open", {
+        query: "@so What are the integration requirements?"
+      })
+    )
   );
 
   // Objectives
@@ -321,10 +301,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Solution Outline
   context.subscriptions.push(
-    vscode.commands.registerCommand("so-workspace.so.generate", soGenerateOpenChat),
-    vscode.commands.registerCommand("so-workspace.so.eval", soEvalOpenChat),
-    vscode.commands.registerCommand("so-workspace.so.patch", soPatchOpenChat),
-    vscode.commands.registerCommand("so-workspace.so.finalReview", soFinalReviewOpenChat)
+    vscode.commands.registerCommand("so-workspace.so.generate", solutionOutlineGenerateOpenChat),
+    vscode.commands.registerCommand("so-workspace.so.eval", solutionOutlineEvalOpenChat),
+    vscode.commands.registerCommand("so-workspace.so.patch", solutionOutlinePatchOpenChat),
+    vscode.commands.registerCommand("so-workspace.so.finalReview", solutionOutlineRecheckOpenChat)
   );
 
   // Diagram rendering with Java backend (V2 implementation)

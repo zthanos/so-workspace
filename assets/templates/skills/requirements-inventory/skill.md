@@ -1,9 +1,24 @@
 ---
+id: requirements-inventory
 name: Requirements Inventory
 description: Generate, evaluate, patch, and recheck a Requirements Inventory from a BRD and related project artifacts.
----
+participant: so
 
-# Requirements Inventory Skill
+operations:
+  generate: {}
+  eval: {}
+  patch:
+    requiresIssueIds: true
+  recheck: {}
+
+inputs:
+  issueIds:
+    forOperations: [patch]
+    type: text
+    title: "Patch Requirements Inventory"
+    prompt: "IssueIds to patch (comma-separated), e.g. INV-BRD-001"
+    placeholder: "INV-BRD-001"
+---
 
 Use this skill when the user asks to:
 - extract requirements from a BRD

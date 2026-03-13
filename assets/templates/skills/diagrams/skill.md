@@ -1,9 +1,34 @@
 ---
-name: diagrams
+id: diagrams
+name: Diagrams
 description: Generate, evaluate, patch, recheck, and answer questions about Structurizr DSL architecture diagrams derived from Objectives and Requirements Inventory.
----
+participant: so
 
-# Diagrams Skill
+operations:
+  generate: {}
+  eval: {}
+  patch:
+    requiresIssueIds: true
+  recheck: {}
+
+inputs:
+  issueIds:
+    forOperations: [patch]
+    type: text
+    title: "Patch Diagram"
+    prompt: "IssueIds to patch (comma-separated), e.g. DIAG-C4-001"
+    placeholder: "DIAG-C4-001"
+
+quickPick:
+  paramName: diagram_id
+  title: "Select Diagram"
+  forOperations: [generate, eval, patch, recheck]
+  options:
+    - value: c4_context
+      label: "C4 Context (L1)"
+    - value: c4_container
+      label: "C4 Container (L2)"
+---
 
 Use this skill when the user asks to:
 - generate architecture diagrams

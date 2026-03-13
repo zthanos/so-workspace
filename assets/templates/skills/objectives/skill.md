@@ -1,9 +1,24 @@
 ---
-name: objectives
+id: objectives
+name: Objectives
 description: Generate, evaluate, patch, recheck, and answer questions about the Solution Outline Objectives document derived from the Requirements Inventory.
----
+participant: so
 
-# Objectives Skill
+operations:
+  generate: {}
+  eval: {}
+  patch:
+    requiresIssueIds: true
+  recheck: {}
+
+inputs:
+  issueIds:
+    forOperations: [patch]
+    type: text
+    title: "Patch Objectives"
+    prompt: "IssueIds to patch (comma-separated), e.g. CONS-02"
+    placeholder: "CONS-02"
+---
 
 Use this skill when the user asks to:
 - generate objectives from the requirements inventory
