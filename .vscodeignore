@@ -33,6 +33,27 @@ jest-coverage/
 # Workspace documentation (project artifacts, not part of the extension)
 docs/
 
+# Development-only folders not needed at runtime
+.kiro/
+,vscode/
+inbox/
+reference_architecture/
+specs/
+test-diagrams/
+test-workspace/
+releases/
+
+# Root files not needed at runtime
+structure.txt
+flow.svg
+test_export.svg
+test-kroki-simple.js
+test-structurizr-workflow.ps1
+validate-reorganization.ps1
+vitest.config.ts
+so-vsix-*.vsix
+KROKI-DOCKER-CONFIGURATION.md
+
 # Build configuration files
 tsconfig.json
 esbuild.config.js

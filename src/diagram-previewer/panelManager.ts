@@ -17,6 +17,7 @@ import { KrokiRenderer } from './renderers/krokiRenderer';
 import { readConfig } from './config';
 import { ThemeManager } from './themeManager';
 import { getLogger } from './logger';
+import { convertSvgToPngViaWebview } from '../mermaid-webview-renderer';
 
 const outputChannel = vscode.window.createOutputChannel('panelManager Renderer Debug');
 
@@ -963,28 +964,17 @@ export class PanelManager {
         return true;
       }
 
-      // If current format is SVG, convert to PNG
-      // For now, we'll use a simple approach with sharp library if available
-      // Otherwise, save as SVG and inform user
-      try {
-        const sharp = require('sharp');
-        const svgBuffer = Buffer.from(this.currentRenderState.content, 'utf-8');
-        await sharp(svgBuffer)
-          .png()
-          .toFile(filePath);
-        logger?.debug('PNG export completed (converted from SVG)', { path: filePath });
-        return true;
-      } catch (sharpError) {
-        // Sharp not available, inform user and suggest SVG export
-        logger?.warning('Sharp library not available for PNG conversion', sharpError);
-        vscode.window.showWarningMessage(
-          'PNG export from SVG requires the "sharp" library. Please export as SVG instead or install sharp: npm install sharp'
-        );
-        return false;
-      }
+      // SVG → PNG via shared webview canvas utility (no sharp dependency)
+      // convertSvgToPngViaWebview has a built-in 15-second timeout
+      const pngBuffer = await convertSvgToPngViaWebview(this.currentRenderState.content, this.context);
+      await fs.writeFile(filePath, pngBuffer);
+      logger?.debug('PNG export completed (SVG→canvas→PNG)', { path: filePath });
+      return true;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(`PNG export failed: ${errorMessage}`);
       logger?.error('PNG export failed', error);
-      throw error;
+      return false;
     }
   }
 

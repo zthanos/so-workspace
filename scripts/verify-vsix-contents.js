@@ -54,12 +54,13 @@ const REQUIRED_ASSETS = [
   'extension/assets/templates/skills/objectives/resources/output-template.md',
   
   'extension/assets/templates/skills/diagrams/skill.md',
-  'extension/assets/templates/skills/diagrams/resources/prompts/generate.prompt.md',
+  'extension/assets/templates/skills/diagrams/resources/prompts/generate_c4_context.prompt.md',
+  'extension/assets/templates/skills/diagrams/resources/prompts/generate_c4_container.prompt.md',
   'extension/assets/templates/skills/diagrams/resources/prompts/evaluate.prompt.md',
   'extension/assets/templates/skills/diagrams/resources/prompts/patch.prompt.md',
   'extension/assets/templates/skills/diagrams/resources/prompts/recheck.prompt.md',
   'extension/assets/templates/skills/diagrams/resources/methodology.md',
-  'extension/assets/templates/skills/diagrams/resources/taxonomy.md',
+  'extension/assets/templates/skills/diagrams/resources/diagram-taxonomy.md',
   'extension/assets/templates/skills/diagrams/resources/output-template.md',
   
   'extension/assets/templates/skills/solution-outline/skill.md',
@@ -70,13 +71,13 @@ const REQUIRED_ASSETS = [
   'extension/assets/templates/skills/solution-outline/resources/methodology.md',
   'extension/assets/templates/skills/solution-outline/resources/output-template.md',
   
-  'extension/assets/templates/skills/architecture-decision-records/skill.md',
-  'extension/assets/templates/skills/architecture-decision-records/resources/prompts/generate.prompt.md',
-  'extension/assets/templates/skills/architecture-decision-records/resources/prompts/evaluate.prompt.md',
-  'extension/assets/templates/skills/architecture-decision-records/resources/prompts/patch.prompt.md',
-  'extension/assets/templates/skills/architecture-decision-records/resources/prompts/recheck.prompt.md',
-  'extension/assets/templates/skills/architecture-decision-records/resources/methodology.md',
-  'extension/assets/templates/skills/architecture-decision-records/resources/output-template.md',
+  'extension/assets/templates/skills/adr/skill.md',
+  'extension/assets/templates/skills/adr/resources/prompts/generate.prompt.md',
+  'extension/assets/templates/skills/adr/resources/prompts/evaluate.prompt.md',
+  'extension/assets/templates/skills/adr/resources/prompts/patch.prompt.md',
+  'extension/assets/templates/skills/adr/resources/prompts/recheck.prompt.md',
+  'extension/assets/templates/skills/adr/resources/methodology.md',
+  'extension/assets/templates/skills/adr/resources/output-template.md',
 
   // Other required assets
   'extension/assets/agent/rules/rules.yaml',

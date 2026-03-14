@@ -128,7 +128,6 @@ export class ConfigMerger {
     // Start with defaults (Requirement 3.4)
     const defaults: Required<JavaBackendConfig> = {
       plantUmlJarPath: "tools/plantuml/plantuml-1.2026.1.jar",
-      mermaidCliPath: "mmdc",
       javaPath: "java",
       enabled: true,
     };
@@ -136,7 +135,6 @@ export class ConfigMerger {
     // Get VS Code settings (Requirement 3.2)
     const vscodeJava = {
       plantUmlJarPath: vscodeConfig.get<string>("diagrams.java.plantUmlJarPath"),
-      mermaidCliPath: vscodeConfig.get<string>("diagrams.java.mermaidCliPath"),
       javaPath: vscodeConfig.get<string>("diagrams.java.javaPath"),
     };
 
@@ -149,7 +147,6 @@ export class ConfigMerger {
     // Merge with precedence: env > workspace > vscode > defaults (Requirement 3.5)
     return {
       plantUmlJarPath: envJava?.plantUmlJarPath ?? workspaceJava?.plantUmlJarPath ?? vscodeJava.plantUmlJarPath ?? defaults.plantUmlJarPath,
-      mermaidCliPath: envJava?.mermaidCliPath ?? workspaceJava?.mermaidCliPath ?? vscodeJava.mermaidCliPath ?? defaults.mermaidCliPath,
       javaPath: envJava?.javaPath ?? workspaceJava?.javaPath ?? vscodeJava.javaPath ?? defaults.javaPath,
       enabled: envJava?.enabled ?? workspaceJava?.enabled ?? defaults.enabled,
     };

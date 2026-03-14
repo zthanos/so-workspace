@@ -3,12 +3,13 @@
  * 
  * Implements diagram rendering using local Java-based tools:
  * - PlantUML JAR for PlantUML and Structurizr diagrams
- * - Mermaid CLI (mmdc) for Mermaid diagrams
+ * - Kroki HTTP API (primary) / Bundled Mermaid webview (fallback) for Mermaid diagrams
  * 
  * This backend enables offline diagram rendering without requiring
  * internet connectivity or cloud services.
  */
 
+import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -22,6 +23,7 @@ import {
 } from "./backend-strategy";
 import { DiagramFile } from "./diagram_renderer_v2";
 import { MermaidValidator } from "./mermaid-validator";
+import { renderMermaidViaKroki, renderMermaidViaWebview } from "./mermaid-webview-renderer";
 
 const execAsync = promisify(exec);
 
@@ -36,14 +38,17 @@ export interface JavaBackendConfig {
   /** Path to PlantUML JAR file (relative to workspace root or absolute) */
   plantUmlJarPath: string;
 
-  /** Path to Mermaid CLI executable (mmdc) */
-  mermaidCliPath: string;
-
   /** Java executable path (defaults to 'java' in PATH) */
   javaPath?: string;
 
   /** Maximum concurrent rendering operations */
   maxConcurrent?: number;
+
+  /** VS Code extension context for creating hidden webviews */
+  extensionContext?: vscode.ExtensionContext;
+
+  /** Kroki service endpoint URL */
+  krokiEndpoint?: string;
 }
 
 // ============================================================================
@@ -52,26 +57,28 @@ export interface JavaBackendConfig {
 
 /**
  * Java-based rendering backend
- * Uses PlantUML JAR for PlantUML/Structurizr and Mermaid CLI for Mermaid
+ * Uses PlantUML JAR for PlantUML/Structurizr and Kroki/webview for Mermaid
  */
 export class JavaRenderBackend implements RenderBackend {
   readonly name = "Java";
 
   private plantUmlJarPath: string;
-  private mermaidCliPath: string;
   private javaPath: string;
+  private extensionContext?: vscode.ExtensionContext;
+  private krokiEndpoint?: string;
   private mermaidValidator: MermaidValidator;
 
   constructor(config: JavaBackendConfig) {
     this.plantUmlJarPath = config.plantUmlJarPath;
-    this.mermaidCliPath = config.mermaidCliPath;
     this.javaPath = config.javaPath || "java";
+    this.extensionContext = config.extensionContext;
+    this.krokiEndpoint = config.krokiEndpoint;
     this.mermaidValidator = new MermaidValidator();
   }
 
   /**
    * Check if backend is available and ready to use
-   * Validates Java installation, PlantUML JAR, and Mermaid CLI
+   * Validates Java installation and PlantUML JAR availability
    */
   async isAvailable(): Promise<BackendAvailability> {
     const supportedTypes: DiagramType[] = [];
@@ -94,12 +101,9 @@ export class JavaRenderBackend implements RenderBackend {
       supportedTypes.push("plantuml", "structurizr");
     }
 
-    // Check Mermaid CLI availability
-    const mermaidAvailable = await this.checkMermaidCliAvailable();
-    if (mermaidAvailable) {
+    // Mermaid is supported when extensionContext is available (bundled mermaid is always shipped with the extension)
+    if (this.extensionContext) {
       supportedTypes.push("mermaid");
-    } else {
-      errors.push("Mermaid CLI (mmdc) is not installed or not in PATH");
     }
 
     // Backend is available if at least one diagram type is supported
@@ -135,6 +139,39 @@ export class JavaRenderBackend implements RenderBackend {
   }
 
   // ==========================================================================
+  // Private Helper Methods - Mermaid Rendering (Kroki-primary / webview-fallback)
+  // ==========================================================================
+
+  /**
+   * Render Mermaid diagram using Kroki HTTP API (primary) with bundled
+   * mermaid.js webview fallback.
+   */
+  private async renderMermaid(content: string): Promise<RenderOutput> {
+    const krokiEndpoint = this.krokiEndpoint || "https://kroki.io";
+
+    // Try Kroki first (primary renderer)
+    try {
+      const svg = await renderMermaidViaKroki(content, krokiEndpoint);
+      return { content: svg, format: "svg", extension: ".svg" };
+    } catch (krokiError) {
+      // Kroki failed — fall back to bundled mermaid webview
+      console.warn(
+        `[JavaRenderBackend] Kroki unavailable (${krokiError instanceof Error ? krokiError.message : String(krokiError)}), falling back to bundled mermaid.js`
+      );
+    }
+
+    // Fallback: bundled mermaid in a hidden webview
+    if (!this.extensionContext) {
+      throw new Error(
+        "Mermaid rendering failed: Kroki is unavailable and no extensionContext provided for webview fallback"
+      );
+    }
+
+    const svg = await renderMermaidViaWebview(content, this.extensionContext);
+    return { content: svg, format: "svg", extension: ".svg" };
+  }
+
+  // ==========================================================================
   // Private Helper Methods - Availability Checks
   // ==========================================================================
 
@@ -159,68 +196,6 @@ export class JavaRenderBackend implements RenderBackend {
       return true;
     } catch (error) {
       return false;
-    }
-  }
-
-  /**
-   * Check if Mermaid CLI is installed and available
-   */
-  private async checkMermaidCliAvailable(): Promise<boolean> {
-    try {
-      const { stdout } = await execAsync(`${this.mermaidCliPath} --version`);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  // ==========================================================================
-  // Private Helper Methods - Mermaid Rendering
-  // ==========================================================================
-
-  /**
-   * Render Mermaid diagram using Mermaid CLI
-   * Executes: mmdc -i input.mmd -o output.svg
-   */
-  private async renderMermaid(content: string): Promise<RenderOutput> {
-    // Validate Mermaid diagram before rendering
-    const validationResult = this.mermaidValidator.validate('mermaid-diagram.mmd', content);
-    
-    if (!validationResult.valid) {
-      throw new Error(
-        `Mermaid diagram validation failed:\n${validationResult.errors.join('\n')}`
-      );
-    }
-
-    // Create temporary files for input and output
-    const tempDir = os.tmpdir();
-    const inputFile = path.join(tempDir, `mermaid-${Date.now()}-${Math.random().toString(36).substring(7)}.mmd`);
-    const outputFile = path.join(tempDir, `mermaid-${Date.now()}-${Math.random().toString(36).substring(7)}.svg`);
-
-    try {
-      // Write content to temporary input file
-      await fs.promises.writeFile(inputFile, content, "utf-8");
-
-      // Execute Mermaid CLI
-      const command = `${this.mermaidCliPath} -i "${inputFile}" -o "${outputFile}"`;
-      await execAsync(command);
-
-      // Read rendered SVG output
-      const svg = await fs.promises.readFile(outputFile, "utf-8");
-
-      return {
-        content: svg,
-        format: "svg",
-        extension: ".svg",
-      };
-    } catch (error) {
-      throw new Error(
-        `Mermaid CLI rendering failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    } finally {
-      // Cleanup temporary files
-      await this.cleanupTempFile(inputFile);
-      await this.cleanupTempFile(outputFile);
     }
   }
 

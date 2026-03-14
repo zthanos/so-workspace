@@ -229,3 +229,90 @@ Avoid unnecessary complexity.
 - Evaluate the current flow diagram
 - Patch the sequence diagram issues
 - Recheck the C4 context diagram after updates
+
+
+## Diagram generation
+
+### Mermaid diagrams
+
+When generating Mermaid diagrams:
+- Use `graph TD` or `graph LR` for flow diagrams
+- Use `sequenceDiagram` for sequence diagrams
+- Use `stateDiagram-v2` for state diagrams
+- Place output in `docs/03_architecture/diagrams/src/*.mmd`
+- Keep node labels short and descriptive
+- Use subgraphs to group related components
+- Prefer `TD` (top-down) layout unless horizontal flow is more natural
+
+### PlantUML diagrams
+
+When generating PlantUML diagrams:
+- Use `@startuml` / `@enduml` delimiters
+- Use component, deployment, or activity diagram types as appropriate
+- Place output in `docs/03_architecture/diagrams/src/*.puml`
+- Use stereotypes and packages to organize elements
+- Keep styling minimal — rely on default PlantUML themes
+
+### Structurizr DSL diagrams
+
+When generating Structurizr DSL diagrams:
+- Use `workspace` as the top-level block
+- Define `model` and `views` sections
+- Use `softwareSystem`, `container`, and `person` elements for C4 levels
+- Place output in `docs/03_architecture/diagrams/src/*.dsl`
+- Follow C4 abstraction levels strictly — do not mix levels in a single view
+
+## Syntax validation
+
+Before rendering any diagram, validate the syntax to catch errors early:
+
+### Mermaid validation
+- Verify the diagram starts with a valid diagram type keyword (`graph`, `sequenceDiagram`, `stateDiagram-v2`, `classDiagram`, `flowchart`, etc.)
+- Check that all node references are defined before use
+- Ensure arrow syntax is correct (`-->`, `-.->`, `==>` for flowcharts; `->>`, `-->>` for sequence diagrams)
+- Confirm subgraph blocks are properly opened and closed
+- Validate that quoted labels use matching delimiters
+
+### PlantUML validation
+- Verify `@startuml` and `@enduml` delimiters are present and balanced
+- Check that all referenced participants or components are declared
+- Ensure arrow syntax matches the diagram type (`->`, `-->`, `<--`, etc.)
+- Validate that `note` blocks are properly closed with `end note`
+
+### Structurizr DSL validation
+- Verify `workspace` block is present with matching braces
+- Check that `model` and `views` sections exist
+- Ensure all element references in views correspond to elements defined in the model
+- Validate relationship syntax: `element -> element "description"`
+- Confirm all blocks have balanced opening and closing braces
+
+### General validation rules
+- Run validation before every render attempt
+- Report syntax errors with line numbers and descriptions when possible
+- Suggest corrections for common mistakes (missing arrows, unclosed blocks, typos in keywords)
+
+## Rendering approach
+
+The extension uses a two-tier rendering strategy for diagrams:
+
+### Primary: Kroki HTTP API
+- All diagram types (Mermaid, PlantUML, Structurizr) are sent to the Kroki service first
+- The diagram source is zlib-deflated, base64url-encoded, and sent as a GET request
+- Kroki returns SVG output on success
+- A 10-second timeout is applied to Kroki requests
+
+### Fallback: Bundled Mermaid (webview)
+- If Kroki is unavailable or returns an error, Mermaid diagrams fall back to the bundled `mermaid.esm.min.mjs` library
+- The bundled library runs inside a hidden VS Code webview panel
+- A 30-second timeout is applied to webview rendering
+- A warning is logged when the fallback is triggered
+
+### PNG export
+- SVG output is converted to PNG using a hidden webview canvas — no external native dependencies are required
+- A 15-second timeout is applied to the SVG-to-PNG conversion
+- On failure, an error message is displayed to the user
+
+### When to use which path
+- For live preview and interactive editing: the PanelManager handles rendering automatically using this pattern
+- For batch rendering: the rendering pipeline applies the same Kroki-primary / Bundled_Mermaid-fallback strategy
+- PlantUML and Structurizr diagrams that Kroki supports are always rendered via Kroki; the bundled Mermaid fallback applies only to Mermaid diagram types

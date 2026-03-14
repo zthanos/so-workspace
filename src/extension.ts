@@ -1,11 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fs from "fs";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { AssetResolver } from "./asset-resolver";
-
-const execAsync = promisify(exec);
 import {
   reqInventoryGenerateOpenChat, reqInventoryEvalOpenChat,
   reqInventoryPatchOpenChat, reqInventoryRecheckOpenChat,
@@ -21,219 +16,19 @@ import { registerPaletteBuildCommands } from "./build_open_tasks";
 import { CommandHandlerImpl } from "./diagram_renderer_v2";
 import { registerWordToMarkdownCommand } from "./word_to_markdown";
 import { registerSoParticipant } from "./so_participant";
-import { registerResetGeneratedFilesCommand } from "./reset_generated_files";
-import { registerGenerateConfigCommand } from "./generate-config-command";
 import { registerSwitchEnvironmentCommand } from "./switch-environment-command";
 import { registerValidateDiagramsCommand } from "./validate-diagrams-command";
+import { registerDocxExportCommand } from "./docx-exporter";
 import { ConfigurationManager } from "./configuration-manager";
-import { JavaCommandHandler } from "./java-command-handler";
 import { initializeWorkspaceCommand } from "./commands/initialize-workspace-command";
-import { repairMermaidDiagramsCommand } from "./commands/repair-mermaid-diagrams-command";
 import { PanelManager } from "./diagram-previewer/panelManager";
 import { readConfig, onConfigChange } from "./diagram-previewer/config";
 import { initializeLogger, getLogger } from "./diagram-previewer/logger";
+import { openSoQuery } from "./skill_open_chat";
 
-// Type definitions for mermaid-cli detection
-
-// Documentation URL for mermaid-cli installation troubleshooting
-const MERMAID_CLI_DOCS_URL = 'https://github.com/mermaid-js/mermaid-cli#installation';
-interface MermaidCLIResolution {
-  /** Resolved path to mmdc executable, or null if not found */
-  path: string | null;
-
-  /** Source of the resolved path */
-  source: 'custom' | 'project' | 'global' | 'not-found';
-
-  /** Error message if resolution failed */
-  error?: string;
-
-  /** Additional context for troubleshooting */
-  context?: {
-    configuredPath?: string;
-    checkedPaths?: string[];
-    platform?: string;
-  };
-}
-
-interface DetectionResult {
-  /** Whether the executable was found and is accessible */
-  found: boolean;
-
-  /** Full path to the executable */
-  path?: string;
-
-  /** Reason for failure if not found */
-  reason?: 'not-exists' | 'not-executable' | 'not-accessible';
-
-  /** Human-readable error message */
-  message?: string;
-}
-
-/**
- * Check if a file exists and is accessible/executable
- * @param filePath Path to the file to check
- * @returns DetectionResult with found status and error details
- */
-async function checkFileAccessibility(filePath: string): Promise<DetectionResult> {
-  try {
-    const stats = await fs.promises.stat(filePath);
-
-    if (!stats.isFile()) {
-      return {
-        found: false,
-        reason: 'not-exists',
-        message: `Path exists but is not a file: ${filePath}`
-      };
-    }
-
-    // Check read permission
-    try {
-      await fs.promises.access(filePath, fs.constants.R_OK);
-    } catch {
-      return {
-        found: false,
-        reason: 'not-accessible',
-        message: `File exists but is not readable: ${filePath}`
-      };
-    }
-
-    // Check execute permission (Unix only)
-    if (process.platform !== 'win32') {
-      try {
-        await fs.promises.access(filePath, fs.constants.X_OK);
-      } catch {
-        return {
-          found: false,
-          reason: 'not-executable',
-          message: `File exists but is not executable: ${filePath}`
-        };
-      }
-    }
-
-    return {
-      found: true,
-      path: filePath
-    };
-  } catch (error) {
-    return {
-      found: false,
-      reason: 'not-exists',
-      message: `File does not exist: ${filePath}`
-    };
-  }
-}
-
-/**
- * Get the global npm installation path
- * @returns Global node_modules path or null if not found
- */
-async function getGlobalNpmPath(): Promise<string | null> {
-  try {
-    const { stdout } = await execAsync('npm root -g');
-    return stdout.trim();
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
- * Resolve the path to the mermaid-cli executable
- * @param configuredPath Path configured in settings
- * @param workspaceRoot Root path of the workspace
- * @param extensionPath Path to the extension directory
- * @returns MermaidCLIResolution with path, source, and error information
- */
-async function resolveMermaidCLIPath(
-  configuredPath: string,
-  workspaceRoot: string,
-  extensionPath: string
-): Promise<MermaidCLIResolution> {
-  const mmcdExecutable = process.platform === 'win32' ? 'mmdc.cmd' : 'mmdc';
-  const checkedPaths: string[] = [];
-
-  // 1. Check custom configured path (if not default "mmdc")
-  if (configuredPath !== 'mmdc') {
-    checkedPaths.push(configuredPath);
-    const result = await checkFileAccessibility(configuredPath);
-
-    if (result.found) {
-      return {
-        path: configuredPath,
-        source: 'custom',
-        context: {
-          configuredPath,
-          checkedPaths,
-          platform: process.platform
-        }
-      };
-    } else {
-      return {
-        path: null,
-        source: 'not-found',
-        error: `Configured Mermaid CLI path is invalid: ${result.message}`,
-        context: {
-          configuredPath,
-          checkedPaths,
-          platform: process.platform
-        }
-      };
-    }
-  }
-
-  // 2. Check project node_modules
-  if (workspaceRoot) {
-    const projectMmdc = path.join(workspaceRoot, 'node_modules', '.bin', mmcdExecutable);
-    checkedPaths.push(projectMmdc);
-    const result = await checkFileAccessibility(projectMmdc);
-
-    if (result.found) {
-      return {
-        path: projectMmdc,
-        source: 'project',
-        context: {
-          configuredPath,
-          checkedPaths,
-          platform: process.platform
-        }
-      };
-    }
-  }
-
-  // 3. Check global npm installation
-  const globalNodeModules = await getGlobalNpmPath();
-  if (globalNodeModules) {
-    const globalMmdc = path.join(globalNodeModules, '.bin', mmcdExecutable);
-    checkedPaths.push(globalMmdc);
-    const result = await checkFileAccessibility(globalMmdc);
-
-    if (result.found) {
-      return {
-        path: globalMmdc,
-        source: 'global',
-        context: {
-          configuredPath,
-          checkedPaths,
-          platform: process.platform
-        }
-      };
-    }
-  }
-
-  // 4. Not found in any location
-  return {
-    path: null,
-    source: 'not-found',
-    error: 'Mermaid CLI (mmdc) not found in any location. Please install @mermaid-js/mermaid-cli globally or in your project.',
-    context: {
-      configuredPath,
-      checkedPaths,
-      platform: process.platform
-    }
-  };
-}
+// Mermaid rendering uses bundled mermaid.esm.min.mjs — no mermaid-cli required
 
 // Store command handler instances for cleanup
-let javaCommandHandler: JavaCommandHandler | undefined;
 let configurationManager: ConfigurationManager | undefined;
 let diagramPreviewerPanelManager: PanelManager | undefined;
 let diagramPreviewerOutputChannel: vscode.OutputChannel | undefined;
@@ -269,7 +64,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("so-workspace.req.recheck", reqInventoryRecheckOpenChat)
   );
 
-
+  
   // Requirements context-menu commands (right-click on brd.md / requirements.inventory.md)
   context.subscriptions.push(
     vscode.commands.registerCommand("so.createRequirementsInventory", reqInventoryGenerateOpenChat),
@@ -332,60 +127,16 @@ export async function activate(context: vscode.ExtensionContext) {
     ? javaConfig.plantUmlJarPath
     : path.join(workspaceRoot, javaConfig.plantUmlJarPath);
 
-  // Resolve Mermaid CLI path using detection system
-  const mermaidResolution = await resolveMermaidCLIPath(
-    javaConfig.mermaidCliPath,
-    workspaceRoot,
-    context.extensionPath
-  );
-
-  let mermaidCliPath = mermaidResolution.path || 'mmdc'; // Fallback to 'mmdc' if not found
-
-  // Show warning if mermaid-cli was not found
-  if (!mermaidResolution.path) {
-    // Check if this is the first run (first time mermaid-cli not found)
-    const hasShownFirstRunMessage = context.globalState.get<boolean>('mermaidCliFirstRunMessageShown', false);
-
-    if (!hasShownFirstRunMessage) {
-      // First-run: Show informational message with installation guidance
-      const message = mermaidResolution.source === 'custom'
-        ? `Welcome to SO Workspace!\n\nMermaid CLI was not found at the configured path. This extension requires @mermaid-js/mermaid-cli to be installed separately for Mermaid diagram rendering.\n\nInstall Mermaid CLI:\n  Global: npm install -g @mermaid-js/mermaid-cli\n  Project: npm install --save-dev @mermaid-js/mermaid-cli\n\nYou can continue using other features while Mermaid CLI is not installed.`
-        : `Welcome to SO Workspace!\n\nThis extension requires @mermaid-js/mermaid-cli to be installed separately for Mermaid diagram rendering.\n\nInstall globally:\n  npm install -g @mermaid-js/mermaid-cli\n\nOr install in your project:\n  npm install --save-dev @mermaid-js/mermaid-cli\n\nYou can continue using other features while Mermaid CLI is not installed.`;
-
-      vscode.window.showInformationMessage(
-        message,
-        'Install Instructions',
-        'Dismiss'
-      ).then(selection => {
-        if (selection === 'Install Instructions') {
-          vscode.env.openExternal(vscode.Uri.parse(MERMAID_CLI_DOCS_URL));
-        }
-      });
-
-      // Mark that we've shown the first-run message
-      context.globalState.update('mermaidCliFirstRunMessageShown', true);
-    } else {
-      // Subsequent runs: Show standard warning message
-      const errorMessage = mermaidResolution.source === 'custom'
-        ? `Mermaid CLI not found at configured path.\n\n${mermaidResolution.error || 'The configured path is invalid or inaccessible.'}\n\nInstall Mermaid CLI:\n  Global: npm install -g @mermaid-js/mermaid-cli\n  Project: npm install --save-dev @mermaid-js/mermaid-cli\n\nFor troubleshooting, see: ${MERMAID_CLI_DOCS_URL}`
-        : `Mermaid CLI (mmdc) not found.\n\nThe extension requires @mermaid-js/mermaid-cli to be installed separately.\n\nInstall globally:\n  npm install -g @mermaid-js/mermaid-cli\n\nOr install in your project:\n  npm install --save-dev @mermaid-js/mermaid-cli\n\nFor more help, see: ${MERMAID_CLI_DOCS_URL}`;
-
-      vscode.window.showWarningMessage(
-        errorMessage,
-        'Open Documentation'
-      ).then(selection => {
-        if (selection === 'Open Documentation') {
-          vscode.env.openExternal(vscode.Uri.parse(MERMAID_CLI_DOCS_URL));
-        }
-      });
-    }
-  }
+  // Read Kroki endpoint from diagram previewer config for Java backend
+  const krokiEndpoint = readConfig().krokiEndpoint;
 
   // Create Java backend instance with configuration
+  // PlantUML uses JAR; Mermaid uses Kroki-primary / bundled mermaid.js webview fallback
   const javaBackend = new JavaRenderBackend({
     plantUmlJarPath,
-    mermaidCliPath,
-    javaPath: javaConfig.javaPath
+    javaPath: javaConfig.javaPath,
+    extensionContext: context,
+    krokiEndpoint
   });
 
   // Get Structurizr CLI configuration from settings
@@ -439,10 +190,6 @@ export async function activate(context: vscode.ExtensionContext) {
   diagramCommandHandler.register(context);
 
 
-  // Diagram rendering with Java backend (PlantUML JAR + Mermaid CLI)
-  javaCommandHandler = new JavaCommandHandler(configurationManager);
-  javaCommandHandler.register(context);
-
   // Docker build tasks
   registerPaletteBuildCommands(context);
 
@@ -450,13 +197,7 @@ export async function activate(context: vscode.ExtensionContext) {
   registerWordToMarkdownCommand(context);
 
   // SO Chat Participant (uses so_agent_context.md + skills)
-  registerSoParticipant(context, assetResolver);
-
-  // Reset generated files command
-  registerResetGeneratedFilesCommand(context);
-
-  // Generate workspace configuration command
-  registerGenerateConfigCommand(context);
+  registerSoParticipant(context);
 
   // Switch environment command (requires Configuration Manager)
   registerSwitchEnvironmentCommand(context, configurationManager);
@@ -464,10 +205,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // Validate Structurizr DSL diagrams
   registerValidateDiagramsCommand(context);
 
-  // Repair Mermaid diagram syntax
-  context.subscriptions.push(
-    vscode.commands.registerCommand("so-workspace.repairMermaidDiagrams", () => repairMermaidDiagramsCommand(configurationManager!))
-  );
+  // Export to Word Document (.docx)
+  registerDocxExportCommand(context);
+
 
   // ========================================
   // Diagram Previewer Feature
@@ -597,51 +337,11 @@ export async function activate(context: vscode.ExtensionContext) {
   // End Diagram Previewer Feature
   // ========================================
 
-  // Listen for configuration changes to validate mermaidCliPath
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration(async (event) => {
-      if (event.affectsConfiguration('so-workspace.diagrams.java.mermaidCliPath')) {
-        const newPath = vscode.workspace.getConfiguration().get<string>('so-workspace.diagrams.java.mermaidCliPath', 'mmdc');
 
-        // Only validate if it's a custom path (not the default "mmdc")
-        if (newPath !== 'mmdc') {
-          const result = await checkFileAccessibility(newPath);
-          if (!result.found) {
-            vscode.window.showErrorMessage(
-              `Invalid Mermaid CLI path: ${result.message}\n\n` +
-              `Reset to "mmdc" for auto-detection or provide a valid path.\n\n` +
-              `For troubleshooting, see: ${MERMAID_CLI_DOCS_URL}`,
-              'Open Documentation',
-              'Reset to Default'
-            ).then(selection => {
-              if (selection === 'Open Documentation') {
-                vscode.env.openExternal(vscode.Uri.parse(MERMAID_CLI_DOCS_URL));
-              } else if (selection === 'Reset to Default') {
-                vscode.workspace.getConfiguration().update(
-                  'so-workspace.diagrams.java.mermaidCliPath',
-                  'mmdc',
-                  vscode.ConfigurationTarget.Workspace
-                );
-              }
-            });
-          } else {
-            vscode.window.showInformationMessage(
-              `Mermaid CLI path validated successfully: ${newPath}`
-            );
-          }
-        }
-      }
-    })
-  );
 }
 
 
 export function deactivate() {
-  // Cleanup command handlers if needed
-  // Note: Currently the backend has no-op cleanup methods,
-  // but this provides a hook for future cleanup requirements
-  javaCommandHandler = undefined;
-
   // Cleanup Configuration Manager
   if (configurationManager) {
     configurationManager.dispose();
