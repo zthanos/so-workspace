@@ -20,6 +20,18 @@ export interface InputConfig {
   placeholder: string;
 }
 
+export interface DiagramCatalogEntry {
+  id: string;
+  labels: string[];
+  notation: string;
+  family: string;
+  outputPath: string;
+  promptKey: string;
+  evaluatePromptKey: string;
+  patchPromptKey: string;
+  recheckPromptKey: string;
+}
+
 export interface SkillConfig {
   id: string;
   name: string;
@@ -33,6 +45,7 @@ export interface SkillConfig {
     forOperations: SkillOperation[];
     options: QuickPickOption[];
   };
+  diagramCatalog?: DiagramCatalogEntry[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -211,8 +224,11 @@ function normalizeSkillConfig(fm: Record<string, unknown>, skillFolder: string):
     operations = rawOps as Record<SkillOperation, OperationConfig>;
   }
 
-  const quickPickRaw = isRecord(fm.quickPick) ? fm.quickPick : undefined;
-  const inputsRaw = isRecord(fm.inputs) ? fm.inputs : undefined;
+  const quickPickRaw   = isRecord(fm.quickPick) ? fm.quickPick : undefined;
+  const inputsRaw      = isRecord(fm.inputs)    ? fm.inputs    : undefined;
+  const diagramCatalog = Array.isArray(fm.diagramCatalog)
+    ? (fm.diagramCatalog as DiagramCatalogEntry[])
+    : undefined;
 
   return {
     id: asString(fm.id, skillFolder),
@@ -220,9 +236,52 @@ function normalizeSkillConfig(fm: Record<string, unknown>, skillFolder: string):
     description: asString(fm.description, ""),
     participant: asString(fm.participant, "so"),
     operations,
-    inputs: inputsRaw as SkillConfig["inputs"] | undefined,
-    quickPick: quickPickRaw as SkillConfig["quickPick"] | undefined,
+    inputs:         inputsRaw      as SkillConfig["inputs"]    | undefined,
+    quickPick:      quickPickRaw   as SkillConfig["quickPick"] | undefined,
+    diagramCatalog,
   };
+}
+
+/**
+ * Returns the catalog entry whose labels match the given prompt text,
+ * or undefined if no match is found.
+ */
+export function matchDiagramFromPrompt(
+  config: SkillConfig,
+  prompt: string
+): DiagramCatalogEntry | undefined {
+  if (!config.diagramCatalog) return undefined;
+  const lower = prompt.toLowerCase();
+  return config.diagramCatalog.find(entry =>
+    entry.labels.some(label => lower.includes(label.toLowerCase()))
+  );
+}
+
+/**
+ * Returns the catalog entry for a given diagram_id,
+ * or undefined if not found.
+ */
+export function getDiagramById(
+  config: SkillConfig,
+  diagramId: string
+): DiagramCatalogEntry | undefined {
+  return config.diagramCatalog?.find(entry => entry.id === diagramId);
+}
+
+/**
+ * Resolves the correct promptKey for a given operation and diagram entry.
+ */
+export function resolvePromptKey(
+  entry: DiagramCatalogEntry,
+  operation: SkillOperation
+): string {
+  switch (operation) {
+    case "generate": return entry.promptKey;
+    case "eval":     return entry.evaluatePromptKey;
+    case "patch":    return entry.patchPromptKey;
+    case "recheck":  return entry.recheckPromptKey;
+    default:         return entry.promptKey;
+  }
 }
 
 function validateSkillConfig(config: SkillConfig, skillFolder: string): void {

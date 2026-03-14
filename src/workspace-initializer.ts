@@ -124,12 +124,13 @@ List the references used in this project.
       "inbox/brd",
 
       ".github",
+      ".github/rules",
       ".github/skills",
       ".github/skills/requirements-inventory",
-      // ".github/skills/objectives",
-      // ".github/skills/solution-outline",
-      // ".github/skills/diagrams",
-      // ".github/skills/adr",
+      ".github/skills/objectives",
+      ".github/skills/solution-outline",
+      ".github/skills/diagrams",
+      ".github/skills/adr",
 
       "docs/00_brd",
       "docs/01_requirements",
@@ -236,6 +237,22 @@ List the references used in this project.
     }
 
 
+
+    // Copy EA rules (baseline from extension; workspace can override/extend)
+    const rulesTemplateUri = this.assetResolver.getRulePath("");
+    const rulesExists = await this.assetResolver.assetExists(rulesTemplateUri);
+    console.log(`[rules] template exists: ${rulesExists}`);
+
+    if (rulesExists) {
+      const rulesTargetUri = vscode.Uri.joinPath(workspaceRoot, ".github", "rules");
+      console.log(`[rules] Starting copy operation...`);
+      await this.copyDirectoryRecursive(rulesTemplateUri, rulesTargetUri, overwrite);
+      console.log(`[rules] Copy operation completed`);
+    } else {
+      const msg = `Rules directory not found at: ${rulesTemplateUri.fsPath}`;
+      console.warn(`[rules] ${msg}`);
+      vscode.window.showWarningMessage(msg);
+    }
 
     // so_agent_context.md (recommended: keep deterministic + versioned via template)
     try {

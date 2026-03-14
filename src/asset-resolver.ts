@@ -32,10 +32,10 @@ export class AssetResolver {
   }
 
   /**
- * Resolves a file inside assets/skills/
- * e.g. getSkillPath("diagrams/skill.md")
- *      → <extension>/assets/skills/diagrams/skill.md
- */
+   * Resolves a file inside assets/skills/
+   * e.g. getSkillPath("diagrams/skill.md")
+   *      → <extension>/assets/skills/diagrams/skill.md
+   */
   getSkillPath(relativePath: string): vscode.Uri {
     return vscode.Uri.joinPath(
       this.getExtensionBaseUri(),
@@ -46,7 +46,7 @@ export class AssetResolver {
   }
 
   /**
-   * Resolves a file inside assets/agent/prompts/
+   * Resolves a file inside assets/agent/prompts/ (legacy)
    */
   getPromptPath(fileName: string): vscode.Uri {
     return vscode.Uri.joinPath(
@@ -54,6 +54,21 @@ export class AssetResolver {
       "assets",
       "agent",
       "prompts",
+      fileName
+    );
+  }
+
+  /**
+   * Resolves a file inside assets/templates/skills/<skill>/resources/
+   */
+  getSkillResourcePath(skillId: string, fileName: string): vscode.Uri {
+    return vscode.Uri.joinPath(
+      this.getExtensionBaseUri(),
+      "assets",
+      "templates",
+      "skills",
+      skillId,
+      "resources",
       fileName
     );
   }

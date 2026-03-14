@@ -269,7 +269,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("so-workspace.req.recheck", reqInventoryRecheckOpenChat)
   );
 
-  
+
   // Requirements context-menu commands (right-click on brd.md / requirements.inventory.md)
   context.subscriptions.push(
     vscode.commands.registerCommand("so.createRequirementsInventory", reqInventoryGenerateOpenChat),
@@ -450,7 +450,7 @@ export async function activate(context: vscode.ExtensionContext) {
   registerWordToMarkdownCommand(context);
 
   // SO Chat Participant (uses so_agent_context.md + skills)
-  registerSoParticipant(context);
+  registerSoParticipant(context, assetResolver);
 
   // Reset generated files command
   registerResetGeneratedFilesCommand(context);

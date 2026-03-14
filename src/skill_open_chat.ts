@@ -83,11 +83,14 @@ export const objectivesPatchOpenChat    = () => executeSkillOperation("objective
 export const objectivesRecheckOpenChat  = () => executeSkillOperation("objectives", "recheck");
 
 // ---------------------------------------------------------------------------
-// Diagrams  (generate variants bypass QuickPick — diagram_id is statically known)
+// Diagrams  (generate variants pass diagram_id explicitly — bypasses QuickPick)
 // ---------------------------------------------------------------------------
 
 export const diagramGenerateC4ContextOpenChat   = () => executeSkillOperation("diagrams", "generate", "diagram_id: c4_context");
 export const diagramGenerateC4ContainerOpenChat = () => executeSkillOperation("diagrams", "generate", "diagram_id: c4_container");
+export const diagramGenerateFlowOpenChat        = () => executeSkillOperation("diagrams", "generate", "diagram_id: flow");
+export const diagramGenerateSequenceOpenChat    = () => executeSkillOperation("diagrams", "generate", "diagram_id: sequence");
+export const diagramGenerateStateOpenChat       = () => executeSkillOperation("diagrams", "generate", "diagram_id: state");
 export const diagramEvalOpenChat                = () => executeSkillOperation("diagrams", "eval");
 export const diagramPatchOpenChat               = () => executeSkillOperation("diagrams", "patch");
 export const diagramRecheckOpenChat             = () => executeSkillOperation("diagrams", "recheck");

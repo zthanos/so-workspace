@@ -15,6 +15,7 @@ export async function loadSoAgentContext(
     const bytes = await vscode.workspace.fs.readFile(ctxUri);
     return Buffer.from(bytes).toString("utf-8");
   } catch {
+    // Use the new template path instead of the old agent context
     const templateUri = assetResolver.getAgentContextTemplatePath();
     const bytes = await vscode.workspace.fs.readFile(templateUri);
     return Buffer.from(bytes).toString("utf-8");

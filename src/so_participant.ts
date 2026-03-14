@@ -1,30 +1,25 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
+import {
+  loadSkillConfig, SkillConfig, SkillOperation,
+  matchDiagramFromPrompt, getDiagramById, resolvePromptKey,
+  DiagramCatalogEntry,
+} from "./skill-loader";
+import { AssetResolver } from "./asset-resolver";
 
 // ---------------------------------------------------------------------------
 // Paths (relative to workspace root)
 // ---------------------------------------------------------------------------
 
-const AGENT_CONTEXT_PATH = ".github/so_agent_context.md";
-
-const SKILLS: Record<string, string> = {
-  "requirements-inventory": ".github/skills/requirements-inventory/skill.md",
-};
-
-const SKILL_RESOURCES: Record<string, string[]> = {
-  "requirements-inventory": [
-    ".github/skills/requirements-inventory/resources/methodology.md",
-    ".github/skills/requirements-inventory/resources/output-template.md",
-    ".github/skills/requirements-inventory/resources/taxonomy.md",
-  ],
-};
+const AGENT_CONTEXT_PATH    = ".github/so_agent_context.md";
+const WORKSPACE_RULES_PATH  = ".github/rules";
+const WORKSPACE_SKILLS_PATH = ".github/skills";
 
 const AUTHORITATIVE_ARTIFACTS: Record<string, string> = {
-  objectives:       "docs/02_objectives/objectives.md",
-  requirements:     "docs/01_requirements/requirements.inventory.md",
-  template:         "assets/templates/solution_outline.template.md",
-  solutionOutline:  "docs/03_architecture/solution_outline.md",
+  objectives:      "docs/02_objectives/objectives.md",
+  requirements:    "docs/01_requirements/requirements.inventory.md",
+  solutionOutline: "docs/03_architecture/solution_outline.md",
 };
 
 const CONTEXT_ARTIFACTS: Record<string, string> = {
@@ -32,6 +27,33 @@ const CONTEXT_ARTIFACTS: Record<string, string> = {
   discussions: "docs/98_discussions",
   references:  "docs/99_references",
   adrs:        "docs/03_architecture/adr",
+};
+
+// Rule files packaged in assets/agent/rules/ (loaded for every request)
+const RULE_FILES = [
+  "rules.yaml",
+  "system_categories.yaml",
+  "zones.yaml",
+  "integration-routing-rules.yaml",
+  "integration-style-rules.yaml",
+  "observability-security-rules.yaml",
+] as const;
+
+// All known skill folders (source of truth: assets/skills/)
+const ALL_SKILL_FOLDERS = [
+  "requirements-inventory",
+  "objectives",
+  "diagrams",
+  "solution-outline",
+  "architecture-decision-records",
+] as const;
+
+// Maps slash operation name → prompt file name (without .prompt.md)
+const OPERATION_TO_PROMPT: Record<string, string> = {
+  generate: "generate",
+  eval:     "evaluate",
+  patch:    "patch",
+  recheck:  "recheck",
 };
 
 // ---------------------------------------------------------------------------
@@ -46,16 +68,16 @@ async function readFileSafe(filePath: string): Promise<string | null> {
   }
 }
 
-async function readDirMarkdownFiles(dirPath: string): Promise<{ file: string; content: string }[]> {
+async function readDirMarkdownFiles(
+  dirPath: string
+): Promise<{ file: string; content: string }[]> {
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
     const results: { file: string; content: string }[] = [];
     for (const entry of entries) {
       if (entry.isFile() && entry.name.endsWith(".md")) {
         const content = await readFileSafe(path.join(dirPath, entry.name));
-        if (content) {
-          results.push({ file: entry.name, content });
-        }
+        if (content) results.push({ file: entry.name, content });
       }
     }
     return results;
@@ -65,112 +87,256 @@ async function readDirMarkdownFiles(dirPath: string): Promise<{ file: string; co
 }
 
 // ---------------------------------------------------------------------------
-// Slash command → intent mapping
+// Skill detection
 // ---------------------------------------------------------------------------
 
-type SlashIntent = "generate" | "eval" | "patch" | "recheck" | null;
-
-function resolveSlashIntent(command: string | undefined): SlashIntent {
-  switch (command) {
-    case "generate": return "generate";
-    case "eval":     return "eval";
-    case "patch":    return "patch";
-    case "recheck":  return "recheck";
-    default:         return null;
-  }
-}
-
 /**
- * Detect which skill is most relevant based on slash command or message keywords.
+ * Detect which skill folder to activate.
+ *
+ * Priority:
+ * 1. Explicit diagram_id param in prompt  → "diagrams"
+ * 2. Keyword matching against each skill's name/description (loaded from skill.md)
+ * 3. Slash command alone (generate/eval/patch/recheck) → "requirements-inventory" as default
  */
-function detectSkill(message: string, command?: string): string | null {
+async function detectSkill(
+  prompt: string,
+  command: string | undefined,
+  assetResolver: AssetResolver
+): Promise<string | null> {
+  const lower = prompt.toLowerCase();
+
+  // 1. Explicit diagram_id in prompt (set by skill_open_chat.ts)
+  if (lower.includes("diagram_id:")) {
+    return "diagrams";
+  }
+
+  // 2. Keyword matching — load all skill configs and score against prompt
+  const scores: { folder: string; score: number }[] = [];
+
+  for (const folder of ALL_SKILL_FOLDERS) {
+    try {
+      const config = await loadSkillConfig(folder);
+      let score = 0;
+
+      // Match against skill name words
+      for (const word of config.name.toLowerCase().split(/\W+/).filter(Boolean)) {
+        if (word.length > 3 && lower.includes(word)) score += 2;
+      }
+
+      // Match against skill id parts
+      for (const part of config.id.toLowerCase().split(/[-_]/).filter(Boolean)) {
+        if (part.length > 3 && lower.includes(part)) score += 1;
+      }
+
+      // Match against description words (lower weight)
+      for (const word of config.description.toLowerCase().split(/\W+/).filter(Boolean)) {
+        if (word.length > 5 && lower.includes(word)) score += 0.5;
+      }
+
+      // Match against diagramCatalog labels (high weight — explicit diagram type names)
+      if (config.diagramCatalog) {
+        for (const entry of config.diagramCatalog) {
+          for (const label of entry.labels) {
+            if (lower.includes(label.toLowerCase())) score += 3;
+          }
+        }
+      }
+
+      if (score > 0) scores.push({ folder, score });
+    } catch {
+      // skill.md unreadable — skip
+    }
+  }
+
+  if (scores.length > 0) {
+    scores.sort((a, b) => b.score - a.score);
+    return scores[0].folder;
+  }
+
+  // 3. Slash command present but no keyword match → default to requirements-inventory
   if (command && ["generate", "eval", "patch", "recheck"].includes(command)) {
     return "requirements-inventory";
   }
-  const lower = message.toLowerCase();
-  if (
-    lower.includes("requirement") ||
-    lower.includes("inventory") ||
-    lower.includes("brd") ||
-    lower.includes("ri-") ||
-    lower.includes("actor") ||
-    lower.includes("stakeholder") ||
-    lower.includes("non-functional") ||
-    lower.includes("nfr") ||
-    lower.includes("constraint")
-  ) {
-    return "requirements-inventory";
-  }
+
   return null;
 }
 
-/**
- * Build an intent-specific instruction to append when a slash command is used.
- */
-function buildSlashIntentInstruction(intent: SlashIntent, skillId: string | null, promptText?: string): string {
-  if (!intent) { return ""; }
-  const artifact = skillId === "requirements-inventory"
-    ? "`docs/01_requirements/requirements.inventory.md`"
-    : "the relevant artifact";
-  switch (intent) {
-    case "generate":
-      return "\n\n> **Slash command: /generate**\nExtract and create " + artifact + " from the BRD. Follow Step 1 (Extract) of the skill workflow.";
-    case "eval":
-      return "\n\n> **Slash command: /eval**\nEvaluate " + artifact + " against the BRD. Follow Step 2 (Evaluate) and produce a report at `docs/reports/inventory_inconsistencies/latest.md`.";
-    case "patch": {
-      // Extra text may contain scoped IssueIds passed from the command (e.g. "IssueIds: INV-BRD-001")
-      const scopeHint = promptText?.includes("IssueIds:")
-        ? `\nScope: apply fixes ONLY for the following IssueIds: ${promptText.replace(/.*IssueIds:/i, "").trim()}`
-        : "";
-      return "\n\n> **Slash command: /patch**\nApply minimal fixes to " + artifact + " based on \`docs/reports/inventory_inconsistencies/latest.md\`. Follow Step 3 (Patch)." + scopeHint;
-    }
-    case "recheck":
-      return "\n\n> **Slash command: /recheck**\nRe-evaluate the patched " + artifact + " and update the report. Follow Step 4 (Recheck).";
-  }
-}
+// ---------------------------------------------------------------------------
+// System prompt builder
+// ---------------------------------------------------------------------------
 
-/**
- * Build the full system prompt from agent context, optional skill, and loaded artifacts.
- */
 async function buildSystemPrompt(
   workspaceRoot: string,
-  skillId: string | null
+  skillFolder: string | null,
+  assetResolver: AssetResolver
 ): Promise<string> {
   const parts: string[] = [];
 
-  // 1. Agent context
+  // 1. Agent context (workspace-level, overrides extension baseline)
   const agentContext = await readFileSafe(path.join(workspaceRoot, AGENT_CONTEXT_PATH));
   if (agentContext) {
     parts.push("# Agent Context\n\n" + agentContext);
   }
 
-  // 2. Skill (if detected)
-  if (skillId && SKILLS[skillId]) {
-    const skillContent = await readFileSafe(path.join(workspaceRoot, SKILLS[skillId]));
-    if (skillContent) {
-      parts.push(`# Active Skill: ${skillId}\n\n` + skillContent);
+  // 2. EA rules — workspace overrides extension baseline (file-by-file)
+  const rulesParts: string[] = [];
+  for (const ruleFile of RULE_FILES) {
+    // Try workspace first (.github/rules/<file>), fallback to extension asset
+    const workspaceRuleContent = await readFileSafe(
+      path.join(workspaceRoot, WORKSPACE_RULES_PATH, ruleFile)
+    );
+    if (workspaceRuleContent) {
+      const label = ruleFile.replace(".yaml", "");
+      rulesParts.push(`### ${label} (workspace)\n\`\`\`yaml\n${workspaceRuleContent}\n\`\`\``);
+      continue;
     }
-    // Skill resources
-    const resources = SKILL_RESOURCES[skillId] ?? [];
-    for (const resourcePath of resources) {
-      const content = await readFileSafe(path.join(workspaceRoot, resourcePath));
-      if (content) {
-        const resourceName = path.basename(resourcePath, ".md");
-        parts.push(`## Skill Resource: ${resourceName}\n\n` + content);
+    try {
+      const ruleUri = assetResolver.getRulePath(ruleFile);
+      const ruleContent = await assetResolver.readAsset(ruleUri);
+      const label = ruleFile.replace(".yaml", "");
+      rulesParts.push(`### ${label}\n\`\`\`yaml\n${ruleContent}\n\`\`\``);
+    } catch {
+      // Rule file missing in both locations — skip
+    }
+  }
+  if (rulesParts.length > 0) {
+    parts.push("# Enterprise Architecture Rules\n\n" + rulesParts.join("\n\n"));
+  }
+
+  // 3. Active skill — workspace overrides extension baseline (skill.md + resources)
+  if (skillFolder) {
+    try {
+      const config = await loadSkillConfig(skillFolder);
+
+      // skill.md: workspace version takes precedence over extension
+      const wsSkillContent = await readFileSafe(
+        path.join(workspaceRoot, WORKSPACE_SKILLS_PATH, skillFolder, "skill.md")
+      );
+      const skillContent = wsSkillContent
+        ?? await assetResolver.readAsset(assetResolver.getSkillPath(`${skillFolder}/skill.md`));
+      const origin = wsSkillContent ? " (workspace)" : "";
+      parts.push(`# Active Skill: ${config.name}${origin}\n\n` + skillContent);
+
+      // Resources: workspace version takes precedence over extension, file-by-file
+      const resourceFiles = ["methodology.md", "output-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
+      for (const resFile of resourceFiles) {
+        const wsResContent = await readFileSafe(
+          path.join(workspaceRoot, WORKSPACE_SKILLS_PATH, skillFolder, "resources", resFile)
+        );
+        if (wsResContent) {
+          const label = path.basename(resFile, ".md");
+          parts.push(`## Skill Resource: ${label} (workspace)\n\n` + wsResContent);
+          continue;
+        }
+        try {
+          const resUri = assetResolver.getSkillPath(`${skillFolder}/resources/${resFile}`);
+          const resContent = await assetResolver.readAsset(resUri);
+          const label = path.basename(resFile, ".md");
+          parts.push(`## Skill Resource: ${label}\n\n` + resContent);
+        } catch {
+          // Resource doesn't exist for this skill — skip
+        }
       }
+    } catch {
+      // skill.md unreadable — skip
     }
   }
 
   return parts.join("\n\n---\n\n");
 }
 
+// ---------------------------------------------------------------------------
+// Operation prompt loader
+// ---------------------------------------------------------------------------
+
 /**
- * Load workspace artifacts relevant to the current request and append them
- * as context messages.
+ * Loads the operation-specific prompt from the skill's resources/prompts/ folder.
+ *
+ * For diagram skills: resolves the correct promptKey from diagramCatalog
+ * (e.g. generate_c4_context, evaluate_mermaid) based on diagram_id in extraParams
+ * or by matching catalog labels against the user prompt.
+ *
+ * Falls back to a generic instruction if no prompt file is found.
  */
+async function loadOperationPrompt(
+  skillFolder: string,
+  operation: SkillOperation,
+  assetResolver: AssetResolver,
+  extraParams?: string,
+  userPrompt?: string
+): Promise<string> {
+  const config = await loadSkillConfig(skillFolder);
+
+  // Resolve diagram catalog entry if applicable
+  let catalogEntry: DiagramCatalogEntry | undefined;
+  if (config.diagramCatalog) {
+    // Try diagram_id from extraParams first (explicit, from QuickPick)
+    const diagramIdMatch = extraParams?.match(/diagram_id:\s*(\S+)/i);
+    if (diagramIdMatch) {
+      catalogEntry = getDiagramById(config, diagramIdMatch[1]);
+    }
+    // Fallback: match from user prompt labels
+    if (!catalogEntry && userPrompt) {
+      catalogEntry = matchDiagramFromPrompt(config, userPrompt);
+    }
+  }
+
+  // Build candidate prompt file names in priority order
+  const candidates: string[] = [];
+
+  if (catalogEntry) {
+    // Use catalog-resolved promptKey for this operation
+    candidates.push(resolvePromptKey(catalogEntry, operation));
+  }
+
+  // Generic operation fallback (e.g. "evaluate", "patch")
+  candidates.push(OPERATION_TO_PROMPT[operation] ?? operation);
+
+  // Try workspace override first, then extension asset
+  for (const candidate of candidates) {
+    // Workspace override: .github/skills/<folder>/resources/prompts/<candidate>.prompt.md
+    if (userPrompt) { // userPrompt presence implies we have workspaceRoot available via closure
+      // Note: workspaceRoot is not available here — workspace override handled in so_participant
+    }
+    try {
+      const uri = assetResolver.getSkillPath(
+        `${skillFolder}/resources/prompts/${candidate}.prompt.md`
+      );
+      const content = await assetResolver.readAsset(uri);
+      if (content) return content;
+    } catch {
+      // Try next candidate
+    }
+  }
+
+  // Fallback: generic instruction
+  return buildGenericOperationInstruction(operation, extraParams);
+}
+
+function buildGenericOperationInstruction(
+  operation: SkillOperation,
+  extraParams?: string
+): string {
+  const scopeHint = extraParams?.includes("IssueIds:")
+    ? `\nScope: apply fixes ONLY for the following IssueIds: ${extraParams.replace(/.*IssueIds:/i, "").trim()}`
+    : "";
+
+  switch (operation) {
+    case "generate": return "Execute the generate operation. Create or update the primary artifact according to the skill methodology.";
+    case "eval":     return "Execute the evaluate operation. Assess the primary artifact for inconsistencies and produce a report.";
+    case "patch":    return `Execute the patch operation. Apply minimal corrections based on the latest inconsistency report.${scopeHint}`;
+    case "recheck":  return "Execute the recheck operation. Re-evaluate the patched artifact using the same evaluation criteria.";
+    default:         return `Execute operation: ${operation}.`;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Artifact context loader
+// ---------------------------------------------------------------------------
+
 async function loadArtifactContext(
   workspaceRoot: string,
-  skillId: string | null
+  skillFolder: string | null
 ): Promise<vscode.LanguageModelChatMessage[]> {
   const messages: vscode.LanguageModelChatMessage[] = [];
   const loadedFiles: string[] = [];
@@ -187,19 +353,17 @@ async function loadArtifactContext(
     }
   }
 
-  // Always load objectives and requirements if they exist
-  await addFile("Objectives", AUTHORITATIVE_ARTIFACTS.objectives);
+  // Always load core artifacts if they exist
+  await addFile("Objectives",             AUTHORITATIVE_ARTIFACTS.objectives);
   await addFile("Requirements Inventory", AUTHORITATIVE_ARTIFACTS.requirements);
+  await addFile("Solution Outline",       AUTHORITATIVE_ARTIFACTS.solutionOutline);
 
-  // Requirements-inventory skill: also load BRD
-  if (skillId === "requirements-inventory") {
+  // BRD only for requirements-inventory skill
+  if (skillFolder === "requirements-inventory") {
     await addFile("BRD", CONTEXT_ARTIFACTS.brd);
   }
 
-  // Load solution outline if it exists
-  await addFile("Solution Outline", AUTHORITATIVE_ARTIFACTS.solutionOutline);
-
-  // Load discussions
+  // Discussions
   const discussions = await readDirMarkdownFiles(
     path.join(workspaceRoot, CONTEXT_ARTIFACTS.discussions)
   );
@@ -212,7 +376,7 @@ async function loadArtifactContext(
     loadedFiles.push(`docs/98_discussions/${file}`);
   }
 
-  // Load ADRs
+  // ADRs
   const adrs = await readDirMarkdownFiles(
     path.join(workspaceRoot, CONTEXT_ARTIFACTS.adrs)
   );
@@ -242,52 +406,59 @@ async function loadArtifactContext(
 
 async function soParticipantHandler(
   request: vscode.ChatRequest,
-  context: vscode.ChatContext,
+  chatContext: vscode.ChatContext,
   stream: vscode.ChatResponseStream,
-  token: vscode.CancellationToken
+  token: vscode.CancellationToken,
+  assetResolver: AssetResolver
 ): Promise<vscode.ChatResult> {
 
-  // Resolve workspace root
   const workspaceFolders = vscode.workspace.workspaceFolders;
-  if (!workspaceFolders || workspaceFolders.length === 0) {
+  if (!workspaceFolders?.length) {
     stream.markdown("⚠️ No workspace folder is open. Please open a workspace to use the SO assistant.");
     return {};
   }
   const workspaceRoot = workspaceFolders[0].uri.fsPath;
 
-  // Resolve slash command and skill
   const slashCommand = request.command;
-  const slashIntent  = resolveSlashIntent(slashCommand);
-  const skillId      = detectSkill(request.prompt, slashCommand);
+  const operation    = slashCommand as SkillOperation | undefined;
 
-  // Show active skill / command in chat
+  // Detect active skill
+  const skillFolder = await detectSkill(request.prompt, slashCommand, assetResolver);
+
+  // UI badges
   const badges: string[] = [];
-  if (slashCommand) { badges.push(`⚡ **/${slashCommand}**`); }
-  if (skillId)      { badges.push(`🛠️ skill: \`${skillId}\``); }
-  if (badges.length > 0) {
-    stream.markdown(`> ${badges.join(" · ")}\n\n`);
+  if (slashCommand) badges.push(`⚡ **/${slashCommand}**`);
+  if (skillFolder)  badges.push(`🛠️ skill: \`${skillFolder}\``);
+  if (badges.length > 0) stream.markdown(`> ${badges.join(" · ")}\n\n`);
+
+  // Build system prompt (agent context + skill.md + resources)
+  const systemPrompt = await buildSystemPrompt(workspaceRoot, skillFolder, assetResolver);
+
+  // Load operation-specific prompt if a slash command was used
+  let operationInstruction = "";
+  if (operation && skillFolder) {
+    operationInstruction = await loadOperationPrompt(
+      skillFolder,
+      operation,
+      assetResolver,
+      request.prompt,   // extraParams (contains diagram_id if set)
+      request.prompt    // userPrompt (for catalog label matching)
+    );
   }
 
-  // Build system prompt
-  const systemPrompt = await buildSystemPrompt(workspaceRoot, skillId);
-
-  // Load artifact context messages
-  const artifactMessages = await loadArtifactContext(workspaceRoot, skillId);
+  // Load workspace artifact context
+  const artifactMessages = await loadArtifactContext(workspaceRoot, skillFolder);
 
   // Select model
-  const [model] = await vscode.lm.selectChatModels({
-    vendor: "copilot",
-    family: "gpt-4o",
-  });
-
+  const [model] = await vscode.lm.selectChatModels({ vendor: "copilot", family: "gpt-4o" });
   if (!model) {
     stream.markdown("⚠️ No compatible language model available. Please ensure GitHub Copilot is active.");
     return {};
   }
 
-  // Build message history from prior turns
+  // Build conversation history
   const history: vscode.LanguageModelChatMessage[] = [];
-  for (const turn of context.history) {
+  for (const turn of chatContext.history) {
     if (turn instanceof vscode.ChatRequestTurn) {
       history.push(vscode.LanguageModelChatMessage.User(turn.prompt));
     } else if (turn instanceof vscode.ChatResponseTurn) {
@@ -295,18 +466,21 @@ async function soParticipantHandler(
         .filter((r): r is vscode.ChatResponseMarkdownPart => r instanceof vscode.ChatResponseMarkdownPart)
         .map(r => r.value.value)
         .join("");
-      if (text) {
-        history.push(vscode.LanguageModelChatMessage.Assistant(text));
-      }
+      if (text) history.push(vscode.LanguageModelChatMessage.Assistant(text));
     }
   }
 
   // Assemble final messages
+  // Operation prompt goes as a separate user message so the model treats it as an instruction
+  const userMessage = operationInstruction
+    ? `${request.prompt}\n\n---\n\n${operationInstruction}`
+    : request.prompt;
+
   const messages: vscode.LanguageModelChatMessage[] = [
     vscode.LanguageModelChatMessage.User(systemPrompt),
     ...artifactMessages,
     ...history,
-    vscode.LanguageModelChatMessage.User(request.prompt + buildSlashIntentInstruction(slashIntent, skillId, request.prompt)),
+    vscode.LanguageModelChatMessage.User(userMessage),
   ];
 
   // Stream response
@@ -316,8 +490,7 @@ async function soParticipantHandler(
       stream.markdown(chunk);
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    stream.markdown(`\n\n⚠️ Error communicating with model: ${msg}`);
+    stream.markdown(`\n\n⚠️ Error communicating with model: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   return {};
@@ -327,14 +500,16 @@ async function soParticipantHandler(
 // Registration
 // ---------------------------------------------------------------------------
 
-export function registerSoParticipant(context: vscode.ExtensionContext): void {
+export function registerSoParticipant(
+  context: vscode.ExtensionContext,
+  assetResolver: AssetResolver
+): void {
   const participant = vscode.chat.createChatParticipant(
     "so-workspace.so",
-    soParticipantHandler
+    (request, chatContext, stream, token) =>
+      soParticipantHandler(request, chatContext, stream, token, assetResolver)
   );
 
-  // Icon (reuse extension icon if present)
   participant.iconPath = vscode.Uri.joinPath(context.extensionUri, "assets", "icon.png");
-
   context.subscriptions.push(participant);
 }
