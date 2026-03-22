@@ -85,76 +85,19 @@ Expected VS Code settings for the local container workflow:
 - `so-workspace.diagrams.structurizrCliContainer`: `structurizr-cli`
 - `so-workspace.diagrams.structurizrCliPath`: `/usr/local/structurizr-cli/structurizr.sh`
 
-### Required Local Tools for Diagram Rendering
+### Diagram Runtime
 
-Legacy note: the section below describes older host-tooling options. For current local rendering, prefer the Docker-based setup in `Local Diagram Containers` above.
+The recommended local rendering setup is Docker-based and does not require a separate Java runtime, PlantUML JAR, or Mermaid CLI installation.
 
-The extension uses **local rendering** for all diagram types by default, with no external API dependencies—ensuring offline operation and data privacy. Server URLs (PlantUML, Structurizr) exist in settings for optional use; the recommended path is local tools only.
+- `.puml` diagrams render through the local Kroki container
+- `.dsl` diagrams render through the local `structurizr/cli` container
+- document generation and participant workflows run from the installed extension plus the configured local containers
 
-#### Required Tools
+The main VS Code settings for this flow are:
 
-1. **Java Runtime Environment (JRE)**
-   - Required for PlantUML rendering
-   - Version 8 or higher recommended
-   - Download: https://www.oracle.com/java/technologies/downloads/
-
-2. **PlantUML JAR**
-   - Required for PlantUML diagram rendering
-   - Default location: `tools/plantuml/plantuml-1.2026.1.jar` (relative to workspace root)
-   - Download latest: https://plantuml.com/download
-   - Configure path in settings: `so-workspace.diagrams.java.plantUmlJarPath`
-
-3. **Mermaid CLI**
-   - **Required separate installation** - Must be installed by the user
-   - The extension will automatically detect your mermaid-cli installation
-   - Install globally (recommended):
-     ```bash
-     npm install -g @mermaid-js/mermaid-cli
-     ```
-   - Or install in your project:
-     ```bash
-     npm install --save-dev @mermaid-js/mermaid-cli
-     ```
-   - Configure custom path in settings: `so-workspace.diagrams.java.mermaidCliPath` (default: `mmdc` enables auto-detection)
-
-4. **Docker**
-   - Required for Structurizr DSL rendering
-   - Download: https://www.docker.com/products/docker-desktop
-   - Used to run Structurizr CLI containers defined in `docker-compose.structurizr.yml`
-
-#### Docker Setup for Structurizr
-
-To render Structurizr DSL files (`.dsl`), you need Docker running with the Structurizr containers:
-
-```bash
-# Start Structurizr containers
-docker-compose -f docker-compose.structurizr.yml up -d
-
-# Verify containers are running
-docker ps
-
-# Stop containers when done
-docker-compose -f docker-compose.structurizr.yml down
-```
-
-The extension will automatically use the Docker containers for Structurizr rendering. Configure the container name and CLI path in settings if needed:
-- `so-workspace.diagrams.structurizrCliContainer` (default: `structurizr-cli`)
-- `so-workspace.diagrams.structurizrCliPath` (default: `/usr/local/structurizr-cli/structurizr.sh`)
-
-#### Configuration
-
-All local tool paths can be configured in VS Code settings (File → Preferences → Settings → SO Workspace Diagrams):
-
-- **PlantUML JAR Path**: Path to PlantUML JAR file (relative to workspace root)
-- **Mermaid CLI Path**: Path to `mmdc` executable (default: `mmdc` enables auto-detection)
-  - The extension automatically detects mermaid-cli in this order:
-    1. Custom configured path (if not default "mmdc")
-    2. Project-local installation (`node_modules/.bin/mmdc`)
-    3. Global npm installation
-- **Java Path**: Path to Java executable (default: `java` in PATH)
-- **Structurizr CLI Container**: Docker container name for Structurizr CLI
-- **Structurizr CLI Path**: Path to structurizr.sh inside the container
-
+- `diagramPreviewer.krokiEndpoint`
+- `so-workspace.diagrams.structurizrCliContainer`
+- `so-workspace.diagrams.structurizrCliPath`
 ---
 
 ## Getting Started
@@ -454,82 +397,24 @@ For the Diagram Previewer feature (webview, renderers, cache), see [src/diagram-
 
 ## Troubleshooting
 
-### Mermaid CLI Installation Issues
+### Diagram Container Issues
 
-If you see errors about mermaid-cli not being found:
+If Mermaid or PlantUML rendering fails:
 
-1. **Verify mermaid-cli is installed**:
+1. Verify the local containers are running:
    ```bash
-   # Check global installation
-   npm list -g @mermaid-js/mermaid-cli
-   
-   # Check project-local installation
-   npm list @mermaid-js/mermaid-cli
+   docker compose -f docker-compose.structurizr.yml ps
    ```
 
-2. **Install mermaid-cli if missing**:
+2. Confirm Kroki is reachable:
    ```bash
-   # Global installation (recommended)
-   npm install -g @mermaid-js/mermaid-cli
-   
-   # Or project-local installation
-   npm install --save-dev @mermaid-js/mermaid-cli
+   curl http://localhost:8000/health
    ```
 
-3. **Verify mmdc is accessible**:
+3. Restart the local rendering stack if needed:
    ```bash
-   # Test the command
-   mmdc --version
+   docker compose -f docker-compose.structurizr.yml down
+   docker compose -f docker-compose.structurizr.yml up -d
    ```
 
-4. **Check detection order**:
-   - The extension searches for mermaid-cli in this order:
-     1. Custom path configured in settings (if not "mmdc")
-     2. Project `node_modules/.bin/mmdc`
-     3. Global npm installation
-   - If you have multiple installations, the extension uses the first one found
-
-5. **Configure custom path** (if needed):
-   - Open VS Code Settings (File → Preferences → Settings)
-   - Search for "SO Workspace Diagrams"
-   - Set "Mermaid CLI Path" to your custom installation path
-   - Example: `/usr/local/bin/mmdc` or `C:\Users\YourName\AppData\Roaming\npm\mmdc.cmd`
-
-6. **Platform-specific notes**:
-   - **Windows**: The extension looks for `mmdc.cmd`
-   - **macOS/Linux**: The extension looks for `mmdc`
-   - Ensure the executable has proper permissions on Unix systems: `chmod +x /path/to/mmdc`
-
-7. **Reload VS Code** after installing mermaid-cli to ensure the extension detects it
-
-If problems persist, check the Output panel (View → Output → SO Workspace) for detailed error messages.
-
-### Extension Can't Find Assets
-
-If you see errors about missing assets:
-
-1. Verify the extension is properly installed
-2. Try reinstalling the extension
-3. Check that assets are included in the VSIX package
-4. Run `npm run verify-vsix` during development
-
-### Workspace Initialization Fails
-
-If workspace initialization fails:
-
-1. Ensure you have write permissions in the workspace folder
-2. Check that the workspace is not read-only
-3. Try closing and reopening VS Code
-4. Check the Output panel (View → Output → SO Workspace) for detailed errors
-
----
-
-## License
-
-See [LICENSE.md](LICENSE.md) in the repository.
-
----
-
-## Support
-
-For issues, questions, or contributions, please visit the repository issue tracker.
+4. Re-run the diagram render command after the services are healthy.

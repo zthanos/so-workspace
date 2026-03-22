@@ -17,14 +17,9 @@ import { MermaidValidator } from "./mermaid-validator";
 import { renderMermaidViaKroki, renderMermaidViaWebview } from "./mermaid-webview-renderer";
 
 /**
- * Configuration for the rendering backend.
- *
- * `plantUmlJarPath` and `javaPath` are kept for compatibility with existing
- * configuration, but Kroki is the active renderer.
+ * Configuration for the Kroki-backed rendering backend.
  */
 export interface JavaBackendConfig {
-  plantUmlJarPath: string;
-  javaPath?: string;
   maxConcurrent?: number;
   extensionContext?: vscode.ExtensionContext;
   krokiEndpoint?: string;

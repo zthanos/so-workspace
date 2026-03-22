@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as path from "path";
 import { AssetResolver } from "./asset-resolver";
 import {
   reqInventoryGenerateOpenChat, reqInventoryEvalOpenChat,
@@ -127,7 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const { StructurizrPipelineRenderer } = require("./structurizr-pipeline-renderer");
   const { StructurizrValidator } = require("./structurizr-validator");
 
-  // Initialize Configuration Manager first (needed for Java backend config)
+  // Initialize Configuration Manager first (needed for Structurizr backend config)
   configurationManager = new ConfigurationManager();
   await configurationManager.initialize(context).catch(error => {
     console.error("Failed to initialize Configuration Manager:", error);
@@ -136,14 +135,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
   });
 
-  // Get Java backend configuration
-  const javaConfig = configurationManager.getConfiguration().java;
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
-
-  // Resolve PlantUML JAR path (absolute or relative to workspace)
-  const plantUmlJarPath = path.isAbsolute(javaConfig.plantUmlJarPath)
-    ? javaConfig.plantUmlJarPath
-    : path.join(workspaceRoot, javaConfig.plantUmlJarPath);
 
   // Read Kroki endpoint from diagram previewer config for Java backend
   const krokiEndpoint = readConfig().krokiEndpoint;
@@ -151,8 +143,6 @@ export async function activate(context: vscode.ExtensionContext) {
   // Create backend instance with configuration.
   // PlantUML and Mermaid render through the local Kroki endpoint.
   const javaBackend = new JavaRenderBackend({
-    plantUmlJarPath,
-    javaPath: javaConfig.javaPath,
     extensionContext: context,
     krokiEndpoint
   });

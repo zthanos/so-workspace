@@ -13,7 +13,6 @@ import {
   EndpointConfigurations,
   ResolvedConfig,
   PlantUMLEndpointConfig,
-  JavaBackendConfig,
   StructurizrBackendConfig,
   RenderingConfig,
 } from "./config-types";
@@ -54,7 +53,6 @@ export class ConfigMerger {
     // This ensures proper precedence (Requirement 3.1, 3.2, 3.3, 3.4, 3.5)
     const resolved: ResolvedConfig = {
       plantuml: this.mergePlantUMLConfig(workspaceConfig, envConfig, vscodeConfig),
-      java: this.mergeJavaConfig(workspaceConfig, envConfig, vscodeConfig),
       structurizr: this.mergeStructurizrConfig(workspaceConfig, envConfig, vscodeConfig),
       rendering: this.mergeRenderingConfig(workspaceConfig, envConfig, vscodeConfig),
     };
@@ -104,51 +102,6 @@ export class ConfigMerger {
       url: envPlantUML?.url ?? workspacePlantUML?.url ?? vscodePlantUML.url ?? defaults.url,
       timeout: envPlantUML?.timeout ?? workspacePlantUML?.timeout ?? vscodePlantUML.timeout ?? defaults.timeout,
       enabled: envPlantUML?.enabled ?? workspacePlantUML?.enabled ?? defaults.enabled,
-    };
-  }
-
-  /**
-   * Merge Java backend configuration
-   * 
-   * Applies precedence rules to Java backend configuration.
-   * Precedence: environment > workspace > VS Code settings > defaults
-   * 
-   * @param workspaceConfig - Workspace configuration (may be null)
-   * @param envConfig - Environment-specific configuration (may be undefined)
-   * @param vscodeConfig - VS Code workspace configuration
-   * @returns Fully resolved Java backend configuration
-   * 
-   * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5
-   */
-  mergeJavaConfig(
-    workspaceConfig: WorkspaceConfig | null,
-    envConfig: EndpointConfigurations | undefined,
-    vscodeConfig: vscode.WorkspaceConfiguration
-  ): Required<JavaBackendConfig> {
-    // Start with defaults (Requirement 3.4)
-    const defaults: Required<JavaBackendConfig> = {
-      plantUmlJarPath: "tools/plantuml/plantuml-1.2026.1.jar",
-      javaPath: "java",
-      enabled: true,
-    };
-
-    // Get VS Code settings (Requirement 3.2)
-    const vscodeJava = {
-      plantUmlJarPath: vscodeConfig.get<string>("diagrams.java.plantUmlJarPath"),
-      javaPath: vscodeConfig.get<string>("diagrams.java.javaPath"),
-    };
-
-    // Get workspace config (Requirement 3.3)
-    const workspaceJava = workspaceConfig?.endpoints?.java;
-
-    // Get environment config (Requirement 3.1)
-    const envJava = envConfig?.java;
-
-    // Merge with precedence: env > workspace > vscode > defaults (Requirement 3.5)
-    return {
-      plantUmlJarPath: envJava?.plantUmlJarPath ?? workspaceJava?.plantUmlJarPath ?? vscodeJava.plantUmlJarPath ?? defaults.plantUmlJarPath,
-      javaPath: envJava?.javaPath ?? workspaceJava?.javaPath ?? vscodeJava.javaPath ?? defaults.javaPath,
-      enabled: envJava?.enabled ?? workspaceJava?.enabled ?? defaults.enabled,
     };
   }
 

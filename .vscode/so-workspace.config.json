@@ -8,15 +8,10 @@
       "maxConcurrent": 5,
       "enabled": true
     },
-    "plantuml": {
-      "url": "https://www.plantuml.com/plantuml",
-      "timeout": 30000,
-      "enabled": true
-    },
-    "java": {
-      "plantUmlJarPath": "tools/plantuml/plantuml-1.2026.1.jar",
-      "mermaidCliPath": "mmdc",
-      "javaPath": "java",
+    "structurizr": {
+      "structurizrCliContainer": "structurizr-cli",
+      "structurizrCliPath": "/usr/local/structurizr-cli/structurizr.sh",
+      "structurizrServerUrl": "http://localhost:8080",
       "enabled": true
     },
     "rendering": {

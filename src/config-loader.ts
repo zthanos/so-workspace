@@ -187,9 +187,8 @@ export class ConfigLoader {
    * 
    * Requirements:
    * - 2.3: Validate PlantUML endpoint properties
-   * - 2.4: Validate Java backend properties
-   * - 6.3: Specify expected type for incorrect types
-   */
+ * - 6.3: Specify expected type for incorrect types
+ */
   private validateEndpoints(endpoints: EndpointConfigurations): void {
     // Validate PlantUML config (Requirement 2.3)
     if (endpoints.plantuml !== undefined) {
@@ -213,26 +212,6 @@ export class ConfigLoader {
       }
       if (plantuml.enabled !== undefined && typeof plantuml.enabled !== "boolean") {
         throw new ConfigValidationError("endpoints.plantuml.enabled", "boolean", typeof plantuml.enabled);
-      }
-    }
-
-    // Validate Java backend config (Requirement 2.4)
-    if (endpoints.java !== undefined) {
-      const java = endpoints.java;
-      
-      if (typeof java !== "object" || java === null) {
-        throw new ConfigValidationError("endpoints.java", "object", typeof java);
-      }
-
-      // All fields are optional
-      if (java.plantUmlJarPath !== undefined && typeof java.plantUmlJarPath !== "string") {
-        throw new ConfigValidationError("endpoints.java.plantUmlJarPath", "string", typeof java.plantUmlJarPath);
-      }
-      if (java.javaPath !== undefined && typeof java.javaPath !== "string") {
-        throw new ConfigValidationError("endpoints.java.javaPath", "string", typeof java.javaPath);
-      }
-      if (java.enabled !== undefined && typeof java.enabled !== "boolean") {
-        throw new ConfigValidationError("endpoints.java.enabled", "boolean", typeof java.enabled);
       }
     }
 

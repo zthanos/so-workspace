@@ -103,7 +103,7 @@ The Requirements Inventory is the structured representation of the BRD and acts 
   `so-workspace.diagram.generateC4Container`
 - **SO: 3-03 Render Diagrams (Local Tools)**  
   `so-workspace.renderDiagrams`  
-  Renders all diagram types using local tools (Mermaid CLI, PlantUML JAR, Docker-based Structurizr CLI)
+  Renders `.puml` diagrams through the local Kroki container and `.dsl` diagrams through the local Structurizr CLI container
 - **SO: 3-04 Diagram Evaluate (Select Diagram)**  
   `so-workspace.diagram.eval`
 - **SO: 3-05 Diagram Patch (Select Diagram)**  

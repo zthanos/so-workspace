@@ -33,51 +33,32 @@
           "description": "Output directory for rendered SVG files",
           "order": 2
         },
-        "so-workspace.diagrams.plantUmlServerUrl": {
-          "type": "string",
-          "default": "https://www.plantuml.com/plantuml",
-          "description": "PlantUML server URL (use public server or local server)",
-          "pattern": "^https?://.*",
-          "order": 3
-        },
         "so-workspace.diagrams.concurrencyLimit": {
           "type": "number",
           "default": 5,
           "minimum": 1,
           "maximum": 50,
           "description": "Maximum number of concurrent rendering operations",
-          "order": 4
-        },
-        "so-workspace.diagrams.java.plantUmlJarPath": {
-          "type": "string",
-          "default": "tools/plantuml/plantuml-1.2026.1.jar",
-          "description": "Path to PlantUML JAR file (relative to workspace root)",
-          "order": 5
-        },
-        "so-workspace.diagrams.java.javaPath": {
-          "type": "string",
-          "default": "java",
-          "description": "Java executable path (defaults to 'java' in PATH)",
-          "order": 7
+          "order": 3
         },
         "so-workspace.diagrams.structurizrServerUrl": {
           "type": "string",
           "default": "http://localhost:8080",
           "description": "Structurizr server URL for DSL validation (Structurizr Lite or Cloud)",
           "pattern": "^https?://.*",
-          "order": 8
+          "order": 4
         },
         "so-workspace.diagrams.structurizrCliContainer": {
           "type": "string",
           "default": "structurizr-cli",
           "description": "Docker container name for Structurizr CLI",
-          "order": 9
+          "order": 5
         },
         "so-workspace.diagrams.structurizrCliPath": {
           "type": "string",
           "default": "/usr/local/structurizr-cli/structurizr.sh",
           "description": "Path to structurizr.sh script inside the Docker container",
-          "order": 10
+          "order": 6
         },
         "diagramPreviewer.autoOpenPreview": {
           "type": "boolean",

@@ -2,7 +2,7 @@
  * Configuration Schema and Types
  * 
  * Defines TypeScript interfaces for workspace-level configuration file support.
- * Enables dynamic management of external service endpoints (PlantUML, etc.)
+ * Enables dynamic management of external service endpoints and rendering behavior
  * through a `.vscode/so-workspace.config.json` file.
  * 
  * Configuration precedence: environment config > workspace config > VS Code settings > defaults
@@ -68,12 +68,6 @@ export interface EndpointConfigurations {
   plantuml?: PlantUMLEndpointConfig;
 
   /**
-   * Java backend configuration
-   * Used for local diagram rendering with PlantUML JAR and Mermaid CLI
-   */
-  java?: JavaBackendConfig;
-
-  /**
    * Structurizr backend configuration
    * Used for rendering Structurizr DSL files with Structurizr CLI
    */
@@ -119,51 +113,12 @@ export interface PlantUMLEndpointConfig {
   enabled?: boolean;
 }
 
-// ============================================================================
-// Java Backend Configuration
-// ============================================================================
-
-/**
- * Java backend configuration
- * 
- * Configures local Java-based rendering tools.
- * Enables offline diagram rendering without cloud services.
- * Requires Java runtime and appropriate CLI tools.
- */
-export interface JavaBackendConfig {
-  /**
-   * Path to PlantUML JAR file
-   * Can be relative to workspace root or absolute path
-   * @example "tools/plantuml/plantuml-1.2026.1.jar", "/usr/local/lib/plantuml.jar"
-   */
-  plantUmlJarPath?: string;
-
-  /**
-   * Java executable path
-   * Can be command name in PATH or absolute path
-   * @default "java"
-   * @example "java", "/usr/bin/java", "C:\\Program Files\\Java\\jdk-17\\bin\\java.exe"
-   */
-  javaPath?: string;
-
-  /**
-   * Whether this backend is enabled
-   * When false, Java backend will not be used for rendering
-   * @default true
-   */
-  enabled?: boolean;
-}
-
-// ============================================================================
-// Structurizr Backend Configuration
-// ============================================================================
-
 /**
  * Structurizr backend configuration
  * 
  * Configures Structurizr CLI for rendering C4 architecture diagrams.
  * Enables rendering of Structurizr DSL files to SVG format.
- * Requires Structurizr CLI and Java runtime.
+ * Uses the configured local container/CLI runtime.
  */
 export interface StructurizrBackendConfig {
   /**
@@ -261,12 +216,6 @@ export interface ResolvedConfig {
    * All fields have concrete values after merging
    */
   plantuml: Required<PlantUMLEndpointConfig>;
-
-  /**
-   * Resolved Java backend configuration
-   * All fields have concrete values after merging
-   */
-  java: Required<JavaBackendConfig>;
 
   /**
    * Resolved Structurizr backend configuration
