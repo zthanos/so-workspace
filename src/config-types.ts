@@ -175,6 +175,13 @@ export interface StructurizrBackendConfig {
   structurizrCliPath?: string;
 
   /**
+   * Docker container name for Structurizr CLI execution
+   * @default "structurizr-cli"
+   * @example "structurizr-cli"
+   */
+  structurizrCliContainer?: string;
+
+  /**
    * Structurizr server URL for DSL validation
    * Used to validate DSL files against Structurizr server API
    * Supports both Structurizr Lite (local) and Structurizr Cloud

@@ -90,7 +90,7 @@ export class JavaRenderBackend implements RenderBackend {
     try {
       const validation = this.mermaidValidator.validate("inline.mmd", content);
       if (!validation.valid) {
-        throw new Error(validation.errors.map((error) => error.message).join("; "));
+        throw new Error(validation.errors.join("; "));
       }
 
       const svg = await renderMermaidViaKroki(content, krokiEndpoint, "mermaid");

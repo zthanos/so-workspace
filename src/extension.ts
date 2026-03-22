@@ -27,7 +27,6 @@ import { initializeWorkspaceCommand } from "./commands/initialize-workspace-comm
 import { PanelManager } from "./diagram-previewer/panelManager";
 import { readConfig, onConfigChange } from "./diagram-previewer/config";
 import { initializeLogger, getLogger } from "./diagram-previewer/logger";
-import { openSoQuery } from "./skill_open_chat";
 
 // Mermaid rendering uses bundled mermaid.esm.min.mjs — no mermaid-cli required
 

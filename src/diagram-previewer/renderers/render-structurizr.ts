@@ -1,8 +1,13 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as pako from "pako";
-import { DiagramDefinition } from "./diagram-types";
-import { readConfig } from "../diagram-previewer/config";
+import { readConfig } from "../config";
+
+interface DiagramDefinition {
+  sourcePath: string;
+  outputSvgPath: string;
+  outputPngPath: string;
+}
 
 /**
  * Renders a Structurizr DSL diagram to SVG + PNG files.
@@ -76,7 +81,7 @@ function renderViaMermaidWebview(
   mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
   async function run() {
     try {
-      const { svg } = await mermaid.render('fallback-export', \\`${escapedSource}\\`);
+      const { svg } = await mermaid.render('fallback-export', \`${escapedSource}\`);
       vscode.postMessage({ type: 'svg', svg });
     } catch (err) {
       vscode.postMessage({ type: 'error', error: String(err) });

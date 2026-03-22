@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
-import pdfParse from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 
 let outputChannel: vscode.OutputChannel;
 
@@ -140,7 +140,9 @@ function pdfTextToMarkdown(text: string): string {
 async function performConversion(inputPath: string, outputPath: string): Promise<void> {
   outputChannel.appendLine(`[INFO] Reading PDF: ${inputPath}`);
   const buffer = await fs.readFile(inputPath);
-  const parsed = await pdfParse(buffer);
+  const parser = new PDFParse({ data: buffer });
+  const parsed = await parser.getText();
+  await parser.destroy();
 
   if (!parsed.text || parsed.text.trim().length === 0) {
     throw new Error("The PDF did not yield any extractable text.");

@@ -173,6 +173,7 @@ export class ConfigMerger {
     // Start with defaults (Requirement 3.4, 10.3, 13.5)
     const defaults: Required<StructurizrBackendConfig> = {
       structurizrCliPath: "structurizr-cli",
+      structurizrCliContainer: "structurizr-cli",
       structurizrServerUrl: "http://localhost:8080",
       validateBeforeRender: false,
       enabled: true,
@@ -181,6 +182,7 @@ export class ConfigMerger {
     // Get VS Code settings (Requirement 3.2)
     const vscodeStructurizr = {
       structurizrCliPath: vscodeConfig.get<string>("diagrams.structurizrCliPath"),
+      structurizrCliContainer: vscodeConfig.get<string>("diagrams.structurizrCliContainer"),
       structurizrServerUrl: vscodeConfig.get<string>("diagrams.structurizrServerUrl"),
       validateBeforeRender: vscodeConfig.get<boolean>("diagrams.structurizrValidateBeforeRender"),
       enabled: vscodeConfig.get<boolean>("diagrams.structurizrCliEnabled"),
@@ -195,6 +197,7 @@ export class ConfigMerger {
     // Merge with precedence: env > workspace > vscode > defaults (Requirement 3.5, 13.7, 13.8)
     return {
       structurizrCliPath: envStructurizr?.structurizrCliPath ?? workspaceStructurizr?.structurizrCliPath ?? vscodeStructurizr.structurizrCliPath ?? defaults.structurizrCliPath,
+      structurizrCliContainer: envStructurizr?.structurizrCliContainer ?? workspaceStructurizr?.structurizrCliContainer ?? vscodeStructurizr.structurizrCliContainer ?? defaults.structurizrCliContainer,
       structurizrServerUrl: envStructurizr?.structurizrServerUrl ?? workspaceStructurizr?.structurizrServerUrl ?? vscodeStructurizr.structurizrServerUrl ?? defaults.structurizrServerUrl,
       validateBeforeRender: envStructurizr?.validateBeforeRender ?? workspaceStructurizr?.validateBeforeRender ?? vscodeStructurizr.validateBeforeRender ?? defaults.validateBeforeRender,
       enabled: envStructurizr?.enabled ?? workspaceStructurizr?.enabled ?? vscodeStructurizr.enabled ?? defaults.enabled,
