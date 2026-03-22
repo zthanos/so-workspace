@@ -33,13 +33,53 @@ const ESSENTIAL_FILES = [
   'extension/dist/extension.js'
 ];
 
-// Required asset paths that must exist in the VSIX
+// Required skill asset paths that must exist in the VSIX
 const REQUIRED_ASSETS = [
-  'extension/assets/agent/prompts/00_EXECUTE.prompt.md',
-  'extension/assets/agent/prompts/01_requirements/00_extract_requirements_inventory.prompt.md',
-  'extension/assets/agent/prompts/02_diagrams/05_generate_c4_context.prompt.md',
-  'extension/assets/agent/prompts/03_objectives/01_generate_objectives.prompt.md',
-  'extension/assets/agent/prompts/04_solution_outline/20_generate_solution_outline.prompt.md',
+  // Skill assets (replacing legacy prompts)
+  'extension/assets/templates/skills/requirements-inventory/skill.md',
+  'extension/assets/templates/skills/requirements-inventory/resources/prompts/generate.prompt.md',
+  'extension/assets/templates/skills/requirements-inventory/resources/prompts/evaluate.prompt.md',
+  'extension/assets/templates/skills/requirements-inventory/resources/prompts/patch.prompt.md',
+  'extension/assets/templates/skills/requirements-inventory/resources/prompts/recheck.prompt.md',
+  'extension/assets/templates/skills/requirements-inventory/resources/methodology.md',
+  'extension/assets/templates/skills/requirements-inventory/resources/taxonomy.md',
+  'extension/assets/templates/skills/requirements-inventory/resources/output-template.md',
+  
+  'extension/assets/templates/skills/objectives/skill.md',
+  'extension/assets/templates/skills/objectives/resources/prompts/generate.prompt.md',
+  'extension/assets/templates/skills/objectives/resources/prompts/evaluate.prompt.md',
+  'extension/assets/templates/skills/objectives/resources/prompts/patch.prompt.md',
+  'extension/assets/templates/skills/objectives/resources/prompts/recheck.prompt.md',
+  'extension/assets/templates/skills/objectives/resources/methodology.md',
+  'extension/assets/templates/skills/objectives/resources/output-template.md',
+  
+  'extension/assets/templates/skills/diagrams/skill.md',
+  'extension/assets/templates/skills/diagrams/resources/prompts/generate_c4_context.prompt.md',
+  'extension/assets/templates/skills/diagrams/resources/prompts/generate_c4_container.prompt.md',
+  'extension/assets/templates/skills/diagrams/resources/prompts/evaluate.prompt.md',
+  'extension/assets/templates/skills/diagrams/resources/prompts/patch.prompt.md',
+  'extension/assets/templates/skills/diagrams/resources/prompts/recheck.prompt.md',
+  'extension/assets/templates/skills/diagrams/resources/methodology.md',
+  'extension/assets/templates/skills/diagrams/resources/diagram-taxonomy.md',
+  'extension/assets/templates/skills/diagrams/resources/output-template.md',
+  
+  'extension/assets/templates/skills/solution-outline/skill.md',
+  'extension/assets/templates/skills/solution-outline/resources/prompts/generate.prompt.md',
+  'extension/assets/templates/skills/solution-outline/resources/prompts/evaluate.prompt.md',
+  'extension/assets/templates/skills/solution-outline/resources/prompts/patch.prompt.md',
+  'extension/assets/templates/skills/solution-outline/resources/prompts/recheck.prompt.md',
+  'extension/assets/templates/skills/solution-outline/resources/methodology.md',
+  'extension/assets/templates/skills/solution-outline/resources/output-template.md',
+  
+  'extension/assets/templates/skills/adr/skill.md',
+  'extension/assets/templates/skills/adr/resources/prompts/generate.prompt.md',
+  'extension/assets/templates/skills/adr/resources/prompts/evaluate.prompt.md',
+  'extension/assets/templates/skills/adr/resources/prompts/patch.prompt.md',
+  'extension/assets/templates/skills/adr/resources/prompts/recheck.prompt.md',
+  'extension/assets/templates/skills/adr/resources/methodology.md',
+  'extension/assets/templates/skills/adr/resources/output-template.md',
+
+  // Other required assets
   'extension/assets/agent/rules/rules.yaml',
   'extension/assets/templates/flows.yaml.template',
   'extension/assets/templates/README_SO_Workspace.md',
@@ -273,7 +313,7 @@ function main() {
     console.log('   ✓ @mermaid-js/mermaid-cli is NOT present');
     console.log('   ✓ dist/extension.js exists');
     console.log('   ✓ Essential files are present');
-    console.log('   ✓ Required assets are present');
+    console.log('   ✓ Required skill assets are present');
     console.log('='.repeat(60));
     process.exit(0);
   } else {

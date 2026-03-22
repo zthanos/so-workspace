@@ -1277,8 +1277,8 @@ export class RendererOrchestratorImpl implements RendererOrchestrator {
     // Log warnings for skipped files
     if (structurizrFiles.length > 0 && !structurizrAvailable) {
       console.log(
-        `Skipping ${structurizrFiles.length} Structurizr file(s) - Rendering pipeline not available. ` +
-        `Ensure Docker is running and render-dsl-to-svg.cmd script exists.`
+        `Skipping ${structurizrFiles.length} Structurizr file(s) - Structurizr renderer not available. ` +
+        `Ensure the Structurizr CLI container/runtime is configured and Docker is running if required.`
       );
     }
     

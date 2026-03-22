@@ -139,14 +139,6 @@ export interface JavaBackendConfig {
   plantUmlJarPath?: string;
 
   /**
-   * Path to Mermaid CLI executable (mmdc)
-   * Can be command name in PATH or absolute path
-   * @default "mmdc"
-   * @example "mmdc", "/usr/local/bin/mmdc", "node_modules/.bin/mmdc"
-   */
-  mermaidCliPath?: string;
-
-  /**
    * Java executable path
    * Can be command name in PATH or absolute path
    * @default "java"

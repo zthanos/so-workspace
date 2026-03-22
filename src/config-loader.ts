@@ -228,9 +228,6 @@ export class ConfigLoader {
       if (java.plantUmlJarPath !== undefined && typeof java.plantUmlJarPath !== "string") {
         throw new ConfigValidationError("endpoints.java.plantUmlJarPath", "string", typeof java.plantUmlJarPath);
       }
-      if (java.mermaidCliPath !== undefined && typeof java.mermaidCliPath !== "string") {
-        throw new ConfigValidationError("endpoints.java.mermaidCliPath", "string", typeof java.mermaidCliPath);
-      }
       if (java.javaPath !== undefined && typeof java.javaPath !== "string") {
         throw new ConfigValidationError("endpoints.java.javaPath", "string", typeof java.javaPath);
       }
