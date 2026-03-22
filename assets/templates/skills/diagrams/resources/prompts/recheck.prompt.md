@@ -5,8 +5,7 @@ Authoritative inputs:
 - docs/01_requirements/requirements.inventory.md
 - <DIAGRAM_PATH>
 
-Template reference:
-- assets/templates/diagram_inconsistencies.template.md
+Use the report structure already loaded from this skill's report template resource.
 
 Purpose:
 Re-evaluate the patched diagram to confirm that all reported issues have been resolved.

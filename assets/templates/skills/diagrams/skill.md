@@ -7,6 +7,7 @@ participant: so
 operations:
   generate: {}
   eval: {}
+  update: {}
   patch:
     requiresIssueIds: true
   recheck: {}
@@ -22,7 +23,7 @@ inputs:
 quickPick:
   paramName: diagram_id
   title: "Select Diagram"
-  forOperations: [generate, eval, patch, recheck]
+  forOperations: [generate, eval, update, patch, recheck]
   options:
     - value: c4_context
       label: "C4 Context Diagram"
@@ -177,6 +178,12 @@ Load the minimum relevant architecture context from:
 Load:
 - selected diagram source
 - relevant architecture artifacts
+
+### Update
+Load:
+- selected diagram source
+- relevant architecture artifacts
+- the user request that describes the intended diagram revision
 
 ### Patch
 Load:

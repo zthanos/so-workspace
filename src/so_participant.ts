@@ -12,7 +12,10 @@ import { AssetResolver } from "./asset-resolver";
 // Paths (relative to workspace root)
 // ---------------------------------------------------------------------------
 
-const AGENT_CONTEXT_PATH    = ".github/so_agent_context.md";
+const AGENT_CONTEXT_PATHS   = [
+  "docs/so_agent_context.md",
+  ".github/so_agent_context.md",
+] as const;
 const WORKSPACE_RULES_PATH  = ".github/rules";
 const WORKSPACE_SKILLS_PATH = ".github/skills";
 
@@ -25,8 +28,45 @@ const AUTHORITATIVE_ARTIFACTS: Record<string, string> = {
 const CONTEXT_ARTIFACTS: Record<string, string> = {
   brd:         "docs/00_brd/brd.md",
   discussions: "docs/98_discussions",
+  adrs:        "docs/04_decisions",
   references:  "docs/99_references",
-  adrs:        "docs/03_architecture/adr",
+};
+
+const NATIVE_EDIT_START_COMMANDS = [
+  "inlineChat.start",
+  "interactiveEditor.start",
+] as const;
+const NATIVE_CHAT_SUBMIT_COMMAND = "workbench.action.chat.submit";
+
+const ARTIFACT_TARGETS: Record<string, Partial<Record<SkillOperation, string>>> = {
+  "requirements-inventory": {
+    generate: "docs/01_requirements/requirements.inventory.md",
+    update: "docs/01_requirements/requirements.inventory.md",
+    patch: "docs/01_requirements/requirements.inventory.md",
+    eval: "docs/reports/inventory_inconsistencies/latest.md",
+    recheck: "docs/reports/inventory_inconsistencies/latest.md",
+  },
+  objectives: {
+    generate: "docs/02_objectives/objectives.md",
+    update: "docs/02_objectives/objectives.md",
+    patch: "docs/02_objectives/objectives.md",
+    eval: "docs/reports/objectives_inconsistencies/latest.md",
+    recheck: "docs/reports/objectives_inconsistencies/latest.md",
+  },
+  "solution-outline": {
+    generate: "docs/03_architecture/solution_outline.md",
+    update: "docs/03_architecture/solution_outline.md",
+    patch: "docs/03_architecture/solution_outline.md",
+    eval: "docs/reports/solution_outline_inconsistencies/latest.md",
+    recheck: "docs/reports/solution_outline_inconsistencies/latest.md",
+  },
+  adr: {
+    generate: "docs/04_decisions/ADR-001.md",
+    update: "docs/04_decisions/ADR-001.md",
+    patch: "docs/04_decisions/ADR-001.md",
+    eval: "docs/reports/adr_inconsistencies/latest.md",
+    recheck: "docs/reports/adr_inconsistencies/latest.md",
+  },
 };
 
 // Rule files packaged in assets/agent/rules/ (loaded for every request)
@@ -45,13 +85,14 @@ const ALL_SKILL_FOLDERS = [
   "objectives",
   "diagrams",
   "solution-outline",
-  "architecture-decision-records",
+  "adr",
 ] as const;
 
 // Maps slash operation name → prompt file name (without .prompt.md)
 const OPERATION_TO_PROMPT: Record<string, string> = {
   generate: "generate",
   eval:     "evaluate",
+  update:   "update",
   patch:    "patch",
   recheck:  "recheck",
 };
@@ -80,6 +121,49 @@ async function readDirMarkdownFiles(
         if (content) results.push({ file: entry.name, content });
       }
     }
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+async function readDirContextFilesRecursive(
+  dirPath: string,
+  baseDir: string = dirPath
+): Promise<{ file: string; relativePath: string; content: string }[]> {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const results: { file: string; relativePath: string; content: string }[] = [];
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+      if (entry.isDirectory()) {
+        results.push(...await readDirContextFilesRecursive(fullPath, baseDir));
+        continue;
+      }
+
+      if (!entry.isFile()) continue;
+
+      const lowerName = entry.name.toLowerCase();
+      const supported =
+        lowerName.endsWith(".md") ||
+        lowerName.endsWith(".yaml") ||
+        lowerName.endsWith(".yml") ||
+        lowerName.endsWith(".json") ||
+        lowerName.endsWith(".txt");
+
+      if (!supported) continue;
+
+      const content = await readFileSafe(fullPath);
+      if (!content) continue;
+
+      results.push({
+        file: entry.name,
+        relativePath: path.relative(baseDir, fullPath).replace(/\\/g, "/"),
+        content,
+      });
+    }
+
     return results;
   } catch {
     return [];
@@ -154,7 +238,7 @@ async function detectSkill(
   }
 
   // 3. Slash command present but no keyword match → default to requirements-inventory
-  if (command && ["generate", "eval", "patch", "recheck"].includes(command)) {
+  if (command && ["generate", "eval", "update", "patch", "recheck"].includes(command)) {
     return "requirements-inventory";
   }
 
@@ -173,7 +257,11 @@ async function buildSystemPrompt(
   const parts: string[] = [];
 
   // 1. Agent context (workspace-level, overrides extension baseline)
-  const agentContext = await readFileSafe(path.join(workspaceRoot, AGENT_CONTEXT_PATH));
+  let agentContext: string | null = null;
+  for (const relPath of AGENT_CONTEXT_PATHS) {
+    agentContext = await readFileSafe(path.join(workspaceRoot, relPath));
+    if (agentContext) break;
+  }
   if (agentContext) {
     parts.push("# Agent Context\n\n" + agentContext);
   }
@@ -212,13 +300,13 @@ async function buildSystemPrompt(
       const wsSkillContent = await readFileSafe(
         path.join(workspaceRoot, WORKSPACE_SKILLS_PATH, skillFolder, "skill.md")
       );
-      const skillContent = wsSkillContent
-        ?? await assetResolver.readAsset(assetResolver.getSkillPath(`${skillFolder}/skill.md`));
-      const origin = wsSkillContent ? " (workspace)" : "";
-      parts.push(`# Active Skill: ${config.name}${origin}\n\n` + skillContent);
+      if (!wsSkillContent) {
+        throw new Error(`Missing workspace skill content for ${skillFolder}.`);
+      }
+      parts.push(`# Active Skill: ${config.name} (workspace)\n\n` + wsSkillContent);
 
-      // Resources: workspace version takes precedence over extension, file-by-file
-      const resourceFiles = ["methodology.md", "output-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
+      // Resources: workspace-owned only. No packaged fallback.
+      const resourceFiles = ["methodology.md", "output-template.md", "report-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
       for (const resFile of resourceFiles) {
         const wsResContent = await readFileSafe(
           path.join(workspaceRoot, WORKSPACE_SKILLS_PATH, skillFolder, "resources", resFile)
@@ -226,15 +314,6 @@ async function buildSystemPrompt(
         if (wsResContent) {
           const label = path.basename(resFile, ".md");
           parts.push(`## Skill Resource: ${label} (workspace)\n\n` + wsResContent);
-          continue;
-        }
-        try {
-          const resUri = assetResolver.getSkillPath(`${skillFolder}/resources/${resFile}`);
-          const resContent = await assetResolver.readAsset(resUri);
-          const label = path.basename(resFile, ".md");
-          parts.push(`## Skill Resource: ${label}\n\n` + resContent);
-        } catch {
-          // Resource doesn't exist for this skill — skip
         }
       }
     } catch {
@@ -259,6 +338,7 @@ async function buildSystemPrompt(
  * Falls back to a generic instruction if no prompt file is found.
  */
 async function loadOperationPrompt(
+  workspaceRoot: string,
   skillFolder: string,
   operation: SkillOperation,
   assetResolver: AssetResolver,
@@ -292,20 +372,19 @@ async function loadOperationPrompt(
   // Generic operation fallback (e.g. "evaluate", "patch")
   candidates.push(OPERATION_TO_PROMPT[operation] ?? operation);
 
-  // Try workspace override first, then extension asset
+  // Workspace-owned prompt files only. No packaged fallback.
   for (const candidate of candidates) {
-    // Workspace override: .github/skills/<folder>/resources/prompts/<candidate>.prompt.md
-    if (userPrompt) { // userPrompt presence implies we have workspaceRoot available via closure
-      // Note: workspaceRoot is not available here — workspace override handled in so_participant
-    }
-    try {
-      const uri = assetResolver.getSkillPath(
-        `${skillFolder}/resources/prompts/${candidate}.prompt.md`
-      );
-      const content = await assetResolver.readAsset(uri);
-      if (content) return content;
-    } catch {
-      // Try next candidate
+    const workspacePromptPath = path.join(
+      workspaceRoot,
+      WORKSPACE_SKILLS_PATH,
+      skillFolder,
+      "resources",
+      "prompts",
+      `${candidate}.prompt.md`
+    );
+    const content = await readFileSafe(workspacePromptPath);
+    if (content) {
+      return content;
     }
   }
 
@@ -323,6 +402,7 @@ function buildGenericOperationInstruction(
 
   switch (operation) {
     case "generate": return "Execute the generate operation. Create or update the primary artifact according to the skill methodology.";
+    case "update":   return "Execute the update operation. Update the primary artifact directly from the current workspace context without relying on an inconsistency report.";
     case "eval":     return "Execute the evaluate operation. Assess the primary artifact for inconsistencies and produce a report.";
     case "patch":    return `Execute the patch operation. Apply minimal corrections based on the latest inconsistency report.${scopeHint}`;
     case "recheck":  return "Execute the recheck operation. Re-evaluate the patched artifact using the same evaluation criteria.";
@@ -383,10 +463,24 @@ async function loadArtifactContext(
   for (const { file, content } of adrs) {
     messages.push(
       vscode.LanguageModelChatMessage.User(
-        `<artifact label="ADR: ${file}" path="docs/03_architecture/adr/${file}">\n${content}\n</artifact>`
+        `<artifact label="ADR: ${file}" path="docs/04_decisions/${file}">\n${content}\n</artifact>`
       )
     );
-    loadedFiles.push(`docs/03_architecture/adr/${file}`);
+    loadedFiles.push(`docs/04_decisions/${file}`);
+  }
+
+  // Local reference snapshot
+  const references = await readDirContextFilesRecursive(
+    path.join(workspaceRoot, CONTEXT_ARTIFACTS.references)
+  );
+  for (const { file, relativePath, content } of references) {
+    const workspacePath = `docs/99_references/${relativePath}`;
+    messages.push(
+      vscode.LanguageModelChatMessage.User(
+        `<artifact label="Reference: ${file}" path="${workspacePath}">\n${content}\n</artifact>`
+      )
+    );
+    loadedFiles.push(workspacePath);
   }
 
   if (loadedFiles.length > 0) {
@@ -398,6 +492,163 @@ async function loadArtifactContext(
   }
 
   return messages;
+}
+
+async function collectArtifactPaths(
+  workspaceRoot: string,
+  skillFolder: string | null
+): Promise<string[]> {
+  const paths: string[] = [];
+
+  async function addPathIfExists(relPath: string) {
+    const content = await readFileSafe(path.join(workspaceRoot, relPath));
+    if (content) {
+      paths.push(relPath);
+    }
+  }
+
+  await addPathIfExists(AUTHORITATIVE_ARTIFACTS.objectives);
+  await addPathIfExists(AUTHORITATIVE_ARTIFACTS.requirements);
+  await addPathIfExists(AUTHORITATIVE_ARTIFACTS.solutionOutline);
+
+  if (skillFolder === "requirements-inventory") {
+    await addPathIfExists(CONTEXT_ARTIFACTS.brd);
+  }
+
+  const discussions = await readDirMarkdownFiles(
+    path.join(workspaceRoot, CONTEXT_ARTIFACTS.discussions)
+  );
+  for (const { file } of discussions) {
+    paths.push(`docs/98_discussions/${file}`);
+  }
+
+  const adrs = await readDirMarkdownFiles(
+    path.join(workspaceRoot, CONTEXT_ARTIFACTS.adrs)
+  );
+  for (const { file } of adrs) {
+    paths.push(`docs/04_decisions/${file}`);
+  }
+
+  const references = await readDirContextFilesRecursive(
+    path.join(workspaceRoot, CONTEXT_ARTIFACTS.references)
+  );
+  for (const { relativePath } of references) {
+    paths.push(`docs/99_references/${relativePath}`);
+  }
+
+  return paths;
+}
+
+function workspaceRelativePathForFile(filePath: string): string | null {
+  const folders = vscode.workspace.workspaceFolders ?? [];
+  const folder = folders.find((item) => filePath.startsWith(item.uri.fsPath));
+  if (!folder) {
+    return null;
+  }
+  return path.relative(folder.uri.fsPath, filePath).replace(/\\/g, "/");
+}
+
+async function resolveArtifactTarget(
+  skillFolder: string | null,
+  operation: SkillOperation | undefined,
+  prompt: string
+): Promise<string | null> {
+  if (!skillFolder || !operation) {
+    return null;
+  }
+
+  if (skillFolder === "diagrams") {
+    const config = await loadSkillConfig("diagrams");
+    const diagramIdMatch = prompt.match(/diagram_id:\s*(\S+)/i);
+    const diagramEntry = diagramIdMatch
+      ? getDiagramById(config, diagramIdMatch[1])
+      : matchDiagramFromPrompt(config, prompt);
+
+    if (diagramEntry) {
+      if (operation === "eval" || operation === "recheck") {
+        return `docs/reports/diagram_inconsistencies/${diagramEntry.id}/latest.md`;
+      }
+      return diagramEntry.outputPath;
+    }
+  }
+
+  if (skillFolder === "adr") {
+    const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
+    if (activeFile && /docs[\\/](04_decisions|04_adrs)[\\/].*\.md$/i.test(activeFile)) {
+      return workspaceRelativePathForFile(activeFile);
+    }
+  }
+
+  return ARTIFACT_TARGETS[skillFolder]?.[operation] ?? null;
+}
+
+function buildNativeEditPrompt(
+  systemPrompt: string,
+  operationInstruction: string,
+  artifactTarget: string,
+  contextPaths: string[],
+  userPrompt: string
+): string {
+  const sections = [
+    `SO Workspace native edit handoff.`,
+    `Target file: ${artifactTarget}`,
+    contextPaths.length
+      ? `Relevant workspace files:\n${contextPaths.map((item) => `- ${item}`).join("\n")}`
+      : "Relevant workspace files: none pre-identified",
+    "Apply the SO guidance below while using the native editor chat editing flow.",
+    systemPrompt,
+    operationInstruction ? `Operation instruction:\n${operationInstruction}` : "",
+    `User request:\n${userPrompt}`,
+    `Edit ${artifactTarget} directly. Use the editor chat edit flow so changes appear as native inline edits instead of returning the full file in chat.`,
+  ].filter(Boolean);
+
+  return sections.join("\n\n---\n\n");
+}
+
+async function ensureTargetDocument(
+  workspaceRoot: string,
+  relativePath: string
+): Promise<vscode.Uri> {
+  const targetUri = vscode.Uri.file(path.join(workspaceRoot, relativePath));
+  const parentUri = vscode.Uri.file(path.dirname(targetUri.fsPath));
+  await vscode.workspace.fs.createDirectory(parentUri);
+  try {
+    await vscode.workspace.fs.stat(targetUri);
+  } catch {
+    await vscode.workspace.fs.writeFile(targetUri, new Uint8Array());
+  }
+  const doc = await vscode.workspace.openTextDocument(targetUri);
+  await vscode.window.showTextDocument(doc, { preview: false });
+  return targetUri;
+}
+
+async function handoffToNativeEditSession(prompt: string): Promise<{
+  started: boolean;
+  autoSubmitted: boolean;
+  command?: string;
+}> {
+  const commands = new Set(await vscode.commands.getCommands(true));
+  const startCommand = NATIVE_EDIT_START_COMMANDS.find((command) => commands.has(command));
+  if (!startCommand) {
+    return { started: false, autoSubmitted: false };
+  }
+
+  await vscode.commands.executeCommand(startCommand);
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  await vscode.commands.executeCommand("type", { text: prompt });
+
+  let autoSubmitted = false;
+  if (commands.has(NATIVE_CHAT_SUBMIT_COMMAND)) {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 75));
+      await vscode.commands.executeCommand(NATIVE_CHAT_SUBMIT_COMMAND);
+      autoSubmitted = true;
+    } catch {
+      autoSubmitted = false;
+    }
+  }
+
+  return { started: true, autoSubmitted, command: startCommand };
 }
 
 // ---------------------------------------------------------------------------
@@ -438,11 +689,51 @@ async function soParticipantHandler(
   let operationInstruction = "";
   if (operation && skillFolder) {
     operationInstruction = await loadOperationPrompt(
+      workspaceRoot,
       skillFolder,
       operation,
       assetResolver,
       request.prompt,   // extraParams (contains diagram_id if set)
       request.prompt    // userPrompt (for catalog label matching)
+    );
+  }
+
+  const artifactTarget = await resolveArtifactTarget(skillFolder, operation, request.prompt);
+
+  if (artifactTarget && skillFolder && operation) {
+    const contextPaths = await collectArtifactPaths(workspaceRoot, skillFolder);
+    const nativePrompt = buildNativeEditPrompt(
+      systemPrompt,
+      operationInstruction,
+      artifactTarget,
+      contextPaths,
+      request.prompt
+    );
+
+    const targetUri = await ensureTargetDocument(workspaceRoot, artifactTarget);
+    const handoff = await handoffToNativeEditSession(nativePrompt);
+
+    if (handoff.started) {
+      stream.markdown(
+        handoff.autoSubmitted
+          ? `Opened native editor chat for \`${artifactTarget}\` and handed off the SO prompt.`
+          : `Opened native editor chat for \`${artifactTarget}\` and prefilled the SO prompt. Press Enter in the editor chat to run it.`
+      );
+      stream.reference(targetUri);
+      return {
+        metadata: {
+          mode: "native-edit-handoff",
+          artifactTarget,
+          skillFolder,
+          operation,
+          autoSubmitted: handoff.autoSubmitted,
+          command: handoff.command,
+        },
+      };
+    }
+
+    stream.markdown(
+      `Native editor chat is not available in this VS Code environment. Falling back to normal chat output for \`${artifactTarget}\`.`
     );
   }
 
@@ -486,6 +777,7 @@ async function soParticipantHandler(
   // Stream response
   try {
     const response = await model.sendRequest(messages, {}, token);
+
     for await (const chunk of response.text) {
       stream.markdown(chunk);
     }

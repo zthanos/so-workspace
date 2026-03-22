@@ -18,8 +18,7 @@ Diagram under evaluation:
 - diagram_id: <resolved from input>
 - diagram_path: <resolved from mapping>
 
-Template reference:
-- assets/templates/diagram_inconsistencies.template.md
+Use the report structure already loaded from this skill's report template resource.
 
 Purpose:
 Evaluate the selected diagram for correctness, completeness, and scope alignment

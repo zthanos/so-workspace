@@ -3,18 +3,21 @@ import * as path from "path";
 import { AssetResolver } from "./asset-resolver";
 import {
   reqInventoryGenerateOpenChat, reqInventoryEvalOpenChat,
-  reqInventoryPatchOpenChat, reqInventoryRecheckOpenChat,
+  reqInventoryUpdateOpenChat, reqInventoryPatchOpenChat, reqInventoryRecheckOpenChat,
   objectivesGenerateOpenChat, objectivesEvalOpenChat,
-  objectivesPatchOpenChat, objectivesRecheckOpenChat,
+  objectivesUpdateOpenChat, objectivesPatchOpenChat, objectivesRecheckOpenChat,
   diagramGenerateC4ContextOpenChat, diagramGenerateC4ContainerOpenChat,
-  diagramEvalOpenChat, diagramPatchOpenChat, diagramRecheckOpenChat,
+  diagramGenerateFlowOpenChat, diagramGenerateSequenceOpenChat, diagramGenerateStateOpenChat,
+  diagramEvalOpenChat, diagramUpdateOpenChat, diagramPatchOpenChat, diagramRecheckOpenChat,
   solutionOutlineGenerateOpenChat, solutionOutlineEvalOpenChat,
-  solutionOutlinePatchOpenChat, solutionOutlineRecheckOpenChat,
+  solutionOutlineUpdateOpenChat, solutionOutlinePatchOpenChat, solutionOutlineRecheckOpenChat,
+  adrGenerateOpenChat, adrEvalOpenChat, adrUpdateOpenChat, adrPatchOpenChat, adrRecheckOpenChat,
 } from "./skill_open_chat";
 import { initializeSkillLoader } from "./skill-loader";
 import { registerPaletteBuildCommands } from "./build_open_tasks";
 import { CommandHandlerImpl } from "./diagram_renderer_v2";
 import { registerWordToMarkdownCommand } from "./word_to_markdown";
+import { registerPdfToMarkdownCommand } from "./pdf_to_markdown";
 import { registerSoParticipant } from "./so_participant";
 import { registerSwitchEnvironmentCommand } from "./switch-environment-command";
 import { registerValidateDiagramsCommand } from "./validate-diagrams-command";
@@ -53,13 +56,14 @@ export async function activate(context: vscode.ExtensionContext) {
   const assetResolver = new AssetResolver(context);
 
   // Initialize command handlers with AssetResolver
-  initializeSkillLoader(assetResolver);
+  initializeSkillLoader();
 
   // Workspace Initialization
   context.subscriptions.push(
     vscode.commands.registerCommand("so-workspace.initialize", () => initializeWorkspaceCommand(assetResolver)),
     vscode.commands.registerCommand("so-workspace.req.generate", reqInventoryGenerateOpenChat),
     vscode.commands.registerCommand("so-workspace.req.eval", reqInventoryEvalOpenChat),
+    vscode.commands.registerCommand("so-workspace.req.update", reqInventoryUpdateOpenChat),
     vscode.commands.registerCommand("so-workspace.req.patch", reqInventoryPatchOpenChat),
     vscode.commands.registerCommand("so-workspace.req.recheck", reqInventoryRecheckOpenChat)
   );
@@ -81,6 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("so-workspace.obj.generate", objectivesGenerateOpenChat),
     vscode.commands.registerCommand("so-workspace.obj.eval", objectivesEvalOpenChat),
+    vscode.commands.registerCommand("so-workspace.obj.update", objectivesUpdateOpenChat),
     vscode.commands.registerCommand("so-workspace.obj.patch", objectivesPatchOpenChat),
     vscode.commands.registerCommand("so-workspace.obj.recheck", objectivesRecheckOpenChat)
   );
@@ -89,7 +94,11 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("so-workspace.diagram.generateC4Context", diagramGenerateC4ContextOpenChat),
     vscode.commands.registerCommand("so-workspace.diagram.generateC4Container", diagramGenerateC4ContainerOpenChat),
+    vscode.commands.registerCommand("so-workspace.diagram.generateFlow", diagramGenerateFlowOpenChat),
+    vscode.commands.registerCommand("so-workspace.diagram.generateSequence", diagramGenerateSequenceOpenChat),
+    vscode.commands.registerCommand("so-workspace.diagram.generateState", diagramGenerateStateOpenChat),
     vscode.commands.registerCommand("so-workspace.diagram.eval", diagramEvalOpenChat),
+    vscode.commands.registerCommand("so-workspace.diagram.update", diagramUpdateOpenChat),
     vscode.commands.registerCommand("so-workspace.diagram.patch", diagramPatchOpenChat),
     vscode.commands.registerCommand("so-workspace.diagram.recheck", diagramRecheckOpenChat)
   );
@@ -98,8 +107,18 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("so-workspace.so.generate", solutionOutlineGenerateOpenChat),
     vscode.commands.registerCommand("so-workspace.so.eval", solutionOutlineEvalOpenChat),
+    vscode.commands.registerCommand("so-workspace.so.update", solutionOutlineUpdateOpenChat),
     vscode.commands.registerCommand("so-workspace.so.patch", solutionOutlinePatchOpenChat),
     vscode.commands.registerCommand("so-workspace.so.finalReview", solutionOutlineRecheckOpenChat)
+  );
+
+  // ADRs
+  context.subscriptions.push(
+    vscode.commands.registerCommand("so-workspace.adr.generate", adrGenerateOpenChat),
+    vscode.commands.registerCommand("so-workspace.adr.eval", adrEvalOpenChat),
+    vscode.commands.registerCommand("so-workspace.adr.update", adrUpdateOpenChat),
+    vscode.commands.registerCommand("so-workspace.adr.patch", adrPatchOpenChat),
+    vscode.commands.registerCommand("so-workspace.adr.recheck", adrRecheckOpenChat)
   );
 
   // Diagram rendering with Java backend (V2 implementation)
@@ -130,8 +149,8 @@ export async function activate(context: vscode.ExtensionContext) {
   // Read Kroki endpoint from diagram previewer config for Java backend
   const krokiEndpoint = readConfig().krokiEndpoint;
 
-  // Create Java backend instance with configuration
-  // PlantUML uses JAR; Mermaid uses Kroki-primary / bundled mermaid.js webview fallback
+  // Create backend instance with configuration.
+  // PlantUML and Mermaid render through the local Kroki endpoint.
   const javaBackend = new JavaRenderBackend({
     plantUmlJarPath,
     javaPath: javaConfig.javaPath,
@@ -139,18 +158,21 @@ export async function activate(context: vscode.ExtensionContext) {
     krokiEndpoint
   });
 
-  // Get Structurizr CLI configuration from settings
   const structurizrConfig = configurationManager.getConfiguration().structurizr;
 
-  // Create Structurizr pipeline renderer (uses render-dsl-to-svg.cmd script from extension)
+  // Create Structurizr renderer backed by a dedicated Structurizr CLI runtime.
   // This provides higher quality SVG output via DSL → PlantUML → Kroki → SVG pipeline
-  const structurizrRenderer = new StructurizrPipelineRenderer(workspaceRoot, context.extensionPath);
+  const structurizrRenderer = new StructurizrPipelineRenderer(
+    workspaceRoot,
+    structurizrConfig.structurizrCliPath,
+    structurizrConfig.structurizrCliContainer
+  );
   const structurizrValidator = new StructurizrValidator();
 
   // Log backend initialization
   console.log("Initializing diagram rendering backends:");
   console.log("  - JavaRenderBackend (for Mermaid and PlantUML)");
-  console.log("  - StructurizrPipelineRenderer (for Structurizr DSL via automated pipeline)");
+  console.log("  - StructurizrPipelineRenderer (for Structurizr DSL via containerized Structurizr CLI)");
 
   // Check backend availability and log status
   const javaAvailability = await javaBackend.isAvailable();
@@ -167,14 +189,14 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   if (structurizrAvailable) {
-    console.log("✓ StructurizrPipelineRenderer is available (Docker-based rendering pipeline)");
+    console.log("✓ StructurizrPipelineRenderer is available (containerized Structurizr CLI)");
   } else {
-    console.warn("✗ StructurizrPipelineRenderer is not available. Docker may not be running or render-dsl-to-svg.cmd script not found.");
+    console.warn("✗ StructurizrPipelineRenderer is not available. Structurizr CLI path/container may be misconfigured.");
     vscode.window.showWarningMessage(
-      "Structurizr rendering pipeline is not available. Ensure:\n" +
-      "1. Docker Desktop is running\n" +
-      "2. render-dsl-to-svg.cmd script exists in workspace root\n" +
-      "3. Run: docker-compose -f docker-compose.structurizr.yml up -d"
+      "Structurizr rendering is not available. Ensure:\n" +
+      "1. Structurizr CLI is installed or available in the configured container\n" +
+      "2. The configured Structurizr CLI path or container name is correct\n" +
+      "3. Docker is running if you use a containerized Structurizr CLI"
     );
   }
 
@@ -195,9 +217,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Word to Markdown conversion
   registerWordToMarkdownCommand(context);
+  registerPdfToMarkdownCommand(context);
 
   // SO Chat Participant (uses so_agent_context.md + skills)
-  registerSoParticipant(context);
+  registerSoParticipant(context, assetResolver);
 
   // Switch environment command (requires Configuration Manager)
   registerSwitchEnvironmentCommand(context, configurationManager);

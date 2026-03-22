@@ -32,14 +32,15 @@ export class AssetResolver {
   }
 
   /**
-   * Resolves a file inside assets/skills/
+   * Resolves a file inside assets/templates/skills/
    * e.g. getSkillPath("diagrams/skill.md")
-   *      → <extension>/assets/skills/diagrams/skill.md
+   *      → <extension>/assets/templates/skills/diagrams/skill.md
    */
   getSkillPath(relativePath: string): vscode.Uri {
     return vscode.Uri.joinPath(
       this.getExtensionBaseUri(),
       "assets",
+      "templates",
       "skills",
       relativePath
     );

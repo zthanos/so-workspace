@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { AssetResolver } from "./asset-resolver";
 
 export type SkillOperation = "generate" | "eval" | "patch" | "recheck" | string;
 
@@ -324,11 +323,17 @@ function validateSkillConfig(config: SkillConfig, skillFolder: string): void {
   }
 }
 
-let assetResolver: AssetResolver;
 const cache = new Map<string, { config: SkillConfig; watcher?: vscode.Disposable }>();
 
-export function initializeSkillLoader(resolver: AssetResolver): void {
-  assetResolver = resolver;
+function getWorkspaceSkillUri(skillFolder: string): vscode.Uri {
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+  if (!workspaceRoot) {
+    throw new Error("No workspace folder is open.");
+  }
+  return vscode.Uri.joinPath(workspaceRoot, ".github", "skills", skillFolder, "skill.md");
+}
+
+export function initializeSkillLoader(): void {
   invalidateCache();
 }
 
@@ -340,8 +345,16 @@ export function invalidateCache(): void {
 export async function loadSkillConfig(skillFolder: string): Promise<SkillConfig> {
   if (cache.has(skillFolder)) return cache.get(skillFolder)!.config;
 
-  const uri = assetResolver.getSkillPath(`${skillFolder}/skill.md`);
-  const raw = await assetResolver.readAsset(uri);
+  const uri = getWorkspaceSkillUri(skillFolder);
+  let raw: string;
+  try {
+    const data = await vscode.workspace.fs.readFile(uri);
+    raw = Buffer.from(data).toString("utf-8");
+  } catch {
+    throw new Error(
+      `Workspace skill not found: .github/skills/${skillFolder}/skill.md. Re-run workspace initialization if needed.`
+    );
+  }
   const fm = parseFrontmatter(raw);
 
   const config = normalizeSkillConfig(fm, skillFolder);

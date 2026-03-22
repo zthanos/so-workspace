@@ -7,6 +7,7 @@ participant: so
 operations:
   generate: {}
   eval: {}
+  update: {}
   patch:
     requiresIssueIds: true
   recheck: {}
@@ -23,6 +24,7 @@ inputs:
 Use this skill when the user asks to:
 - extract requirements from a BRD
 - create or regenerate the requirements inventory
+- update the requirements inventory directly
 - review the existing requirements inventory
 - identify gaps, duplicates, ambiguity, or misclassification in requirements
 - patch or improve the requirements inventory

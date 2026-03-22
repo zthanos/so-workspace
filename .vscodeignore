@@ -92,3 +92,4 @@ pnpm-debug.log
 # package.json
 # dist/extension.js (bundled output)
 # assets/ (runtime assets - icon, templates, prompts, rules)
+assets/templates/skills.zip

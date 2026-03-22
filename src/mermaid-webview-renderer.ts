@@ -168,7 +168,7 @@ export function convertSvgToPngViaWebview(
       { enableScripts: true }
     );
 
-    const escapedSvg = svg.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
+    const svgBase64 = Buffer.from(svg, "utf-8").toString("base64");
 
     panel.webview.html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
@@ -176,25 +176,86 @@ export function convertSvgToPngViaWebview(
 <canvas id="canvas"></canvas>
 <script>
   const vscode = acquireVsCodeApi();
-  const svgStr = \`${escapedSvg}\`;
-  const blob   = new Blob([svgStr], { type: 'image/svg+xml' });
-  const url    = URL.createObjectURL(blob);
-  const img    = new Image();
+  const svgStr = atob('${svgBase64}');
 
-  img.onload = () => {
-    const canvas  = document.getElementById('canvas');
-    canvas.width  = img.naturalWidth  || 1200;
-    canvas.height = img.naturalHeight || 800;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
-    URL.revokeObjectURL(url);
-    vscode.postMessage({ type: 'png', data: canvas.toDataURL('image/png') });
-  };
+  function getSvgDimensions(svgMarkup) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgMarkup, 'image/svg+xml');
+      const svgEl = doc.documentElement;
 
-  img.onerror = (e) => vscode.postMessage({ type: 'error', error: String(e) });
-  img.src = url;
+      const widthAttr = svgEl.getAttribute('width');
+      const heightAttr = svgEl.getAttribute('height');
+      const viewBoxAttr = svgEl.getAttribute('viewBox');
+
+      const parseLength = (value) => {
+        if (!value) return undefined;
+        const match = String(value).match(/([0-9.]+)/);
+        return match ? Number(match[1]) : undefined;
+      };
+
+      const width = parseLength(widthAttr);
+      const height = parseLength(heightAttr);
+      if (width && height) {
+        return { width, height };
+      }
+
+      if (viewBoxAttr) {
+        const parts = viewBoxAttr.split(/[\s,]+/).map(Number);
+        if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+          return { width: parts[2], height: parts[3] };
+        }
+      }
+    } catch (error) {
+      // Fall through to defaults below.
+    }
+
+    return { width: 1200, height: 800 };
+  }
+
+  async function run() {
+    let url;
+    try {
+      const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+      url = URL.createObjectURL(blob);
+      const img = new Image();
+      const dimensions = getSvgDimensions(svgStr);
+
+      img.onload = () => {
+        try {
+          const canvas = document.getElementById('canvas');
+          canvas.width = Math.max(1, Math.ceil(img.naturalWidth || dimensions.width));
+          canvas.height = Math.max(1, Math.ceil(img.naturalHeight || dimensions.height));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            throw new Error('Canvas 2D context is unavailable');
+          }
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const data = canvas.toDataURL('image/png');
+          URL.revokeObjectURL(url);
+          vscode.postMessage({ type: 'png', data });
+        } catch (error) {
+          if (url) URL.revokeObjectURL(url);
+          vscode.postMessage({ type: 'error', error: String(error) });
+        }
+      };
+
+      img.onerror = (e) => {
+        if (url) URL.revokeObjectURL(url);
+        vscode.postMessage({ type: 'error', error: 'Failed to load SVG into image element' });
+      };
+
+      img.src = url;
+      await img.decode().catch(() => {});
+    } catch (error) {
+      if (url) URL.revokeObjectURL(url);
+      vscode.postMessage({ type: 'error', error: String(error) });
+    }
+  }
+
+  run();
 </script>
 </body></html>`;
 

@@ -3,8 +3,7 @@ You are in EXECUTION mode.
 Create or update the file:
 docs/02_objectives/objectives.md
 
-Use the structure and guidance from:
-assets/templates/objectives.template.md
+Use the structure and guidance already loaded from this skill's output template resource.
 
 Use as authoritative input:
 docs/01_requirements/requirements.inventory.md

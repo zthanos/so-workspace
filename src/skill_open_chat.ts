@@ -70,6 +70,7 @@ export async function executeSkillOperation(
 
 export const reqInventoryGenerateOpenChat = () => executeSkillOperation("requirements-inventory", "generate");
 export const reqInventoryEvalOpenChat     = () => executeSkillOperation("requirements-inventory", "eval");
+export const reqInventoryUpdateOpenChat   = () => executeSkillOperation("requirements-inventory", "update");
 export const reqInventoryPatchOpenChat    = () => executeSkillOperation("requirements-inventory", "patch");
 export const reqInventoryRecheckOpenChat  = () => executeSkillOperation("requirements-inventory", "recheck");
 
@@ -79,6 +80,7 @@ export const reqInventoryRecheckOpenChat  = () => executeSkillOperation("require
 
 export const objectivesGenerateOpenChat = () => executeSkillOperation("objectives", "generate");
 export const objectivesEvalOpenChat     = () => executeSkillOperation("objectives", "eval");
+export const objectivesUpdateOpenChat   = () => executeSkillOperation("objectives", "update");
 export const objectivesPatchOpenChat    = () => executeSkillOperation("objectives", "patch");
 export const objectivesRecheckOpenChat  = () => executeSkillOperation("objectives", "recheck");
 
@@ -92,6 +94,7 @@ export const diagramGenerateFlowOpenChat        = () => executeSkillOperation("d
 export const diagramGenerateSequenceOpenChat    = () => executeSkillOperation("diagrams", "generate", "diagram_id: sequence");
 export const diagramGenerateStateOpenChat       = () => executeSkillOperation("diagrams", "generate", "diagram_id: state");
 export const diagramEvalOpenChat                = () => executeSkillOperation("diagrams", "eval");
+export const diagramUpdateOpenChat              = () => executeSkillOperation("diagrams", "update");
 export const diagramPatchOpenChat               = () => executeSkillOperation("diagrams", "patch");
 export const diagramRecheckOpenChat             = () => executeSkillOperation("diagrams", "recheck");
 
@@ -101,6 +104,7 @@ export const diagramRecheckOpenChat             = () => executeSkillOperation("d
 
 export const solutionOutlineGenerateOpenChat = () => executeSkillOperation("solution-outline", "generate");
 export const solutionOutlineEvalOpenChat     = () => executeSkillOperation("solution-outline", "eval");
+export const solutionOutlineUpdateOpenChat   = () => executeSkillOperation("solution-outline", "update");
 export const solutionOutlinePatchOpenChat    = () => executeSkillOperation("solution-outline", "patch");
 export const solutionOutlineRecheckOpenChat  = () => executeSkillOperation("solution-outline", "recheck");
 
@@ -108,7 +112,8 @@ export const solutionOutlineRecheckOpenChat  = () => executeSkillOperation("solu
 // ADR
 // ---------------------------------------------------------------------------
 
-export const adrGenerateOpenChat = () => executeSkillOperation("architecture-decision-records", "generate");
-export const adrEvalOpenChat     = () => executeSkillOperation("architecture-decision-records", "eval");
-export const adrPatchOpenChat    = () => executeSkillOperation("architecture-decision-records", "patch");
-export const adrRecheckOpenChat  = () => executeSkillOperation("architecture-decision-records", "recheck");
+export const adrGenerateOpenChat = () => executeSkillOperation("adr", "generate");
+export const adrEvalOpenChat     = () => executeSkillOperation("adr", "eval");
+export const adrUpdateOpenChat   = () => executeSkillOperation("adr", "update");
+export const adrPatchOpenChat    = () => executeSkillOperation("adr", "patch");
+export const adrRecheckOpenChat  = () => executeSkillOperation("adr", "recheck");

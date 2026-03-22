@@ -13,3 +13,6 @@ node_modules/
 
 # Intermediate PlantUML files for DSL to SVG rendering pipeline
 docs/03_architecture/diagrams/temp/
+
+# Legacy packaged skills fallback artifact
+assets/templates/skills.zip

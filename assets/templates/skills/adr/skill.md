@@ -7,6 +7,7 @@ participant: so
 operations:
   generate: {}
   eval: {}
+  update: {}
   patch:
     requiresIssueIds: true
   recheck: {}
@@ -54,7 +55,7 @@ Inputs:
 - `docs/03_architecture/solution_outline.md`
 
 ADR artifacts:
-- `docs/04_adrs/ADR-*.md`
+- `docs/04_decisions/ADR-*.md`
 
 Evaluation reports:
 - `docs/reports/adr_inconsistencies/<adr_id>/latest.md`
@@ -66,6 +67,9 @@ Create a new ADR based on architectural decisions implied by the Solution Outlin
 
 ### Evaluate
 Check ADR completeness, consistency, and architectural quality.
+
+### Update
+Update an ADR directly from the current workspace context without requiring a prior inconsistency report.
 
 ### Patch
 Apply minimal corrections based on the evaluation report.

@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "1.3.0",
+  "version": "3.0.0",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
@@ -170,11 +170,15 @@
         "commands": [
           {
             "name": "generate",
-            "description": "Extract and create Requirements Inventory from the BRD"
+            "description": "Generate a workflow artifact using the active SO skill"
           },
           {
             "name": "eval",
-            "description": "Evaluate Requirements Inventory against the BRD"
+            "description": "Evaluate the active SO artifact and produce a report"
+          },
+          {
+            "name": "update",
+            "description": "Update the active SO artifact directly without using a report"
           },
           {
             "name": "patch",
@@ -182,7 +186,7 @@
           },
           {
             "name": "recheck",
-            "description": "Re-evaluate the patched inventory and update the report"
+            "description": "Re-evaluate the patched artifact and update the report"
           }
         ]
       }
@@ -191,6 +195,10 @@
       {
         "command": "so-workspace.convertWordToMarkdown",
         "title": "SO: 0-01 Convert Word to Markdown"
+      },
+      {
+        "command": "so-workspace.convertPdfToMarkdown",
+        "title": "SO: 0-01b Convert PDF to Markdown"
       },
       {
         "command": "so-workspace.initialize",
@@ -209,12 +217,16 @@
         "title": "SO: 1-02 Requirements Inventory Evaluate (Open Chat)"
       },
       {
+        "command": "so-workspace.req.update",
+        "title": "SO: 1-03 Requirements Inventory Update (Open Chat)"
+      },
+      {
         "command": "so-workspace.req.patch",
-        "title": "SO: 1-03 Requirements Inventory Patch (Open Chat)"
+        "title": "SO: 1-04 Requirements Inventory Patch (Open Chat)"
       },
       {
         "command": "so-workspace.req.recheck",
-        "title": "SO: 1-04 Requirements Inventory Recheck (Open Chat)"
+        "title": "SO: 1-05 Requirements Inventory Recheck (Open Chat)"
       },
       {
         "command": "so-workspace.obj.generate",
@@ -225,12 +237,16 @@
         "title": "SO: 2-02 Objectives Evaluate (Open Chat)"
       },
       {
+        "command": "so-workspace.obj.update",
+        "title": "SO: 2-03 Objectives Update (Open Chat)"
+      },
+      {
         "command": "so-workspace.obj.patch",
-        "title": "SO: 2-03 Objectives Patch (Open Chat)"
+        "title": "SO: 2-04 Objectives Patch (Open Chat)"
       },
       {
         "command": "so-workspace.obj.recheck",
-        "title": "SO: 2-04 Objectives Recheck (Open Chat)"
+        "title": "SO: 2-05 Objectives Recheck (Open Chat)"
       },
       {
         "command": "so-workspace.diagram.generateC4Context",
@@ -241,24 +257,40 @@
         "title": "SO: 3-02 Generate C4 Container Diagram (Open Chat)"
       },
       {
+        "command": "so-workspace.diagram.generateFlow",
+        "title": "SO: 3-03 Generate Flow Diagram (Open Chat)"
+      },
+      {
+        "command": "so-workspace.diagram.generateSequence",
+        "title": "SO: 3-04 Generate Sequence Diagram (Open Chat)"
+      },
+      {
+        "command": "so-workspace.diagram.generateState",
+        "title": "SO: 3-05 Generate State Diagram (Open Chat)"
+      },
+      {
         "command": "so-workspace.renderDiagrams",
-        "title": "SO: 3-03 Render Diagrams (Local Tools)"
+        "title": "SO: 3-06 Render Diagrams (Local Tools)"
       },
       {
         "command": "so-workspace.diagram.eval",
-        "title": "SO: 3-04 Diagram Evaluate (Select Diagram)"
+        "title": "SO: 3-07 Diagram Evaluate (Select Diagram)"
+      },
+      {
+        "command": "so-workspace.diagram.update",
+        "title": "SO: 3-08 Diagram Update (Select Diagram)"
       },
       {
         "command": "so-workspace.diagram.patch",
-        "title": "SO: 3-05 Diagram Patch (Select Diagram)"
+        "title": "SO: 3-09 Diagram Patch (Select Diagram)"
       },
       {
         "command": "so-workspace.diagram.recheck",
-        "title": "SO: 3-06 Diagram Recheck (Select Diagram)"
+        "title": "SO: 3-10 Diagram Recheck (Select Diagram)"
       },
       {
         "command": "so-workspace.validateDiagrams",
-        "title": "SO: 3-07 Validate Structurizr DSL Files"
+        "title": "SO: 3-11 Validate Structurizr DSL Files"
       },
       {
         "command": "so-workspace.so.generate",
@@ -269,24 +301,48 @@
         "title": "SO: 4-02 Solution Outline Evaluate (Objectives + Diagrams)"
       },
       {
+        "command": "so-workspace.so.update",
+        "title": "SO: 4-03 Solution Outline Update (Open Chat)"
+      },
+      {
         "command": "so-workspace.so.patch",
-        "title": "SO: 4-03 Solution Outline Patch (Open Chat)"
+        "title": "SO: 4-04 Solution Outline Patch (Open Chat)"
       },
       {
         "command": "so-workspace.so.finalReview",
-        "title": "SO: 4-04 Solution Outline Final Review (Requirements Inventory)"
+        "title": "SO: 4-05 Solution Outline Final Review (Requirements Inventory)"
+      },
+      {
+        "command": "so-workspace.adr.generate",
+        "title": "SO: 5-01 ADR Generate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.adr.eval",
+        "title": "SO: 5-02 ADR Evaluate (Open Chat)"
+      },
+      {
+        "command": "so-workspace.adr.update",
+        "title": "SO: 5-03 ADR Update (Open Chat)"
+      },
+      {
+        "command": "so-workspace.adr.patch",
+        "title": "SO: 5-04 ADR Patch (Open Chat)"
+      },
+      {
+        "command": "so-workspace.adr.recheck",
+        "title": "SO: 5-05 ADR Recheck (Open Chat)"
       },
       {
         "command": "so-workspace.exportPdfNpm",
-        "title": "5-02 SO: Export PDF"
+        "title": "6-02 SO: Export PDF"
       },
       {
         "command": "so-workspace.openGeneratedPdf",
-        "title": "5-03 SO: Open Generated PDF"
+        "title": "6-03 SO: Open Generated PDF"
       },
       {
         "command": "so-workspace.exportDocx",
-        "title": "SO: 5-04 Export to Word Document (.docx)"
+        "title": "SO: 6-04 Export to Word Document (.docx)"
       },
       {
         "command": "diagramPreviewer.openPreview",
@@ -348,6 +404,11 @@
         {
           "command": "so-workspace.convertWordToMarkdown",
           "when": "resourceExtname == .docx",
+          "group": "navigation"
+        },
+        {
+          "command": "so-workspace.convertPdfToMarkdown",
+          "when": "resourceExtname == .pdf",
           "group": "navigation"
         }
       ],
@@ -414,6 +475,7 @@
     "markdown-it-table-of-contents": "^1.1.0",
     "mermaid": "^11.12.2",
     "pako": "^2.1.0",
+    "pdf-parse": "^1.1.1",
     "plantuml-encoder": "^1.4.0",
     "turndown": "^7.1.2",
     "turndown-plugin-gfm": "^1.0.2"

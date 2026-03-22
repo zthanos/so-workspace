@@ -204,8 +204,8 @@ List the references used in this project.
    * @param overwrite - Whether to overwrite existing files
    */
   async copyTemplateFiles(workspaceRoot: vscode.Uri, overwrite: boolean): Promise<void> {
-    // flows.yaml template
-    const flowsTemplateUri = this.assetResolver.getTemplatePath("flows.yaml.template");
+    // flows.yaml template is owned by the objectives skill resources
+    const flowsTemplateUri = this.assetResolver.getSkillPath("objectives/resources/flows-template.yaml");
     const flowsTargetUri = vscode.Uri.joinPath(workspaceRoot, "docs", "02_objectives", "flows.yaml");
     await this.copyFileIfNeeded(flowsTemplateUri, flowsTargetUri, overwrite);
 

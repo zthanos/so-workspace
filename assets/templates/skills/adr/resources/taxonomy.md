@@ -39,7 +39,7 @@ Inputs:
 - `docs/03_architecture/solution_outline.md`
 
 ADR artifacts:
-- `docs/04_adrs/ADR-*.md`
+- `docs/04_decisions/ADR-*.md`
 
 Evaluation reports:
 - `docs/reports/adr_inconsistencies/<adr_id>/latest.md`

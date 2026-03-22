@@ -4,8 +4,7 @@ Authoritative inputs:
 - docs/00_brd/brd.md
 - docs/01_requirements/requirements.inventory.md
 
-Template reference:
-- assets/templates/inventory_inconsistencies.template.md
+Use the report structure already loaded from this skill's report template resource.
 
 Purpose:
 Evaluate the completeness and internal consistency of the Requirements Inventory against the BRD.

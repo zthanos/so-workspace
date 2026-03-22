@@ -17,7 +17,7 @@ You must treat the following as authoritative:
 2. Requirements: `docs/01_requirements/requirements.inventory.md`
 3. Solution Outline template: `assets/templates/solution_outline.template.md`
 4. Diagrams (rendered): `docs/03_architecture/diagrams/out/*.png`
-5. ADRs: `docs/03_architecture/adr/*.md` (if present)
+5. ADRs: `docs/04_decisions/*.md` (if present)
 
 6. Project discussions: `docs/98_discussions/*.md` (if present)
 7. Local reference snapshot: `docs/99_references/**/*` (if present)
@@ -27,7 +27,7 @@ You must treat the following as authoritative:
 You are allowed to create/update:
 
 - `docs/03_architecture/solution_outline.md`
-- `docs/03_architecture/adr/*.md` (new ADRs if required)
+- `docs/04_decisions/*.md` (new ADRs if required)
 - `docs/reports/solution_outline_inconsistencies/latest.md` (new report file)
 
 You must not edit:

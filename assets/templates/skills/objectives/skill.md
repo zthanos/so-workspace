@@ -7,6 +7,7 @@ participant: so
 operations:
   generate: {}
   eval: {}
+  update: {}
   patch:
     requiresIssueIds: true
   recheck: {}
@@ -57,6 +58,9 @@ Create or update the Objectives document from the Requirements Inventory.
 
 ### Evaluate
 Evaluate consistency, completeness, and scope alignment between the Requirements Inventory and Objectives.
+
+### Update
+Update the Objectives document directly from the current workspace context without requiring a prior inconsistency report.
 
 ### Patch
 Apply minimal corrections to the Objectives document based on the latest inconsistency report.

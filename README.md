@@ -13,6 +13,9 @@ This extension packages all runtime assets (prompts, templates, rules) internall
 - **Architecture-Safe**: Prevents architectural drift through structured inputs and derived outputs
 - **Workspace Initialization**: One-command setup for new SO projects
 - **Asset Management**: All extension assets are packaged internally, no workspace pollution
+- **SO Participant**: `@so` acts as the user-facing workflow entry point inside chat
+- **Workspace Skills**: Initialized workspaces use `.github/skills` as the active skill source
+- **Document Conversion**: Convert `.docx` and `.pdf` source documents to Markdown inside the workspace
 
 ---
 
@@ -46,7 +49,45 @@ npm run package
 # Install the generated .vsix file in VS Code
 ```
 
+### Local Diagram Containers
+
+The recommended local rendering setup uses Docker containers:
+
+- `.puml` diagrams render through a local Kroki container at `http://localhost:8000`
+- `.dsl` Structurizr diagrams render through a local `structurizr/cli` container
+
+Start the local rendering stack:
+
+```bash
+docker compose -f docker-compose.structurizr.yml up -d
+```
+
+Verify the containers:
+
+```bash
+docker compose -f docker-compose.structurizr.yml ps
+```
+
+Stop the stack:
+
+```bash
+docker compose -f docker-compose.structurizr.yml down
+```
+
+The bundled [docker-compose.structurizr.yml](docker-compose.structurizr.yml) starts:
+
+- `kroki` using `yuzutech/kroki:latest`
+- `structurizr-cli` using `structurizr/cli:latest`
+
+Expected VS Code settings for the local container workflow:
+
+- `diagramPreviewer.krokiEndpoint`: `http://localhost:8000`
+- `so-workspace.diagrams.structurizrCliContainer`: `structurizr-cli`
+- `so-workspace.diagrams.structurizrCliPath`: `/usr/local/structurizr-cli/structurizr.sh`
+
 ### Required Local Tools for Diagram Rendering
+
+Legacy note: the section below describes older host-tooling options. For current local rendering, prefer the Docker-based setup in `Local Diagram Containers` above.
 
 The extension uses **local rendering** for all diagram types by default, with no external API dependencies—ensuring offline operation and data privacy. Server URLs (PlantUML, Structurizr) exist in settings for optional use; the recommended path is local tools only.
 
@@ -148,6 +189,52 @@ docs/
 
 The extension provides numbered commands that should be executed in sequence. See the complete workflow in your workspace's `docs/README_SO_Workspace.md` after initialization.
 
+### 2a. Use the `@so` Participant
+
+After workspace initialization, the recommended chat entry point is the sticky `@so` participant.
+
+The participant loads:
+
+- the workspace guidance from `docs/so_agent_context.md`
+- the active workspace skills from `.github/skills`
+
+The participant supports these workflow operations:
+
+- `/generate` to create an artifact
+- `/eval` to review an artifact and produce an inconsistencies report
+- `/update` to directly change an artifact without going through a report first
+- `/patch` to apply fixes based on the latest report
+- `/recheck` to run the evaluation again after changes
+
+Typical examples:
+
+```text
+@so /generate requirements inventory from the BRD
+@so /eval objectives
+@so /update c4 context diagram to include the mobile app and identity provider
+@so /patch solution outline
+@so /recheck adr
+```
+
+Recommended usage model:
+
+- use `@so` for day-to-day artifact generation and updates
+- use the numbered command palette commands when you want explicit stage-by-stage actions
+- keep workspace-specific skill changes in `.github/skills` so the participant follows the project’s current rules
+- keep `docs/99_references` populated with approved reference architecture material so the participant can use it for diagrams, routing rules, and related architectural outputs
+
+### 2b. Skills in the Workspace
+
+When you initialize a workspace, the extension copies the active skill set into:
+
+```text
+.github/skills/
+```
+
+That workspace folder is the source of truth for runtime skill behavior. This makes it possible to adjust prompts, templates, and resources per project without changing the extension itself.
+
+Skill-owned resources now include the active prompts and report templates used by the workflow.
+
 ### 3. How It Works (Standard User Journey)
 
 The SO Workspace extension provides a structured and deterministic workflow for transforming a Business Requirements Document (BRD) into a validated Solution Outline package.
@@ -159,10 +246,11 @@ A typical architect journey follows these steps:
 3. Run the **Initialize SO Workspace Structure** command.
 4. Place the BRD document into the `inbox/brd/` folder.
 5. Execute the **Convert Word to Markdown** command to produce a canonical BRD version.
-6. Progress through each stage of the workflow (Requirements → Objectives → Architecture → Decisions) using the **Generate → Evaluate → Patch → Recheck** sequence.
-7. Use the `discussions/` folder to capture meeting clarifications and project-specific updates not originally present in the BRD.
-8. Use the `references/` folder to apply approved reference architectures, patterns, and decision tables.
-9. Produce a structured, review-ready Solution Outline with diagrams and supporting artifacts.
+6. If the source BRD is a PDF instead of a Word document, use **Convert PDF to Markdown** to produce the canonical BRD version.
+7. Progress through each stage of the workflow (Requirements → Objectives → Architecture → Decisions) using the **Generate → Evaluate → Patch → Recheck** sequence.
+8. Use the `discussions/` folder to capture meeting clarifications and project-specific updates not originally present in the BRD.
+9. Use the `references/` folder to apply approved reference architectures, patterns, and decision tables.
+10. Produce a structured, review-ready Solution Outline with diagrams and supporting artifacts.
 
 This structured approach ensures:
 
@@ -252,9 +340,9 @@ This command will:
 ### Local Rendering
 
 The extension renders all diagrams locally using the following tools:
-- **Mermaid diagrams (.mmd)**: Rendered using `@mermaid-js/mermaid-cli` (mmdc)
-- **PlantUML diagrams (.puml)**: Rendered using PlantUML JAR with Java
-- **Structurizr DSL (.dsl)**: Rendered using Docker-based Structurizr CLI
+- **Mermaid diagrams (.mmd)**: Rendered using the built-in webview renderer and Kroki where applicable
+- **PlantUML diagrams (.puml)**: Rendered using a local Kroki container
+- **Structurizr DSL (.dsl)**: Rendered using a local Docker-based Structurizr CLI container
 
 All diagrams are validated before rendering to catch syntax errors early. No external APIs or cloud services are used for rendering, ensuring complete offline operation and data privacy.
 

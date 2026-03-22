@@ -1,0 +1,19 @@
+services:
+  kroki:
+    image: yuzutech/kroki:latest
+    container_name: kroki
+    ports:
+      - "8000:8000"
+    environment:
+      KROKI_SAFE_MODE: "false"
+    restart: unless-stopped
+
+  structurizr-cli:
+    image: structurizr/cli:latest
+    container_name: structurizr-cli
+    working_dir: /workspace
+    entrypoint: ["/bin/sh", "-c", "while true; do sleep 3600; done"]
+    volumes:
+      - ./docs/03_architecture/diagrams/src:/workspace/src
+      - ./docs/03_architecture/diagrams/out:/workspace/out
+    restart: unless-stopped

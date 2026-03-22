@@ -2,13 +2,11 @@ You are in EXECUTION mode.
 
 Authoritative inputs:
 - docs/03_architecture/solution_outline.md
-- assets/templates/solution_outline.template.md
 - docs/02_objectives/objectives.md
 - docs/03_architecture/diagrams/src/c4_context.puml
 - docs/03_architecture/diagrams/src/c4_container.puml
 
-Template reference:
-- assets/templates/so_inconsistencies.template.md
+Use the report structure already loaded from this skill's report template resource.
 
 Purpose:
 Evaluate the Solution Outline for correctness, completeness, and consistency

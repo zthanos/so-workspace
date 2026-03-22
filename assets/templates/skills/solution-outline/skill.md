@@ -7,6 +7,7 @@ participant: so
 operations:
   generate: {}
   eval: {}
+  update: {}
   patch:
     requiresIssueIds: true
   recheck: {}

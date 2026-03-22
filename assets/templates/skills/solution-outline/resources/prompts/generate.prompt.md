@@ -4,10 +4,11 @@ Create or update the file:
 docs/03_architecture/solution_outline.md
 
 Authoritative inputs:
-- assets/templates/solution_outline.template.md
 - docs/02_objectives/objectives.md
 - docs/03_architecture/diagrams/src/c4_context.puml
 - docs/03_architecture/diagrams/src/c4_container.puml
+
+Use the structure and guidance already loaded from this skill's output template resource.
 
 Purpose:
 Generate the Solution Outline document using the provided template as a strict contract.

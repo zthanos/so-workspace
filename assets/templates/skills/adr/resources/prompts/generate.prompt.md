@@ -11,7 +11,7 @@ Authoritative inputs:
 
 Create:
 
-docs/04_adrs/ADR-XXX.md
+docs/04_decisions/ADR-XXX.md
 
 Follow the ADR template exactly.
 
