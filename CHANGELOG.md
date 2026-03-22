@@ -45,6 +45,7 @@ SO Workspace v3 consolidates the participant, workspace skills, and diagram tool
 ### Document conversion
 
 - Kept Word-to-Markdown conversion as a VSIX-only JavaScript flow.
+- Added PDF-to-Markdown conversion as a VSIX-only JavaScript flow.
 - Kept DOCX export as a VSIX-only JavaScript flow using the bundled `docx` package.
 
 ### Packaging and cleanup

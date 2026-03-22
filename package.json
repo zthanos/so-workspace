@@ -197,6 +197,10 @@
         "title": "SO: 0-01 Convert Word to Markdown"
       },
       {
+        "command": "so-workspace.convertPdfToMarkdown",
+        "title": "SO: 0-01b Convert PDF to Markdown"
+      },
+      {
         "command": "so-workspace.initialize",
         "title": "SO: 0-02 Initialize SO Workspace Structure"
       },
@@ -400,6 +404,11 @@
         {
           "command": "so-workspace.convertWordToMarkdown",
           "when": "resourceExtname == .docx",
+          "group": "navigation"
+        },
+        {
+          "command": "so-workspace.convertPdfToMarkdown",
+          "when": "resourceExtname == .pdf",
           "group": "navigation"
         }
       ],
