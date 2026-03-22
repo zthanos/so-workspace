@@ -197,10 +197,6 @@
         "title": "SO: 0-01 Convert Word to Markdown"
       },
       {
-        "command": "so-workspace.convertPdfToMarkdown",
-        "title": "SO: 0-01b Convert PDF to Markdown"
-      },
-      {
         "command": "so-workspace.initialize",
         "title": "SO: 0-02 Initialize SO Workspace Structure"
       },
@@ -405,11 +401,6 @@
           "command": "so-workspace.convertWordToMarkdown",
           "when": "resourceExtname == .docx",
           "group": "navigation"
-        },
-        {
-          "command": "so-workspace.convertPdfToMarkdown",
-          "when": "resourceExtname == .pdf",
-          "group": "navigation"
         }
       ],
       "commandPalette": [
@@ -475,7 +466,7 @@
     "markdown-it-table-of-contents": "^1.1.0",
     "mermaid": "^11.12.2",
     "pako": "^2.1.0",
-    "pdf-parse": "^1.1.1",
+    "pdf-parse": "^2.4.5",
     "plantuml-encoder": "^1.4.0",
     "turndown": "^7.1.2",
     "turndown-plugin-gfm": "^1.0.2"

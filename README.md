@@ -15,7 +15,7 @@ This extension packages all runtime assets (prompts, templates, rules) internall
 - **Asset Management**: All extension assets are packaged internally, no workspace pollution
 - **SO Participant**: `@so` acts as the user-facing workflow entry point inside chat
 - **Workspace Skills**: Initialized workspaces use `.github/skills` as the active skill source
-- **Document Conversion**: Convert `.docx` and `.pdf` source documents to Markdown inside the workspace
+- **Document Conversion**: Convert `.docx` source documents to Markdown inside the workspace
 
 ---
 
@@ -246,7 +246,6 @@ A typical architect journey follows these steps:
 3. Run the **Initialize SO Workspace Structure** command.
 4. Place the BRD document into the `inbox/brd/` folder.
 5. Execute the **Convert Word to Markdown** command to produce a canonical BRD version.
-6. If the source BRD is a PDF instead of a Word document, use **Convert PDF to Markdown** to produce the canonical BRD version.
 7. Progress through each stage of the workflow (Requirements → Objectives → Architecture → Decisions) using the **Generate → Evaluate → Patch → Recheck** sequence.
 8. Use the `discussions/` folder to capture meeting clarifications and project-specific updates not originally present in the BRD.
 9. Use the `references/` folder to apply approved reference architectures, patterns, and decision tables.
