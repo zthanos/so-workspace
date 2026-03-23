@@ -43,6 +43,15 @@ export async function renderMermaidViaKroki(
   krokiEndpoint: string,
   diagramType: string = "mermaid"
 ): Promise<string> {
+  return renderDiagramViaKroki(content, krokiEndpoint, diagramType, "svg") as Promise<string>;
+}
+
+export async function renderDiagramViaKroki(
+  content: string,
+  krokiEndpoint: string,
+  diagramType: string,
+  format: "svg" | "png"
+): Promise<string | Buffer> {
   const endpoint = krokiEndpoint.replace(/\/$/, "");
 
   // Encode: zlib deflate → base64url
@@ -53,7 +62,7 @@ export async function renderMermaidViaKroki(
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 
-  const url = `${endpoint}/${diagramType}/svg/${base64url}`;
+  const url = `${endpoint}/${diagramType}/${format}/${base64url}`;
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("Kroki request timed out (10s)")), 10_000)
@@ -66,6 +75,11 @@ export async function renderMermaidViaKroki(
     throw new Error(
       `Kroki HTTP ${response.status}: ${body || response.statusText}`
     );
+  }
+
+  if (format === "png") {
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
   }
 
   return response.text();
@@ -168,7 +182,8 @@ export function convertSvgToPngViaWebview(
       { enableScripts: true }
     );
 
-    const svgBase64 = Buffer.from(svg, "utf-8").toString("base64");
+    const normalizedSvg = normalizeSvgForImageLoad(svg);
+    const svgBase64 = Buffer.from(normalizedSvg, "utf-8").toString("base64");
 
     panel.webview.html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
@@ -176,7 +191,7 @@ export function convertSvgToPngViaWebview(
 <canvas id="canvas"></canvas>
 <script>
   const vscode = acquireVsCodeApi();
-  const svgStr = atob('${svgBase64}');
+  const svgDataUrl = 'data:image/svg+xml;base64,${svgBase64}';
 
   function getSvgDimensions(svgMarkup) {
     try {
@@ -214,12 +229,9 @@ export function convertSvgToPngViaWebview(
   }
 
   async function run() {
-    let url;
     try {
-      const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-      url = URL.createObjectURL(blob);
       const img = new Image();
-      const dimensions = getSvgDimensions(svgStr);
+      const dimensions = getSvgDimensions(atob('${svgBase64}'));
 
       img.onload = () => {
         try {
@@ -234,23 +246,19 @@ export function convertSvgToPngViaWebview(
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           const data = canvas.toDataURL('image/png');
-          URL.revokeObjectURL(url);
           vscode.postMessage({ type: 'png', data });
         } catch (error) {
-          if (url) URL.revokeObjectURL(url);
           vscode.postMessage({ type: 'error', error: String(error) });
         }
       };
 
-      img.onerror = (e) => {
-        if (url) URL.revokeObjectURL(url);
+      img.onerror = () => {
         vscode.postMessage({ type: 'error', error: 'Failed to load SVG into image element' });
       };
 
-      img.src = url;
+      img.src = svgDataUrl;
       await img.decode().catch(() => {});
     } catch (error) {
-      if (url) URL.revokeObjectURL(url);
       vscode.postMessage({ type: 'error', error: String(error) });
     }
   }
@@ -278,4 +286,29 @@ export function convertSvgToPngViaWebview(
       }
     });
   });
+}
+
+function normalizeSvgForImageLoad(svg: string): string {
+  let normalized = svg.trim().replace(/^\uFEFF/, "");
+
+  const svgStart = normalized.indexOf("<svg");
+  if (svgStart > 0) {
+    normalized = normalized.slice(svgStart);
+  }
+
+  normalized = normalized.replace(/<svg\b([^>]*)>/i, (_match, attrs: string) => {
+    let nextAttrs = attrs;
+
+    if (!/\sxmlns=/.test(nextAttrs)) {
+      nextAttrs += ' xmlns="http://www.w3.org/2000/svg"';
+    }
+
+    if (!/\sxmlns:xlink=/.test(nextAttrs) && /xlink:href=/.test(normalized)) {
+      nextAttrs += ' xmlns:xlink="http://www.w3.org/1999/xlink"';
+    }
+
+    return `<svg${nextAttrs}>`;
+  });
+
+  return normalized;
 }

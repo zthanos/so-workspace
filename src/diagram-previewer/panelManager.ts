@@ -17,7 +17,8 @@ import { KrokiRenderer } from './renderers/krokiRenderer';
 import { readConfig } from './config';
 import { ThemeManager } from './themeManager';
 import { getLogger } from './logger';
-import { convertSvgToPngViaWebview } from '../mermaid-webview-renderer';
+import { convertSvgToPngViaWebview, renderDiagramViaKroki } from '../mermaid-webview-renderer';
+import { StructurizrCLI } from '../structurizr-cli-wrapper';
 
 const outputChannel = vscode.window.createOutputChannel('panelManager Renderer Debug');
 
@@ -954,8 +955,74 @@ export class PanelManager {
     const fs = require('fs').promises;
 
     try {
+      if (this.currentEditor) {
+        const extension = path.extname(this.currentEditor.document.fileName).toLowerCase();
+        const sourceContent = this.currentEditor.document.getText();
+
+        if (extension === '.puml' || extension === '.plantuml' || extension === '.pu' || extension === '.wsd') {
+          const krokiEndpoint = readConfig().krokiEndpoint;
+          logger?.info('Using direct PNG export path', {
+            exportPath: 'kroki-plantuml',
+            sourceFile: this.currentEditor.document.fileName,
+            endpoint: krokiEndpoint,
+          });
+          const pngBuffer = await renderDiagramViaKroki(sourceContent, krokiEndpoint, 'plantuml', 'png') as Buffer;
+          await fs.writeFile(filePath, pngBuffer);
+          logger?.debug('PNG export completed directly via Kroki PlantUML renderer', { path: filePath });
+          return true;
+        }
+
+        if (extension === '.dsl') {
+          const vscodeConfig = vscode.workspace.getConfiguration('so-workspace.diagrams');
+          const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          const cliPath = vscodeConfig.get<string>('structurizrCliPath');
+          const containerName = vscodeConfig.get<string>('structurizrCliContainer');
+          const cli = new StructurizrCLI(cliPath, containerName, workspaceRoot);
+
+          const tempOutputDir = path.join(path.dirname(filePath), `.so-structurizr-export-${Date.now()}`);
+          await fs.mkdir(tempOutputDir, { recursive: true });
+          logger?.info('Using direct PNG export path', {
+            exportPath: 'structurizr-cli',
+            sourceFile: this.currentEditor.document.fileName,
+            cliPath,
+            containerName,
+          });
+
+          try {
+            const result = await cli.export(this.currentEditor.document.fileName, 'png', tempOutputDir);
+            if (!result.success) {
+              throw new Error(result.stderr || result.stdout || 'Structurizr CLI PNG export failed');
+            }
+
+            const exportedFiles = (await fs.readdir(tempOutputDir))
+              .filter((name: string) => name.toLowerCase().endsWith('.png'))
+              .map((name: string) => path.join(tempOutputDir, name));
+
+            if (exportedFiles.length === 0) {
+              throw new Error('Structurizr CLI did not produce any PNG files');
+            }
+
+            const preferredStem = path.basename(this.currentEditor.document.fileName, path.extname(this.currentEditor.document.fileName)).toLowerCase();
+            const selectedFile =
+              exportedFiles.find((candidate: string) => path.basename(candidate).toLowerCase().includes(preferredStem)) ||
+              exportedFiles[0];
+
+            const pngBuffer = await fs.readFile(selectedFile);
+            await fs.writeFile(filePath, pngBuffer);
+            logger?.debug('PNG export completed directly via Structurizr CLI renderer', { path: filePath, selectedFile });
+            return true;
+          } finally {
+            await fs.rm(tempOutputDir, { recursive: true, force: true });
+          }
+        }
+      }
+
       // If current format is already PNG (data URL), extract and save
       if (this.currentRenderState.format === 'png') {
+        logger?.info('Using direct PNG export path', {
+          exportPath: 'render-state-png',
+          sourceFile: this.currentEditor?.document.fileName,
+        });
         // Extract base64 data from data URL
         const base64Data = this.currentRenderState.content.replace(/^data:image\/png;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
@@ -966,6 +1033,10 @@ export class PanelManager {
 
       // SVG → PNG via shared webview canvas utility (no sharp dependency)
       // convertSvgToPngViaWebview has a built-in 15-second timeout
+      logger?.info('Using fallback PNG export path', {
+        exportPath: 'webview-svg-converter',
+        sourceFile: this.currentEditor?.document.fileName,
+      });
       const pngBuffer = await convertSvgToPngViaWebview(this.currentRenderState.content, this.context);
       await fs.writeFile(filePath, pngBuffer);
       logger?.debug('PNG export completed (SVG→canvas→PNG)', { path: filePath });
