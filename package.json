@@ -386,6 +386,16 @@
           "command": "so-workspace.convertWordToMarkdown",
           "when": "resourceExtname == .docx",
           "group": "navigation"
+        },
+        {
+          "command": "so-workspace.exportDocx",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
+        },
+        {
+          "command": "so-workspace.exportPdfNpm",
+          "when": "resourceExtname == .md",
+          "group": "navigation"
         }
       ],
       "commandPalette": [
