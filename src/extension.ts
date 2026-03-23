@@ -220,6 +220,67 @@ export async function activate(context: vscode.ExtensionContext) {
   // Export to Word Document (.docx)
   registerDocxExportCommand(context);
 
+  const ensureDiagramPreviewerPanelManager = (): PanelManager => {
+    if (!diagramPreviewerPanelManager) {
+      diagramPreviewerPanelManager = PanelManager.getInstance(context);
+    }
+    return diagramPreviewerPanelManager;
+  };
+
+  // Register previewer commands before previewer initialization so the command
+  // remains available even if the preview subsystem fails during activation.
+  context.subscriptions.push(
+    vscode.commands.registerCommand('diagramPreviewer.openPreview', () => {
+      const logger = getLogger();
+
+      try {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+          vscode.window.showWarningMessage('No active editor found. Please open a diagram file first.');
+          logger?.warning('Command invoked but no active editor found');
+          return;
+        }
+
+        logger?.info(`Opening preview for: ${editor.document.fileName}`);
+        ensureDiagramPreviewerPanelManager().openPreview(editor);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger?.error('Error opening preview', error);
+        vscode.window.showErrorMessage(`Failed to open diagram preview: ${errorMessage}`);
+      }
+    }),
+    vscode.commands.registerCommand('diagramPreviewer.openPreviewFromExplorer', async (uri: vscode.Uri) => {
+      const logger = getLogger();
+
+      try {
+        if (!uri) {
+          vscode.window.showWarningMessage('No file selected for preview.');
+          logger?.warning('Command invoked but no file URI provided');
+          return;
+        }
+
+        logger?.info(`Opening preview from explorer for: ${uri.fsPath}`);
+        await ensureDiagramPreviewerPanelManager().openPreviewFromExplorer(uri);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger?.error('Error opening preview from explorer', error);
+        vscode.window.showErrorMessage(`Failed to open diagram preview: ${errorMessage}`);
+      }
+    }),
+    vscode.commands.registerCommand('diagramPreviewer.export', async () => {
+      const logger = getLogger();
+
+      try {
+        logger?.info('Export diagram command invoked');
+        await ensureDiagramPreviewerPanelManager().exportDiagram();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger?.error('Error exporting diagram', error);
+        vscode.window.showErrorMessage(`Failed to export diagram: ${errorMessage}`);
+      }
+    })
+  );
+
 
   // ========================================
   // Diagram Previewer Feature
@@ -235,62 +296,7 @@ export async function activate(context: vscode.ExtensionContext) {
     logger.info('Initializing Diagram Previewer...');
 
     // Initialize PanelManager singleton
-    diagramPreviewerPanelManager = PanelManager.getInstance(context);
-
-    // Register "Open Diagram Preview" command
-    context.subscriptions.push(
-      vscode.commands.registerCommand('diagramPreviewer.openPreview', () => {
-        try {
-          const editor = vscode.window.activeTextEditor;
-          if (!editor) {
-            vscode.window.showWarningMessage('No active editor found. Please open a diagram file first.');
-            logger.warning('Command invoked but no active editor found');
-            return;
-          }
-
-          logger.info(`Opening preview for: ${editor.document.fileName}`);
-          diagramPreviewerPanelManager!.openPreview(editor);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.error('Error opening preview', error);
-          vscode.window.showErrorMessage(`Failed to open diagram preview: ${errorMessage}`);
-        }
-      })
-    );
-
-    // Register "Open Preview from Explorer" command
-    context.subscriptions.push(
-      vscode.commands.registerCommand('diagramPreviewer.openPreviewFromExplorer', async (uri: vscode.Uri) => {
-        try {
-          if (!uri) {
-            vscode.window.showWarningMessage('No file selected for preview.');
-            logger.warning('Command invoked but no file URI provided');
-            return;
-          }
-
-          logger.info(`Opening preview from explorer for: ${uri.fsPath}`);
-          await diagramPreviewerPanelManager!.openPreviewFromExplorer(uri);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.error('Error opening preview from explorer', error);
-          vscode.window.showErrorMessage(`Failed to open diagram preview: ${errorMessage}`);
-        }
-      })
-    );
-
-    // Register "Export Diagram" command
-    context.subscriptions.push(
-      vscode.commands.registerCommand('diagramPreviewer.export', async () => {
-        try {
-          logger.info('Export diagram command invoked');
-          await diagramPreviewerPanelManager!.exportDiagram();
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.error('Error exporting diagram', error);
-          vscode.window.showErrorMessage(`Failed to export diagram: ${errorMessage}`);
-        }
-      })
-    );
+    diagramPreviewerPanelManager = ensureDiagramPreviewerPanelManager();
 
     // Register text document change listeners with debounce
     context.subscriptions.push(

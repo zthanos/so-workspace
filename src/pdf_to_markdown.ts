@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
-import { PDFParse } from "pdf-parse";
 
 let outputChannel: vscode.OutputChannel;
 
@@ -140,6 +139,7 @@ function pdfTextToMarkdown(text: string): string {
 async function performConversion(inputPath: string, outputPath: string): Promise<void> {
   outputChannel.appendLine(`[INFO] Reading PDF: ${inputPath}`);
   const buffer = await fs.readFile(inputPath);
+  const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: buffer });
   const parsed = await parser.getText();
   await parser.destroy();

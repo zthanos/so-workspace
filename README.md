@@ -159,6 +159,30 @@ Typical examples:
 @so /recheck adr
 ```
 
+Example conversation for requirements work:
+
+```text
+User: @so /generate requirements inventory from the BRD in docs/00_brd/brd.md
+SO: Creates or updates docs/01_requirements/requirements.inventory.md using so_agent_context, workspace skills, and the current docs context.
+
+User: @so /update requirements inventory to separate authentication requirements from authorization requirements and add MFA requirements for mobile users
+SO: Opens the native edit flow for docs/01_requirements/requirements.inventory.md with the SO context and skill instructions preloaded.
+
+User: @so /eval requirements inventory
+SO: Reviews the current requirements artifact against the BRD, discussions, references, and rules, then updates the inconsistencies report if needed.
+```
+
+Participant flow:
+
+```mermaid
+flowchart LR
+    A["@so prompt"] --> B["Load docs/so_agent_context.md"]
+    B --> C["Load workspace skill from .github/skills"]
+    C --> D["Load relevant docs context"]
+    D --> E["Generate or update target artifact"]
+    E --> F["Native editor edit flow for file changes"]
+```
+
 Recommended usage model:
 
 - use `@so` for day-to-day artifact generation and updates
