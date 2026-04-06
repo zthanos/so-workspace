@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "3.0.1",
+  "version": "3.1.1",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
@@ -231,11 +231,11 @@
       },
       {
         "command": "so-workspace.diagram.generateC4Context",
-        "title": "SO: 3-01 Generate C4 Context Diagram (Open Chat)"
+        "title": "SO: 3-01 Generate C4 Context Diagram in draw.io (Open Chat)"
       },
       {
         "command": "so-workspace.diagram.generateC4Container",
-        "title": "SO: 3-02 Generate C4 Container Diagram (Open Chat)"
+        "title": "SO: 3-02 Generate C4 Container Diagram in draw.io (Open Chat)"
       },
       {
         "command": "so-workspace.diagram.generateFlow",

@@ -1,7 +1,7 @@
 ---
 id: solution-outline
 name: Solution Outline
-description: Generate, evaluate, patch, recheck, and final-review the Solution Outline document derived from Objectives and validated Structurizr DSL diagrams.
+description: Generate, evaluate, patch, recheck, and final-review the Solution Outline document derived from Objectives and validated architecture diagrams.
 participant: so
 
 operations:
@@ -36,7 +36,7 @@ This skill manages the lifecycle of the Solution Outline document.
 
 It derives the Solution Outline strictly from:
 - `docs/02_objectives/objectives.md`
-- validated architecture diagrams in Structurizr DSL
+- validated architecture diagrams
 - the approved Solution Outline template
 
 It ensures:
@@ -49,8 +49,8 @@ It ensures:
 
 Authoritative inputs:
 - `docs/02_objectives/objectives.md`
-- `docs/03_architecture/diagrams/src/c4_context.dsl`
-- `docs/03_architecture/diagrams/src/c4_container.dsl`
+- `docs/03_architecture/diagrams/src/c4_context.drawio`
+- `docs/03_architecture/diagrams/src/c4_container.drawio`
 
 Primary artifact:
 - `docs/03_architecture/solution_outline.md`

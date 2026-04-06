@@ -5,8 +5,8 @@ docs/03_architecture/solution_outline.md
 
 Authoritative inputs:
 - docs/02_objectives/objectives.md
-- docs/03_architecture/diagrams/src/c4_context.puml
-- docs/03_architecture/diagrams/src/c4_container.puml
+- docs/03_architecture/diagrams/src/c4_context.drawio
+- docs/03_architecture/diagrams/src/c4_container.drawio
 
 Use the structure and guidance already loaded from this skill's output template resource.
 

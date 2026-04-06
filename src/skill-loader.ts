@@ -47,6 +47,14 @@ export interface SkillConfig {
   diagramCatalog?: DiagramCatalogEntry[];
 }
 
+const LEGACY_DEFAULT_OPERATIONS: Record<string, SkillOperation[]> = {
+  "requirements-inventory": ["generate", "eval", "update", "patch", "recheck"],
+  "objectives": ["generate", "eval", "update", "patch", "recheck"],
+  "diagrams": ["generate", "eval", "update", "patch", "recheck"],
+  "solution-outline": ["generate", "eval", "update", "patch", "recheck"],
+  "adr": ["generate", "eval", "update", "patch", "recheck"],
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -221,6 +229,12 @@ function normalizeSkillConfig(fm: Record<string, unknown>, skillFolder: string):
     }
   } else if (isRecord(rawOps)) {
     operations = rawOps as Record<SkillOperation, OperationConfig>;
+  }
+
+  if (!Object.keys(operations).length) {
+    for (const op of LEGACY_DEFAULT_OPERATIONS[skillFolder] ?? ["generate"]) {
+      operations[op] = {};
+    }
   }
 
   const quickPickRaw   = isRecord(fm.quickPick) ? fm.quickPick : undefined;

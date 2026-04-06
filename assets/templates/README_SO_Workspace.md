@@ -122,12 +122,12 @@ The Requirements Inventory is the structured representation of the BRD and acts 
 
 ### Stage 3: Architecture Diagrams
 
-**Purpose:** Create C4 architecture diagrams (Context and Container levels) validated against Objectives and approved flows.
+**Purpose:** Create C4 architecture diagrams (Context and Container levels) in draw.io, validated against Objectives and approved flows.
 
 **Commands (C4 + Render → Evaluate → Patch → Recheck):**
-- **SO: 3-01 Generate C4 Context Diagram (Open Chat)**  
+- **SO: 3-01 Generate C4 Context Diagram in draw.io (Open Chat)**  
   `so-workspace.diagram.generateC4Context`
-- **SO: 3-02 Generate C4 Container Diagram (Open Chat)**  
+- **SO: 3-02 Generate C4 Container Diagram in draw.io (Open Chat)**  
   `so-workspace.diagram.generateC4Container`
 - **SO: 3-03 Render Diagrams (Local Tools)**  
   `so-workspace.renderDiagrams`  
@@ -139,7 +139,16 @@ The Requirements Inventory is the structured representation of the BRD and acts 
 - **SO: 3-06 Diagram Recheck (Select Diagram)**  
   `so-workspace.diagram.recheck`
 
-**Output:** Structurizr DSL files in `docs/03_architecture/diagrams/src/`
+**Output:** draw.io C4 files in `docs/03_architecture/diagrams/src/`
+
+Default C4 artifacts:
+- `docs/03_architecture/diagrams/src/c4_context.drawio`
+- `docs/03_architecture/diagrams/src/c4_container.drawio`
+
+Default C4 behavior:
+- the participant and the numbered commands now target draw.io files first for C4 authoring
+- use the draw.io C4 stencil when refining diagrams visually
+- keep diagrams enterprise-readable and easy to edit after generation
 
 ---
 

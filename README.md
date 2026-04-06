@@ -149,6 +149,12 @@ The participant supports these workflow operations:
 - `/patch` to apply fixes based on the latest report
 - `/recheck` to run the evaluation again after changes
 
+For C4 diagrams, the default authoring format is now draw.io:
+
+- `@so` targets `docs/03_architecture/diagrams/src/*.drawio` for C4 Context and C4 Container artifacts
+- the diagrams skill instructs the model to use draw.io C4 stencil conventions and enterprise-grade layout discipline
+- `/generate`, `/update`, `/patch`, and `/recheck` for C4 now operate on editable draw.io files by default
+
 Typical examples:
 
 ```text
@@ -227,6 +233,25 @@ This structured approach ensures:
 - **Alignment** between business, architecture, and engineering teams
 
 The result is not just a document, but a standardized architectural artifact set ready for enterprise communication and governance.
+
+### C4 Diagram Authoring
+
+The default authoring format for C4 diagrams is draw.io:
+
+- `docs/03_architecture/diagrams/src/c4_context.drawio`
+- `docs/03_architecture/diagrams/src/c4_container.drawio`
+
+The recommended workflow is:
+
+1. generate or update the C4 artifact through `@so`
+2. let the participant hand the edit to the native editor chat flow
+3. refine visually in draw.io when needed
+
+The draw.io C4 workflow is intended to produce:
+
+- editable enterprise architecture diagrams
+- C4 stencil-compatible structure and layout
+- diagrams that can be refined visually without converting from another format first
 
 ![Standard user journey flowchart](assets/standard-user-journey.png)
 

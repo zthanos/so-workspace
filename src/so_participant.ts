@@ -88,6 +88,45 @@ const ALL_SKILL_FOLDERS = [
   "adr",
 ] as const;
 
+const SKILL_ALIASES: Record<string, string[]> = {
+  "requirements-inventory": [
+    "requirements inventory",
+    "requirements",
+    "inventory",
+    "from brd",
+    "requirements from brd",
+    "brd",
+    "business requirements",
+  ],
+  objectives: [
+    "objectives",
+    "objective",
+  ],
+  diagrams: [
+    "diagram",
+    "diagrams",
+    "c4",
+    "drawio",
+    "draw.io",
+    "context diagram",
+    "container diagram",
+    "flow diagram",
+    "sequence diagram",
+    "state diagram",
+  ],
+  "solution-outline": [
+    "solution outline",
+    "architecture outline",
+    "solution document",
+  ],
+  adr: [
+    "adr",
+    "adrs",
+    "decision record",
+    "architecture decision record",
+  ],
+};
+
 // Maps slash operation name → prompt file name (without .prompt.md)
 const OPERATION_TO_PROMPT: Record<string, string> = {
   generate: "generate",
@@ -245,6 +284,56 @@ async function detectSkill(
   return null;
 }
 
+async function detectSkillDeterministic(
+  prompt: string,
+  command: string | undefined,
+  assetResolver: AssetResolver
+): Promise<string | null> {
+  const lower = prompt.toLowerCase();
+
+  if (lower.includes("diagram_id:")) {
+    return "diagrams";
+  }
+
+  for (const [skillFolder, aliases] of Object.entries(SKILL_ALIASES)) {
+    if (aliases.some((alias) => lower.includes(alias))) {
+      return skillFolder;
+    }
+  }
+
+  if (command && ["generate", "eval", "update", "patch", "recheck"].includes(command)) {
+    return "requirements-inventory";
+  }
+
+  return detectSkill(prompt, command, assetResolver);
+}
+
+function inferOperationFromPrompt(prompt: string): SkillOperation | undefined {
+  const lower = prompt.toLowerCase();
+
+  if (/\b(recheck|re-check|check again|verify again|revalidate)\b/.test(lower)) {
+    return "recheck";
+  }
+
+  if (/\b(patch|fix|apply fixes|correct issues|resolve issues)\b/.test(lower)) {
+    return "patch";
+  }
+
+  if (/\b(evaluate|eval|review|assess|check)\b/.test(lower)) {
+    return "eval";
+  }
+
+  if (/\b(update|change|modify|edit|revise|refine)\b/.test(lower)) {
+    return "update";
+  }
+
+  if (/\b(generate|create|draft|produce|build|write)\b/.test(lower)) {
+    return "generate";
+  }
+
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // System prompt builder
 // ---------------------------------------------------------------------------
@@ -306,7 +395,7 @@ async function buildSystemPrompt(
       parts.push(`# Active Skill: ${config.name} (workspace)\n\n` + wsSkillContent);
 
       // Resources: workspace-owned only. No packaged fallback.
-      const resourceFiles = ["methodology.md", "output-template.md", "report-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
+      const resourceFiles = ["methodology.md", "output-template.md", "report-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "drawio-c4-guidelines.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
       for (const resFile of resourceFiles) {
         const wsResContent = await readFileSafe(
           path.join(workspaceRoot, WORKSPACE_SKILLS_PATH, skillFolder, "resources", resFile)
@@ -519,6 +608,7 @@ async function collectArtifactPaths(
     path.join(workspaceRoot, CONTEXT_ARTIFACTS.discussions)
   );
   for (const { file } of discussions) {
+    if (file.toLowerCase() === "readme.md") continue;
     paths.push(`docs/98_discussions/${file}`);
   }
 
@@ -533,6 +623,8 @@ async function collectArtifactPaths(
     path.join(workspaceRoot, CONTEXT_ARTIFACTS.references)
   );
   for (const { relativePath } of references) {
+    const lowerPath = relativePath.toLowerCase();
+    if (lowerPath === "readme.md") continue;
     paths.push(`docs/99_references/${relativePath}`);
   }
 
@@ -587,22 +679,92 @@ function buildNativeEditPrompt(
   operationInstruction: string,
   artifactTarget: string,
   contextPaths: string[],
-  userPrompt: string
+  userPrompt: string,
+  skillFolder?: string | null,
+  operation?: SkillOperation
 ): string {
+  const compactContextPaths = contextPaths.slice(0, 8);
   const sections = [
-    `SO Workspace native edit handoff.`,
+    `Edit the currently open file: ${artifactTarget}`,
+    `Use only workspace artifacts as source of truth. Do not invent scope or unsupported details.`,
     `Target file: ${artifactTarget}`,
-    contextPaths.length
-      ? `Relevant workspace files:\n${contextPaths.map((item) => `- ${item}`).join("\n")}`
+    compactContextPaths.length
+      ? `Relevant workspace files:\n${compactContextPaths.map((item) => `- ${item}`).join("\n")}`
       : "Relevant workspace files: none pre-identified",
-    "Apply the SO guidance below while using the native editor chat editing flow.",
-    systemPrompt,
-    operationInstruction ? `Operation instruction:\n${operationInstruction}` : "",
+    contextPaths.length > compactContextPaths.length
+      ? `Additional workspace files are available if needed: ${contextPaths.length - compactContextPaths.length}`
+      : "",
+    buildNativeEditInstruction(skillFolder, operation, artifactTarget, operationInstruction),
     `User request:\n${userPrompt}`,
-    `Edit ${artifactTarget} directly. Use the editor chat edit flow so changes appear as native inline edits instead of returning the full file in chat.`,
+    `Apply the change directly in ${artifactTarget}. Prefer native inline edits over chat-only suggestions.`,
   ].filter(Boolean);
 
   return sections.join("\n\n---\n\n");
+}
+
+function buildNativeEditInstruction(
+  skillFolder: string | null | undefined,
+  operation: SkillOperation | undefined,
+  artifactTarget: string,
+  operationInstruction: string
+): string {
+  const action = operation ?? "update";
+
+  const deterministicGuidance: Record<string, string[]> = {
+    "requirements-inventory": [
+      `SO ${action} guidance for Requirements Inventory:`,
+      "- work only from the BRD and relevant workspace context",
+      "- keep content business-oriented and implementation-neutral",
+      "- classify requirements cleanly and avoid duplicates",
+      "- update only the target requirements artifact",
+    ],
+    "objectives": [
+      `SO ${action} guidance for Objectives:`,
+      "- derive objectives from the validated requirements inventory",
+      "- do not introduce unsupported systems, scope, or architecture decisions",
+      "- keep terminology aligned with the requirements artifact",
+      "- update only the target objectives artifact",
+    ],
+    "solution-outline": [
+      `SO ${action} guidance for Solution Outline:`,
+      "- derive content only from validated objectives and architecture artifacts",
+      "- keep the document architectural, not implementation-level",
+      "- do not add unsupported sections, systems, or technologies",
+      "- update only the target solution outline artifact",
+    ],
+    "adr": [
+      `SO ${action} guidance for ADR:`,
+      "- capture decisions, rationale, alternatives, and consequences clearly",
+      "- stay aligned with workspace artifacts and approved constraints",
+      "- do not silently reconcile conflicts; surface them when needed",
+      "- update only the target ADR artifact",
+    ],
+    "diagrams": [
+      `SO ${action} guidance for Diagram:`,
+      artifactTarget.endsWith(".drawio")
+        ? "- for C4 diagrams, preserve valid editable draw.io XML and enterprise-grade layout"
+        : "- preserve valid diagram source syntax",
+      "- keep the abstraction level correct",
+      "- do not invent unsupported actors, systems, containers, or relationships",
+      "- update only the target diagram artifact",
+    ],
+  };
+
+  const selected = skillFolder ? deterministicGuidance[skillFolder] : undefined;
+  if (selected?.length) {
+    return selected.join("\n");
+  }
+
+  if (!operationInstruction.trim()) {
+    return "";
+  }
+
+  const lines = operationInstruction
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  return `SO operation guidance:\n${lines.slice(0, 8).join("\n")}`;
 }
 
 async function ensureTargetDocument(
@@ -615,11 +777,62 @@ async function ensureTargetDocument(
   try {
     await vscode.workspace.fs.stat(targetUri);
   } catch {
-    await vscode.workspace.fs.writeFile(targetUri, new Uint8Array());
+    const initialContent = await getInitialTargetContent(workspaceRoot, relativePath);
+    await vscode.workspace.fs.writeFile(
+      targetUri,
+      new TextEncoder().encode(initialContent)
+    );
   }
   const doc = await vscode.workspace.openTextDocument(targetUri);
   await vscode.window.showTextDocument(doc, { preview: false });
   return targetUri;
+}
+
+async function getInitialTargetContent(
+  workspaceRoot: string,
+  relativePath: string
+): Promise<string> {
+  const normalizedPath = relativePath.replace(/\\/g, "/");
+  if (!normalizedPath.endsWith(".drawio")) {
+    return "";
+  }
+
+  const templatePath = path.join(
+    workspaceRoot,
+    WORKSPACE_SKILLS_PATH,
+    "diagrams",
+    "resources",
+    "templates",
+    path.basename(normalizedPath)
+  );
+
+  const workspaceTemplate = await readFileSafe(templatePath);
+  if (workspaceTemplate) {
+    return workspaceTemplate;
+  }
+
+  return buildDefaultDrawioTemplate(path.basename(normalizedPath, ".drawio"));
+}
+
+function buildDefaultDrawioTemplate(diagramId: string): string {
+  const prettyName = diagramId
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="SO Workspace" version="24.7.17">
+  <diagram id="${diagramId}" name="${prettyName}">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+`;
 }
 
 async function handoffToNativeEditSession(prompt: string): Promise<{
@@ -671,10 +884,11 @@ async function soParticipantHandler(
   const workspaceRoot = workspaceFolders[0].uri.fsPath;
 
   const slashCommand = request.command;
-  const operation    = slashCommand as SkillOperation | undefined;
+  const operation = (slashCommand as SkillOperation | undefined)
+    ?? inferOperationFromPrompt(request.prompt);
 
   // Detect active skill
-  const skillFolder = await detectSkill(request.prompt, slashCommand, assetResolver);
+  const skillFolder = await detectSkillDeterministic(request.prompt, slashCommand, assetResolver);
 
   // UI badges
   const badges: string[] = [];
@@ -707,7 +921,9 @@ async function soParticipantHandler(
       operationInstruction,
       artifactTarget,
       contextPaths,
-      request.prompt
+      request.prompt,
+      skillFolder,
+      operation
     );
 
     const targetUri = await ensureTargetDocument(workspaceRoot, artifactTarget);

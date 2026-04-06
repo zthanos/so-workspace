@@ -1,145 +1,77 @@
 You are in EXECUTION mode.
 
 Create or update the file:
-docs/03_architecture/diagrams/src/c4_container.dsl
+docs/03_architecture/diagrams/src/c4_container.drawio
 
 Authoritative inputs:
 - docs/02_objectives/objectives.md
 - docs/01_requirements/requirements.inventory.md
-- docs/03_architecture/diagrams/src/c4_context.dsl (for context)
+- docs/03_architecture/diagrams/src/c4_context.drawio (for context, if present)
+
+Load and follow: resources/drawio-c4-guidelines.md (official draw.io C4 v29 shapes)
 
 Purpose:
-Generate a C4 Model Level 2 (Container) diagram for the Sports Booking Platform,
-strictly based on validated Objectives + Requirements Inventory.
+Generate a C4 Model Level 2 (Container) diagram using the official draw.io C4 shape
+library with placeholders=1 and c4Name/c4Type/c4Technology/c4Description metadata attributes.
 
-Diagram rules:
-- Produce a Container diagram (C4 Level 2) only.
-- Show the internal containers/applications that make up the Sports Booking Platform.
-- Do NOT create components or code-level details (that's Level 3).
-- Include only technologies explicitly supported by the inventory/objectives.
-- Use concise, technical labels and responsibilities.
+## Key rules
 
-Required content:
-1) People (actors) - from Context diagram:
-- Player
-- Coach
-- Venue Operator
-- Platform Administrator
+SHAPES: Use <object placeholders="1" ...> wrappers with c4* attributes and %placeholder% labels.
+DO NOT use plain mxCell with hardcoded text labels for C4 elements.
 
-2) Containers within Sports Booking Platform:
-- Web Application (Browser-based UI)
-- Mobile Application (iOS/Android)
-- API Gateway (REST API)
-- Application Services (Business logic)
-- Database (Data storage)
+### Shape styles:
 
-3) External Systems - from Context diagram:
-- Payment Provider (external)
-- Notification Service (external)
+Person (internal) — fillColor=#083F75; strokeColor=#06315C; shape=mxgraph.c4.person2; size 200x180
+Person (external) — fillColor=#6C6477; strokeColor=#4D4D4D; shape=mxgraph.c4.person2; size 200x180
+Container (app/service) — fillColor=#23A2D9; strokeColor=#0E7DAD; rounded=1; size 240x120
+Container (database) — fillColor=#23A2D9; strokeColor=#0E7DAD; shape=cylinder3; size 240x120
+Container (microservice) — fillColor=#23A2D9; strokeColor=#0E7DAD; shape=hexagon; size 200x170
+Container (message bus) — fillColor=#23A2D9; strokeColor=#0E7DAD; shape=cylinder3 direction=south; size 240x120
+Container (web browser) — fillColor=#23A2D9; shape=mxgraph.c4.webBrowserContainer2; size 240x160
+External Software System — fillColor=#8C8496; strokeColor=#736782; rounded=1; size 240x120
+ContainerScopeBoundary — fillColor=none; strokeColor=#666666; dashed=1; dashPattern=8 4
 
-Relationships:
-- Actors interact with Web Application and/or Mobile Application
-- Web/Mobile Applications call API Gateway
-- API Gateway routes to Application Services
-- Application Services read/write to Database
-- Application Services integrate with Payment Provider for payments
-- Application Services integrate with Notification Service for notifications
+### Relationship style:
+endArrow=blockThin; endFill=1; strokeColor=#828282; edgeStyle=orthogonalEdgeStyle
+Use c4Description + c4Technology on all relationships.
 
-Output format:
-- Structurizr DSL (native C4 format)
-- The diagram must be renderable as-is (no placeholders).
-- Keep the diagram minimal and readable (no extra elements).
-- Include technology choices where appropriate (e.g., "React", "Node.js", "PostgreSQL").
+## C4 Level 2 rules
 
-Structurizr DSL Structure:
-```
-workspace "Workspace Name" "Workspace Description" {
-    model {
-        # Define people (actors)
-        identifier = person "Name" "Description"
-        
-        # Define software system with containers
-        identifier = softwareSystem "Name" "Description" {
-            # Define containers within the system
-            containerIdentifier = container "Name" "Description" "Technology"
-        }
-        
-        # Define external systems with External tag
-        identifier = softwareSystem "Name" "Description" {
-            tags "External"
-        }
-        
-        # Define relationships
-        source -> destination "Description"
-        source -> destination "Description" "Technology"
-    }
-    
-    views {
-        container softwareSystemIdentifier "ViewKey" {
-            include *
-            autoLayout
-        }
-    }
-}
-```
+Include ONLY:
+- People/actors OUTSIDE the boundary
+- Internal containers INSIDE the ContainerScopeBoundary
+  - Layer order top→bottom: UI → API → Services → Data
+- External systems OUTSIDE the boundary (right/below)
 
-Structurizr DSL Syntax Rules:
-- Use camelCase for all identifiers (e.g., player, webApp, apiGateway)
-- Enclose names and descriptions in double quotes
-- Container format: identifier = container "Name" "Description" "Technology"
-- Technology is the fourth parameter for containers (e.g., "React", "Node.js", "PostgreSQL")
-- Use "tags External" for external systems
-- Relationship format: source -> destination "description"
-- For technical relationships, include protocol: source -> destination "description" "HTTPS/JSON"
-- Include a container view with "include *" and "autoLayout"
+CRITICAL: External systems (payment, notifications, etc.) must be OUTSIDE the boundary.
 
-Example Container Diagram:
-```
-workspace "Sports Booking Platform" "Architecture documentation for the Sports Booking Platform" {
-    
-    model {
-        player = person "Player" "Discovers and books activities"
-        coach = person "Coach" "Creates and manages activities"
-        venueOperator = person "Venue Operator" "Manages venues"
-        platformAdmin = person "Platform Administrator" "Administers platform"
-        
-        sportsPlatform = softwareSystem "Sports Booking Platform" "Central platform for activity management" {
-            webApp = container "Web Application" "Browser-based UI for discovery and booking" "React"
-            mobileApp = container "Mobile Application" "Native mobile apps" "iOS / Android"
-            apiGateway = container "API Gateway" "Public HTTP API surface" "REST API"
-            appServices = container "Application Services" "Business logic for activities and bookings" "Node.js"
-            database = container "Database" "Persistent storage" "PostgreSQL"
-        }
-        
-        paymentProvider = softwareSystem "Payment Provider" "External payment processing" {
-            tags "External"
-        }
-        notificationService = softwareSystem "Notification Service" "External notifications" {
-            tags "External"
-        }
-        
-        player -> webApp "Use to discover and book"
-        player -> mobileApp "Use to discover and book"
-        coach -> webApp "Create and manage activities"
-        venueOperator -> webApp "Manage venues"
-        platformAdmin -> webApp "Platform administration"
-        
-        webApp -> apiGateway "Calls API" "HTTPS/JSON"
-        mobileApp -> apiGateway "Calls API" "HTTPS/JSON"
-        apiGateway -> appServices "Routes requests" "HTTPS/JSON"
-        appServices -> database "Reads/writes" "SQL"
-        appServices -> paymentProvider "Process payments" "HTTPS"
-        appServices -> notificationService "Send notifications" "HTTPS"
-    }
-    
-    views {
-        container sportsPlatform "Container" {
-            include *
-            autoLayout
-        }
-    }
-}
-```
+Do NOT include: components, code detail, infrastructure annotations.
+
+## Layout
+- Canvas: pageWidth=1600 pageHeight=1200
+- Boundary centred; actors left; external systems right
+- All connectors: orthogonalEdgeStyle; arrow direction consumer→provider
+- Every relationship must carry c4Description and c4Technology
+
+## Output
 
 Return only the content of:
-docs/03_architecture/diagrams/src/c4_container.dsl
+docs/03_architecture/diagrams/src/c4_container.drawio
+
+The file must be valid mxfile XML, fully editable in draw.io 29+.
+
+## Connector crossing avoidance
+
+Before finalising coordinates, apply this layout strategy:
+
+1. Stack actors vertically on the left — one actor per row, aligned with the UI container it connects to. Connectors flow straight right, no crossings.
+2. Stack external systems vertically on the right — each at the same vertical level as the service that calls it. Connectors flow straight right, no crossings.
+3. Inside the boundary, all vertical flows go straight down: UI (top) → API → Services → Data (bottom). Connectors exit bottom-centre (exitY=1) and enter top-centre (entryY=0).
+4. Use explicit exit/entry points on every connector:
+   - Downward: exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0
+   - Rightward: exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0
+5. If a crossing cannot be avoided structurally, add waypoints:
+   <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="X" y="Y"/></Array></mxGeometry>
+6. As a last resort, add jumpStyle=arc;jumpSize=16; to the crossing connector's style.
+
+Never let two connectors cross without a jump arc. Prefer structural avoidance over jump arcs.

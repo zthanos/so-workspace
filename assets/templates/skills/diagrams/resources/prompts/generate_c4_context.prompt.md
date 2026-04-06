@@ -1,112 +1,67 @@
 You are in EXECUTION mode.
 
 Create or update the file:
-docs/03_architecture/diagrams/src/c4_context.dsl
+docs/03_architecture/diagrams/src/c4_context.drawio
 
 Authoritative inputs:
 - docs/02_objectives/objectives.md
 - docs/01_requirements/requirements.inventory.md
 
+Load and follow: resources/drawio-c4-guidelines.md (official draw.io C4 v29 shapes)
+
 Purpose:
-Generate a C4 Model Level 1 (System Context) diagram for the target platform,
-strictly based on validated Objectives + Requirements Inventory.
+Generate a C4 Model Level 1 (System Context) diagram using the official draw.io C4 shape
+library with placeholders=1 and c4Name/c4Type/c4Description metadata attributes.
 
-Diagram rules:
-- Produce a System Context diagram (C4 Level 1) only.
-- Do NOT create containers, components, or sequences.
-- Do NOT introduce technologies (microservices, cloud services, protocols, databases).
-- Include only actors and external systems explicitly supported by the inventory/objectives.
-- Use concise, business-oriented labels and responsibilities.
+## Key rules
 
-Required content:
-1) People (actors):
-- Player
-- Coach
-- Venue Operator
-- Platform Administrator
+SHAPES: Use <object placeholders="1" ...> wrappers with c4* attributes and %placeholder% labels.
+DO NOT use plain mxCell with hardcoded text labels for C4 elements.
 
-2) System of Interest:
-- Sports Booking Platform (the platform being built)
+### Shape styles to use:
 
-3) External Systems:
-- Payment Provider (external)
-- Notification Service (external)
+Person (internal) — fillColor=#083F75; strokeColor=#06315C; shape=mxgraph.c4.person2; size 200x180
+Person (external) — fillColor=#6C6477; strokeColor=#4D4D4D; shape=mxgraph.c4.person2; size 200x180
+Software System (internal) — fillColor=#1061B0; strokeColor=#0D5091; rounded=1; size 240x120
+Software System (external) — fillColor=#8C8496; strokeColor=#736782; rounded=1; size 240x120
+SystemScopeBoundary — fillColor=none; strokeColor=#666666; dashed=1; dashPattern=8 4
 
-Relationships:
-- Player uses platform to discover and book lessons/matches/tournaments.
-- Coach uses platform to create/publish activities and manage participation.
-- Venue Operator uses platform to manage venues and availability.
-- Platform Administrator manages platform configuration/oversight.
-- Platform integrates with Payment Provider for optional payments.
-- Platform integrates with Notification Service for booking/change/cancellation notifications.
+### Relationship style:
+endArrow=blockThin; endFill=1; strokeColor=#828282; edgeStyle=orthogonalEdgeStyle
+Use c4Description for the verb label; add c4Technology when protocol matters.
 
-Output format:
-- Structurizr DSL (native C4 format)
-- The diagram must be renderable as-is (no placeholders).
-- Keep the diagram minimal and readable (no extra elements).
+## C4 Level 1 rules
 
-Structurizr DSL Structure:
-```
-workspace "Workspace Name" "Workspace Description" {
-    model {
-        # Define people (actors)
-        identifier = person "Name" "Description"
-        
-        # Define software systems
-        identifier = softwareSystem "Name" "Description"
-        
-        # Define external systems with External tag
-        identifier = softwareSystem "Name" "Description" {
-            tags "External"
-        }
-        
-        # Define relationships
-        source -> destination "Description"
-    }
-    
-    views {
-        systemContext softwareSystemIdentifier "ViewKey" {
-            include *
-            autoLayout
-        }
-    }
-}
-```
+Include ONLY:
+- People (internal + external)
+- The system of interest (one Software System, internal blue)
+- External systems (grey)
+- A SystemScopeBoundary around the system of interest
 
-Structurizr DSL Syntax Rules:
-- Use camelCase for all identifiers (e.g., player, sportsPlatform, paymentProvider)
-- Enclose names and descriptions in double quotes
-- Use "tags External" for external systems
-- Relationship format: source -> destination "description"
-- Include a systemContext view with "include *" and "autoLayout"
+Do NOT include: containers, APIs, databases, protocols, cloud product names.
 
-Example Context Diagram:
-```
-workspace "Sports Booking Platform" "Architecture documentation for the Sports Booking Platform" {
-    
-    model {
-        player = person "Player" "Discovers and books activities such as lessons, matches, and tournaments"
-        coach = person "Coach" "Creates and publishes activities and manages participant enrollment"
-        
-        sportsPlatform = softwareSystem "Sports Booking Platform" "Central platform for activity discovery, booking, and management"
-        
-        paymentProvider = softwareSystem "Payment Provider" "External payment processing services" {
-            tags "External"
-        }
-        
-        player -> sportsPlatform "Discover and book activities"
-        coach -> sportsPlatform "Create and manage activities"
-        sportsPlatform -> paymentProvider "Process payments"
-    }
-    
-    views {
-        systemContext sportsPlatform "SystemContext" {
-            include *
-            autoLayout
-        }
-    }
-}
-```
+## Layout
+- Canvas: pageWidth=1400 pageHeight=900
+- Boundary centred; actors above/left; external systems below/right
+- All connectors: orthogonalEdgeStyle; arrow direction consumer→provider
+- Every relationship must carry c4Description
+
+## Output
 
 Return only the content of:
-docs/03_architecture/diagrams/src/c4_context.dsl
+docs/03_architecture/diagrams/src/c4_context.drawio
+
+The file must be valid mxfile XML, fully editable in draw.io 29+.
+
+## Connector crossing avoidance
+
+Before finalising coordinates, apply this layout strategy:
+
+1. Position actors directly left/above their connection targets — connectors flow straight right or down, no crossings needed.
+2. Position external systems directly right of the system they connect to — connectors flow straight right.
+3. Use explicit exit/entry points:
+   - Actor → System: exitX=1;exitY=0.5 on actor, entryX=0;entryY=0.5 on system
+4. If a crossing cannot be avoided, add jumpStyle=arc;jumpSize=16; to the connector style.
+5. If connectors must detour, add <Array as="points"><mxPoint x="..." y="..."/></Array> waypoints inside <mxGeometry>.
+
+Never let two connectors cross without a jump arc.

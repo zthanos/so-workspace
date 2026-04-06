@@ -4,8 +4,8 @@ Authoritative inputs:
 - docs/reports/solution_outline_inconsistencies/latest.md
 - docs/03_architecture/solution_outline.md
 - docs/02_objectives/objectives.md
-- docs/03_architecture/diagrams/src/c4_context.puml
-- docs/03_architecture/diagrams/src/c4_container.puml
+- docs/03_architecture/diagrams/src/c4_context.drawio
+- docs/03_architecture/diagrams/src/c4_container.drawio
 
 Purpose:
 Apply minimal and controlled changes to the Solution Outline

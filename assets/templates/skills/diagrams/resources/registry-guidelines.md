@@ -10,10 +10,10 @@ Each entry must define:
 - title
 
 Rules:
-- `path` must point to a Structurizr DSL file under `docs/03_architecture/diagrams/src/`
+- `path` must point to the correct diagram source file under `docs/03_architecture/diagrams/src/`
 - `diagram_id` must be stable and unique
 - `level` must match the intended diagram abstraction
-- `type` must be `structurizr_dsl`
+- `type` must match the notation used by the diagram (`drawio_xml`, `mermaid`, etc.)
 
 The registry is used by:
 - diagram generation

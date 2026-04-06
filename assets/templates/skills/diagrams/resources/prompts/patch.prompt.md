@@ -16,6 +16,8 @@ Rules:
 - Keep changes minimal: rename labels, add/remove elements strictly required, adjust relationships.
 - Do NOT modify objectives.md or requirements.inventory.md.
 - Do NOT create additional diagrams.
+- If the target is a `.drawio` C4 diagram, preserve valid draw.io XML and keep the file editable after the patch.
+- Maintain enterprise-quality layout intent while applying the minimum necessary changes.
 
 Output:
 - Update only <DIAGRAM_PATH>.
