@@ -47,6 +47,13 @@ const ARTIFACT_TARGETS: Record<string, Partial<Record<SkillOperation, string>>> 
     eval: "docs/reports/inventory_inconsistencies/latest.md",
     recheck: "docs/reports/inventory_inconsistencies/latest.md",
   },
+  bpmn: {
+    generate: "docs/03_architecture/diagrams/src/bpmn_process.drawio",
+    update: "docs/03_architecture/diagrams/src/bpmn_process.drawio",
+    patch: "docs/03_architecture/diagrams/src/bpmn_process.drawio",
+    eval: "docs/reports/diagram_inconsistencies/bpmn/latest.md",
+    recheck: "docs/reports/diagram_inconsistencies/bpmn/latest.md",
+  },
   objectives: {
     generate: "docs/02_objectives/objectives.md",
     update: "docs/02_objectives/objectives.md",
@@ -85,6 +92,7 @@ const ALL_SKILL_FOLDERS = [
   "requirements-inventory",
   "objectives",
   "diagrams",
+  "bpmn",
   "solution-outline",
   "adr",
 ] as const;
@@ -115,6 +123,15 @@ const SKILL_ALIASES: Record<string, string[]> = {
     "sequence diagram",
     "state diagram",
   ],
+  bpmn: [
+    "bpmn",
+    "bpmn 2.0",
+    "business process diagram",
+    "process model",
+    "workflow with lanes",
+    "workflow with pools",
+    "collaboration diagram",
+  ],
   "solution-outline": [
     "solution outline",
     "architecture outline",
@@ -126,6 +143,72 @@ const SKILL_ALIASES: Record<string, string[]> = {
     "decision record",
     "architecture decision record",
   ],
+};
+
+type ParticipantCommandResolution =
+  | { type: "workspace-update" }
+  | {
+      type: "skill";
+      skillFolder: string;
+      operation?: SkillOperation;
+      promptAugment?: string;
+    };
+
+const PARTICIPANT_COMMAND_ALIASES: Record<string, ParticipantCommandResolution> = {
+  updateWorkspace: { type: "workspace-update" },
+  UpdateWorkspace: { type: "workspace-update" },
+
+  generateRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "generate" },
+  GenerateRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "generate" },
+  generateRequirement: { type: "skill", skillFolder: "requirements-inventory", operation: "generate" },
+  GenerateRequirement: { type: "skill", skillFolder: "requirements-inventory", operation: "generate" },
+  evaluateRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "eval" },
+  EvaluateRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "eval" },
+  evaluateRequirement: { type: "skill", skillFolder: "requirements-inventory", operation: "eval" },
+  EvaluateRequirement: { type: "skill", skillFolder: "requirements-inventory", operation: "eval" },
+  patchRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "patch" },
+  PatchRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "patch" },
+  patchRequirement: { type: "skill", skillFolder: "requirements-inventory", operation: "patch" },
+  PatchRequirement: { type: "skill", skillFolder: "requirements-inventory", operation: "patch" },
+  reviewRequirements: { type: "skill", skillFolder: "requirements-inventory" },
+  ReviewRequirements: { type: "skill", skillFolder: "requirements-inventory" },
+  reviewRequirement: { type: "skill", skillFolder: "requirements-inventory" },
+  ReviewRequirement: { type: "skill", skillFolder: "requirements-inventory" },
+
+  generateObjectives: { type: "skill", skillFolder: "objectives", operation: "generate" },
+  GenerateObjectives: { type: "skill", skillFolder: "objectives", operation: "generate" },
+  generateObjective: { type: "skill", skillFolder: "objectives", operation: "generate" },
+  GenerateObjective: { type: "skill", skillFolder: "objectives", operation: "generate" },
+  evaluateObjectives: { type: "skill", skillFolder: "objectives", operation: "eval" },
+  EvaluateObjectives: { type: "skill", skillFolder: "objectives", operation: "eval" },
+  evaluateObjective: { type: "skill", skillFolder: "objectives", operation: "eval" },
+  EvaluateObjective: { type: "skill", skillFolder: "objectives", operation: "eval" },
+  patchObjectives: { type: "skill", skillFolder: "objectives", operation: "patch" },
+  PatchObjectives: { type: "skill", skillFolder: "objectives", operation: "patch" },
+  patchObjective: { type: "skill", skillFolder: "objectives", operation: "patch" },
+  PatchObjective: { type: "skill", skillFolder: "objectives", operation: "patch" },
+  reviewObjectives: { type: "skill", skillFolder: "objectives" },
+  ReviewObjectives: { type: "skill", skillFolder: "objectives" },
+  reviewObjective: { type: "skill", skillFolder: "objectives" },
+  ReviewObjective: { type: "skill", skillFolder: "objectives" },
+
+  generateC4: { type: "skill", skillFolder: "diagrams", operation: "generate", promptAugment: "diagram_id: c4_context" },
+  GenerateC4: { type: "skill", skillFolder: "diagrams", operation: "generate", promptAugment: "diagram_id: c4_context" },
+  evaluateC4: { type: "skill", skillFolder: "diagrams", operation: "eval", promptAugment: "diagram_id: c4_context" },
+  EvaluateC4: { type: "skill", skillFolder: "diagrams", operation: "eval", promptAugment: "diagram_id: c4_context" },
+  patchC4: { type: "skill", skillFolder: "diagrams", operation: "patch", promptAugment: "diagram_id: c4_context" },
+  PatchC4: { type: "skill", skillFolder: "diagrams", operation: "patch", promptAugment: "diagram_id: c4_context" },
+  reviewC4: { type: "skill", skillFolder: "diagrams", promptAugment: "diagram_id: c4_context" },
+  ReviewC4: { type: "skill", skillFolder: "diagrams", promptAugment: "diagram_id: c4_context" },
+
+  generateSolutionOutline: { type: "skill", skillFolder: "solution-outline", operation: "generate" },
+  GenerateSolutionOutline: { type: "skill", skillFolder: "solution-outline", operation: "generate" },
+  evaluateSolutionOutline: { type: "skill", skillFolder: "solution-outline", operation: "eval" },
+  EvaluateSolutionOutline: { type: "skill", skillFolder: "solution-outline", operation: "eval" },
+  patchSolutionOutline: { type: "skill", skillFolder: "solution-outline", operation: "patch" },
+  PatchSolutionOutline: { type: "skill", skillFolder: "solution-outline", operation: "patch" },
+  reviewSolutionOutline: { type: "skill", skillFolder: "solution-outline" },
+  ReviewSolutionOutline: { type: "skill", skillFolder: "solution-outline" },
 };
 
 // Maps slash operation name → prompt file name (without .prompt.md)
@@ -335,6 +418,26 @@ function inferOperationFromPrompt(prompt: string): SkillOperation | undefined {
   return undefined;
 }
 
+function resolveParticipantCommand(command: string | undefined, prompt: string): ParticipantCommandResolution | undefined {
+  if (!command) return undefined;
+
+  const mapped = PARTICIPANT_COMMAND_ALIASES[command];
+  if (!mapped) return undefined;
+
+  if (
+    mapped.type === "skill" &&
+    mapped.skillFolder === "diagrams" &&
+    mapped.promptAugment === "diagram_id: c4_context"
+  ) {
+    const lower = prompt.toLowerCase();
+    if (lower.includes("container")) {
+      return { ...mapped, promptAugment: "diagram_id: c4_container" };
+    }
+  }
+
+  return mapped;
+}
+
 // ---------------------------------------------------------------------------
 // System prompt builder
 // ---------------------------------------------------------------------------
@@ -396,7 +499,7 @@ async function buildSystemPrompt(
       parts.push(`# Active Skill: ${config.name} (workspace)\n\n` + wsSkillContent);
 
       // Resources: workspace-owned only. No packaged fallback.
-      const resourceFiles = ["methodology.md", "output-template.md", "report-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "drawio-c4-guidelines.md", "drawio-c4-layout-patterns.md", "drawio-c4-anti-patterns.md", "drawio-xml-integrity.md", "drawio-c4-examples.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
+      const resourceFiles = ["methodology.md", "output-template.md", "report-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "drawio-c4-guidelines.md", "drawio-c4-layout-patterns.md", "drawio-c4-anti-patterns.md", "drawio-xml-integrity.md", "drawio-c4-examples.md", "drawio-bpmn-guidelines.md", "drawio-bpmn-layout-patterns.md", "drawio-bpmn-anti-patterns.md", "drawio-bpmn-examples.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
       for (const resFile of resourceFiles) {
         const wsResContent = await readFileSafe(
           path.join(workspaceRoot, WORKSPACE_SKILLS_PATH, skillFolder, "resources", resFile)
@@ -749,6 +852,13 @@ function buildNativeEditInstruction(
       "- do not invent unsupported actors, systems, containers, or relationships",
       "- update only the target diagram artifact",
     ],
+    "bpmn": [
+      `SO ${action} guidance for BPMN Diagram:`,
+      "- preserve valid editable draw.io XML using BPMN 2.0 semantics",
+      "- use correct BPMN shapes, pools, lanes, and connector types",
+      "- do not invent unsupported participants, tasks, gateways, or messages",
+      "- update only the target BPMN artifact",
+    ],
   };
 
   const selected = skillFolder ? deterministicGuidance[skillFolder] : undefined;
@@ -770,7 +880,8 @@ function buildNativeEditInstruction(
 
 async function ensureTargetDocument(
   workspaceRoot: string,
-  relativePath: string
+  relativePath: string,
+  skillFolder?: string | null
 ): Promise<vscode.Uri> {
   const targetUri = vscode.Uri.file(path.join(workspaceRoot, relativePath));
   const parentUri = vscode.Uri.file(path.dirname(targetUri.fsPath));
@@ -778,7 +889,7 @@ async function ensureTargetDocument(
   try {
     await vscode.workspace.fs.stat(targetUri);
   } catch {
-    const initialContent = await getInitialTargetContent(workspaceRoot, relativePath);
+    const initialContent = await getInitialTargetContent(workspaceRoot, relativePath, skillFolder);
     await vscode.workspace.fs.writeFile(
       targetUri,
       new TextEncoder().encode(initialContent)
@@ -791,7 +902,8 @@ async function ensureTargetDocument(
 
 async function getInitialTargetContent(
   workspaceRoot: string,
-  relativePath: string
+  relativePath: string,
+  skillFolder?: string | null
 ): Promise<string> {
   const normalizedPath = relativePath.replace(/\\/g, "/");
   if (!normalizedPath.endsWith(".drawio")) {
@@ -801,7 +913,7 @@ async function getInitialTargetContent(
   const templatePath = path.join(
     workspaceRoot,
     WORKSPACE_SKILLS_PATH,
-    "diagrams",
+    skillFolder ?? "diagrams",
     "resources",
     "templates",
     path.basename(normalizedPath)
@@ -885,10 +997,16 @@ async function soParticipantHandler(
   const workspaceRoot = workspaceFolders[0].uri.fsPath;
 
   const slashCommand = request.command;
-  const operation = (slashCommand as SkillOperation | undefined)
-    ?? inferOperationFromPrompt(request.prompt);
+  const commandResolution = resolveParticipantCommand(slashCommand, request.prompt);
+  const effectivePrompt =
+    commandResolution?.type === "skill" && commandResolution.promptAugment
+      ? `${commandResolution.promptAugment} ${request.prompt}`.trim()
+      : request.prompt;
+  const operation = commandResolution?.type === "skill"
+    ? commandResolution.operation
+    : (slashCommand as SkillOperation | undefined) ?? inferOperationFromPrompt(request.prompt);
 
-  if (slashCommand === "updateWorkspace") {
+  if (commandResolution?.type === "workspace-update") {
     const response = await vscode.window.showWarningMessage(
       "Update workspace templates from the current extension version? This will overwrite .github/skills, .github/rules, docs/so_agent_context.md, and README_SO_Workspace.md.",
       { modal: true },
@@ -916,7 +1034,9 @@ async function soParticipantHandler(
   }
 
   // Detect active skill
-  const skillFolder = await detectSkillDeterministic(request.prompt, slashCommand, assetResolver);
+  const skillFolder = commandResolution?.type === "skill"
+    ? commandResolution.skillFolder
+    : await detectSkillDeterministic(effectivePrompt, slashCommand, assetResolver);
 
   // UI badges
   const badges: string[] = [];
@@ -935,12 +1055,12 @@ async function soParticipantHandler(
       skillFolder,
       operation,
       assetResolver,
-      request.prompt,   // extraParams (contains diagram_id if set)
-      request.prompt    // userPrompt (for catalog label matching)
+      effectivePrompt,   // extraParams (contains diagram_id if set)
+      effectivePrompt    // userPrompt (for catalog label matching)
     );
   }
 
-  const artifactTarget = await resolveArtifactTarget(skillFolder, operation, request.prompt);
+  const artifactTarget = await resolveArtifactTarget(skillFolder, operation, effectivePrompt);
 
   if (artifactTarget && skillFolder && operation) {
     const contextPaths = await collectArtifactPaths(workspaceRoot, skillFolder);
@@ -949,12 +1069,12 @@ async function soParticipantHandler(
       operationInstruction,
       artifactTarget,
       contextPaths,
-      request.prompt,
+      effectivePrompt,
       skillFolder,
       operation
     );
 
-    const targetUri = await ensureTargetDocument(workspaceRoot, artifactTarget);
+    const targetUri = await ensureTargetDocument(workspaceRoot, artifactTarget, skillFolder);
     const handoff = await handoffToNativeEditSession(nativePrompt);
 
     if (handoff.started) {
@@ -1008,8 +1128,8 @@ async function soParticipantHandler(
   // Assemble final messages
   // Operation prompt goes as a separate user message so the model treats it as an instruction
   const userMessage = operationInstruction
-    ? `${request.prompt}\n\n---\n\n${operationInstruction}`
-    : request.prompt;
+    ? `${effectivePrompt}\n\n---\n\n${operationInstruction}`
+    : effectivePrompt;
 
   const messages: vscode.LanguageModelChatMessage[] = [
     vscode.LanguageModelChatMessage.User(systemPrompt),

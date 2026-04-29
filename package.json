@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
@@ -150,8 +150,72 @@
         "isSticky": true,
         "commands": [
           {
-            "name": "updateWorkspace",
+            "name": "UpdateWorkspace",
             "description": "Refresh workspace-owned SO templates from the current extension version"
+          },
+          {
+            "name": "GenerateRequirements",
+            "description": "Generate the Requirements Inventory artifact"
+          },
+          {
+            "name": "EvaluateRequirements",
+            "description": "Evaluate the Requirements Inventory artifact"
+          },
+          {
+            "name": "PatchRequirement",
+            "description": "Patch reported Requirements Inventory issues"
+          },
+          {
+            "name": "ReviewRequirement",
+            "description": "Review or discuss the Requirements Inventory artifact"
+          },
+          {
+            "name": "GenerateObjectives",
+            "description": "Generate the Objectives artifact"
+          },
+          {
+            "name": "EvaluateObjectives",
+            "description": "Evaluate the Objectives artifact"
+          },
+          {
+            "name": "PatchObjectives",
+            "description": "Patch reported Objectives issues"
+          },
+          {
+            "name": "ReviewObjectives",
+            "description": "Review or discuss the Objectives artifact"
+          },
+          {
+            "name": "GenerateC4",
+            "description": "Generate a C4 diagram artifact"
+          },
+          {
+            "name": "EvaluateC4",
+            "description": "Evaluate a C4 diagram artifact"
+          },
+          {
+            "name": "PatchC4",
+            "description": "Patch reported C4 diagram issues"
+          },
+          {
+            "name": "ReviewC4",
+            "description": "Review or discuss a C4 diagram artifact"
+          },
+          {
+            "name": "GenerateSolutionOutline",
+            "description": "Generate the Solution Outline artifact"
+          },
+          {
+            "name": "EvaluateSolutionOutline",
+            "description": "Evaluate the Solution Outline artifact"
+          },
+          {
+            "name": "PatchSolutionOutline",
+            "description": "Patch reported Solution Outline issues"
+          },
+          {
+            "name": "ReviewSolutionOutline",
+            "description": "Review or discuss the Solution Outline artifact"
           },
           {
             "name": "generate",

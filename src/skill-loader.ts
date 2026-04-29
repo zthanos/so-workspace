@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-export type SkillOperation = "generate" | "eval" | "patch" | "recheck" | string;
+export type SkillOperation = "generate" | "eval" | "update" | "patch" | "recheck" | string;
 
 export interface QuickPickOption {
   value: string;
@@ -51,6 +51,7 @@ const LEGACY_DEFAULT_OPERATIONS: Record<string, SkillOperation[]> = {
   "requirements-inventory": ["generate", "eval", "update", "patch", "recheck"],
   "objectives": ["generate", "eval", "update", "patch", "recheck"],
   "diagrams": ["generate", "eval", "update", "patch", "recheck"],
+  "bpmn": ["generate", "eval", "update", "patch", "recheck"],
   "solution-outline": ["generate", "eval", "update", "patch", "recheck"],
   "adr": ["generate", "eval", "update", "patch", "recheck"],
 };
@@ -184,8 +185,7 @@ function parseBlockSequence(lines: string[]): unknown[] {
     }
 
     if (inline.includes(": ")) {
-      const obj: Record<string, unknown> = {};
-      const pairs = [inline];
+      const children: string[] = [`${" ".repeat(seqIndent + 2)}${inline}`];
 
       while (i < lines.length) {
         const next = lines[i];
@@ -196,16 +196,11 @@ function parseBlockSequence(lines: string[]): unknown[] {
         }
         const nextIndent = next.search(/\S/);
         if (nextIndent <= seqIndent) break;
-        pairs.push(next.trim());
+        children.push(next);
         i++;
       }
 
-      for (const pair of pairs) {
-        const m = pair.match(/^([\w-]+):\s*(.*)/);
-        if (m) obj[m[1]] = unquote(m[2].trim());
-      }
-
-      items.push(obj);
+      items.push(parseYamlBlock(children, seqIndent + 2).value);
       continue;
     }
 

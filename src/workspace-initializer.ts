@@ -186,6 +186,7 @@ List the references used in this project.
       ".github/skills/objectives",
       ".github/skills/solution-outline",
       ".github/skills/diagrams",
+      ".github/skills/bpmn",
       ".github/skills/adr",
 
       "docs/00_brd",
