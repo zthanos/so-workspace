@@ -43,6 +43,8 @@ Use c4Description for the verb label; add c4Technology when protocol matters.
   - line 3: c4Description
 - Labels must remain centred, wrapped, and readable inside the rendered shape.
 - Do not place descriptive text outside the shape.
+- For filled internal/external shapes, `c4Name` and `c4Type` must be high-contrast white or near-white.
+- Do not use low-contrast grey text for metadata on dark blue or grey filled shapes.
 
 ## C4 Level 1 rules
 

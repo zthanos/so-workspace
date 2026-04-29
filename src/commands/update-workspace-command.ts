@@ -18,16 +18,20 @@ export async function updateWorkspaceCommand(assetResolver: AssetResolver): Prom
       "Update workspace templates from the current extension version? This will overwrite .github/skills, .github/rules, docs/so_agent_context.md, and README_SO_Workspace.md.",
       { modal: true },
       "Update",
+      "Update All",
       "Cancel"
     );
 
-    if (response !== "Update") {
+    if (response !== "Update" && response !== "Update All") {
       return;
     }
 
     const workspaceRoot = workspaceFolders[0].uri;
     const initializer = new WorkspaceInitializer(assetResolver);
-    await initializer.updateWorkspaceTemplates(workspaceRoot);
+    await initializer.updateWorkspaceTemplates(
+      workspaceRoot,
+      response === "Update All" ? "all" : "standard"
+    );
   } catch (error) {
     console.error("Failed to update workspace templates:", error);
     vscode.window.showErrorMessage(

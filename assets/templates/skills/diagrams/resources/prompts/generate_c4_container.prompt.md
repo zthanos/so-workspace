@@ -48,6 +48,8 @@ Use c4Description + c4Technology on all relationships.
   - line 3: c4Description
 - Labels must remain inside shapes and be readable at normal zoom.
 - Do not place descriptive text outside the container shape.
+- For filled internal/external shapes, `c4Name` and `c4Type` must be high-contrast white or near-white.
+- Do not use low-contrast grey text for metadata on dark blue or grey filled shapes.
 
 ## C4 Level 2 rules
 

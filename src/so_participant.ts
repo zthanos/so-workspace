@@ -438,6 +438,20 @@ function resolveParticipantCommand(command: string | undefined, prompt: string):
   return mapped;
 }
 
+function resolveWorkspaceUpdateMode(prompt: string): "standard" | "all" {
+  const lower = prompt.toLowerCase();
+  if (
+    lower.includes("override all") ||
+    lower.includes("update all") ||
+    lower.includes("all") ||
+    lower.includes("full") ||
+    lower.includes("force")
+  ) {
+    return "all";
+  }
+  return "standard";
+}
+
 // ---------------------------------------------------------------------------
 // System prompt builder
 // ---------------------------------------------------------------------------
@@ -1007,23 +1021,28 @@ async function soParticipantHandler(
     : (slashCommand as SkillOperation | undefined) ?? inferOperationFromPrompt(request.prompt);
 
   if (commandResolution?.type === "workspace-update") {
+    const updateMode = resolveWorkspaceUpdateMode(request.prompt);
     const response = await vscode.window.showWarningMessage(
-      "Update workspace templates from the current extension version? This will overwrite .github/skills, .github/rules, docs/so_agent_context.md, and README_SO_Workspace.md.",
+      updateMode === "all"
+        ? "Fully refresh workspace templates from the current extension version? This will overwrite .github/skills, .github/rules, docs/so_agent_context.md, README_SO_Workspace.md, flows.yaml, and the discussion/reference bootstrap files."
+        : "Update workspace templates from the current extension version? This will overwrite .github/skills, .github/rules, docs/so_agent_context.md, and README_SO_Workspace.md.",
       { modal: true },
-      "Update",
+      updateMode === "all" ? "Update All" : "Update",
       "Cancel"
     );
 
-    if (response !== "Update") {
+    if (response !== "Update" && response !== "Update All") {
       stream.markdown("Workspace template update cancelled.");
       return {};
     }
 
     try {
       const initializer = new WorkspaceInitializer(assetResolver);
-      await initializer.updateWorkspaceTemplates(workspaceFolders[0].uri);
+      await initializer.updateWorkspaceTemplates(workspaceFolders[0].uri, updateMode);
       stream.markdown(
-        "Workspace templates updated from the current extension version.\n\nUpdated targets:\n- `.github/skills/**`\n- `.github/rules/**`\n- `docs/so_agent_context.md`\n- `README_SO_Workspace.md`"
+        updateMode === "all"
+          ? "Workspace templates fully refreshed from the current extension version.\n\nUpdated targets:\n- `.github/skills/**`\n- `.github/rules/**`\n- `docs/so_agent_context.md`\n- `README_SO_Workspace.md`\n- `docs/02_objectives/flows.yaml`\n- `docs/98_discussions/README.md`\n- `docs/99_references/README.md`\n- `docs/99_references/REFERENCES_MANIFEST.md`"
+          : "Workspace templates updated from the current extension version.\n\nUpdated targets:\n- `.github/skills/**`\n- `.github/rules/**`\n- `docs/so_agent_context.md`\n- `README_SO_Workspace.md`"
       );
     } catch (error) {
       stream.markdown(

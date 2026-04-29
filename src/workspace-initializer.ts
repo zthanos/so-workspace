@@ -118,49 +118,29 @@ List the references used in this project.
 
   /**
    * Refreshes workspace-owned templates from the current extension version.
-   * This is intended for already-initialized workspaces that need updated
-   * skills/rules/context without touching project artifacts.
    *
-   * Updated targets:
-   * - .github/skills/**
-   * - .github/rules/**
-   * - docs/so_agent_context.md
-   * - README_SO_Workspace.md
+   * Modes:
+   * - standard: refreshes runtime/bootstrap templates used by the extension
+   * - all: also refreshes additional workspace-owned bootstrap files such as
+   *   flows.yaml and the reference/discussion skeleton documents
    */
-  async updateWorkspaceTemplates(workspaceRoot: vscode.Uri): Promise<void> {
+  async updateWorkspaceTemplates(
+    workspaceRoot: vscode.Uri,
+    mode: "standard" | "all" = "standard"
+  ): Promise<void> {
     try {
       await this.createFolderStructure(workspaceRoot);
 
-      const skillsTemplateUri = this.assetResolver.getTemplatePath("skills");
-      if (await this.assetResolver.assetExists(skillsTemplateUri)) {
-        const skillsTargetUri = vscode.Uri.joinPath(workspaceRoot, ".github", "skills");
-        await this.copyDirectoryRecursive(skillsTemplateUri, skillsTargetUri, true);
-      }
+      await this.refreshCoreWorkspaceTemplates(workspaceRoot);
 
-      const rulesTemplateUri = this.assetResolver.getRulePath("");
-      if (await this.assetResolver.assetExists(rulesTemplateUri)) {
-        const rulesTargetUri = vscode.Uri.joinPath(workspaceRoot, ".github", "rules");
-        await this.copyDirectoryRecursive(rulesTemplateUri, rulesTargetUri, true);
-      }
-
-      try {
-        const ctxTemplateUri = this.assetResolver.getAgentContextTemplatePath();
-        const ctxTargetUri = vscode.Uri.joinPath(workspaceRoot, "docs", "so_agent_context.md");
-        await this.copyFileForce(ctxTemplateUri, ctxTargetUri);
-      } catch {
-        // Optional template: skip if not packaged.
-      }
-
-      try {
-        const readmeTemplateUri = this.assetResolver.getTemplatePath("README_SO_Workspace.md");
-        const readmeTargetUri = vscode.Uri.joinPath(workspaceRoot, "README_SO_Workspace.md");
-        await this.copyFileForce(readmeTemplateUri, readmeTargetUri);
-      } catch {
-        // Optional template: skip if not packaged.
+      if (mode === "all") {
+        await this.refreshAllBootstrapTemplates(workspaceRoot);
       }
 
       vscode.window.showInformationMessage(
-        "SO workspace templates updated successfully from the current extension version."
+        mode === "all"
+          ? "SO workspace templates fully refreshed from the current extension version."
+          : "SO workspace templates updated successfully from the current extension version."
       );
     } catch (error) {
       console.error("Workspace template update failed:", error);
@@ -169,6 +149,88 @@ List the references used in this project.
       );
       throw error;
     }
+  }
+
+  private async refreshCoreWorkspaceTemplates(workspaceRoot: vscode.Uri): Promise<void> {
+    const skillsTemplateUri = this.assetResolver.getTemplatePath("skills");
+    if (await this.assetResolver.assetExists(skillsTemplateUri)) {
+      const skillsTargetUri = vscode.Uri.joinPath(workspaceRoot, ".github", "skills");
+      await this.copyDirectoryRecursive(skillsTemplateUri, skillsTargetUri, true);
+    }
+
+    const rulesTemplateUri = this.assetResolver.getRulePath("");
+    if (await this.assetResolver.assetExists(rulesTemplateUri)) {
+      const rulesTargetUri = vscode.Uri.joinPath(workspaceRoot, ".github", "rules");
+      await this.copyDirectoryRecursive(rulesTemplateUri, rulesTargetUri, true);
+    }
+
+    try {
+      const ctxTemplateUri = this.assetResolver.getAgentContextTemplatePath();
+      const ctxTargetUri = vscode.Uri.joinPath(workspaceRoot, "docs", "so_agent_context.md");
+      await this.copyFileForce(ctxTemplateUri, ctxTargetUri);
+    } catch {
+      // Optional template: skip if not packaged.
+    }
+
+    try {
+      const readmeTemplateUri = this.assetResolver.getTemplatePath("README_SO_Workspace.md");
+      const readmeTargetUri = vscode.Uri.joinPath(workspaceRoot, "README_SO_Workspace.md");
+      await this.copyFileForce(readmeTemplateUri, readmeTargetUri);
+    } catch {
+      // Optional template: skip if not packaged.
+    }
+  }
+
+  private async refreshAllBootstrapTemplates(workspaceRoot: vscode.Uri): Promise<void> {
+    await this.copyTemplateFiles(workspaceRoot, true);
+
+    await this.writeFileForce(
+      workspaceRoot,
+      "docs/98_discussions/README.md",
+      `# Discussions Folder
+
+This folder contains project-specific clarifications, meeting notes, and contextual decisions not originally present in the BRD.
+
+## Usage Guidelines
+
+- Timestamp discussion entries
+- Distinguish decisions from open questions
+- If discussions impact artifacts, re-run Evaluate -> Patch -> Recheck
+`
+    );
+
+    await this.writeFileForce(
+      workspaceRoot,
+      "docs/99_references/README.md",
+      `# References Folder
+
+This folder contains a project-scoped snapshot of enterprise-approved references.
+
+The canonical source lives in a shared repository, but only references copied into this workspace are used during generation.
+
+## Usage Guidelines
+
+- Copy only the references needed for this project
+- If deviating from a reference, record justification in ADRs
+- References must not override authoritative project artifacts
+`
+    );
+
+    await this.writeFileForce(
+      workspaceRoot,
+      "docs/99_references/REFERENCES_MANIFEST.md",
+      `# Reference Manifest
+
+List the references used in this project.
+
+## Format
+
+- Reference ID:
+- Title:
+- Version / Tag / Commit:
+- Reason for inclusion:
+`
+    );
   }
 
   /**
@@ -405,6 +467,17 @@ List the references used in this project.
     const targetUri = this.uriFromRelative(workspaceRoot, relativePath);
     const exists = await this.exists(targetUri);
     if (exists) return;
+    await vscode.workspace.fs.writeFile(targetUri, new TextEncoder().encode(content));
+  }
+
+  private async writeFileForce(
+    workspaceRoot: vscode.Uri,
+    relativePath: string,
+    content: string
+  ): Promise<void> {
+    const targetUri = this.uriFromRelative(workspaceRoot, relativePath);
+    const parentUri = vscode.Uri.file(path.dirname(targetUri.fsPath));
+    await vscode.workspace.fs.createDirectory(parentUri);
     await vscode.workspace.fs.writeFile(targetUri, new TextEncoder().encode(content));
   }
 

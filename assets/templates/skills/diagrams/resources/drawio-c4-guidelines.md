@@ -29,12 +29,27 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 
 ---
 
+## Label contrast rule
+
+For all blue and grey filled C4 shapes:
+- `c4Name` must be high-contrast white
+- `c4Type` must also be high-contrast white or near-white
+- `c4Description` must remain readable at normal zoom and must not use a low-contrast muted grey
+
+Preferred description colors:
+- internal blue shapes: `#F3F6FA`
+- external grey shapes: `#F3F3F3`
+
+Do not use low-contrast label colors such as `#cccccc` for metadata on dark-filled shapes.
+
+---
+
 ## Shape definitions
 
 ### Person (internal)
 
 ```xml
-<object placeholders="1" c4Name="Person Name" c4Type="Person" c4Description="Description of person." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="Person Name" c4Type="Person" c4Description="Description of person." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F6FA&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="html=1;fontSize=11;dashed=0;whiteSpace=wrap;fillColor=#083F75;strokeColor=#06315C;fontColor=#ffffff;shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];resizable=0;" vertex="1">
     <mxGeometry height="180" width="200" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -44,7 +59,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Person (external)
 
 ```xml
-<object placeholders="1" c4Name="External Person Name" c4Type="Person" c4Description="Description of external person." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="External Person Name" c4Type="Person" c4Description="Description of external person." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F3F3&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="html=1;fontSize=11;dashed=0;whiteSpace=wrap;fillColor=#6C6477;strokeColor=#4D4D4D;fontColor=#ffffff;shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];resizable=0;" vertex="1">
     <mxGeometry height="180" width="200" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -54,7 +69,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Software System (internal)
 
 ```xml
-<object placeholders="1" c4Name="System Name" c4Type="Software System" c4Description="Description of software system." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="System Name" c4Type="Software System" c4Description="Description of software system." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F6FA&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#1061B0;fontColor=#ffffff;align=center;arcSize=10;strokeColor=#0D5091;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
     <mxGeometry height="120" width="240" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -64,7 +79,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Software System (external)
 
 ```xml
-<object placeholders="1" c4Name="External System Name" c4Type="Software System" c4Description="Description of external software system." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="External System Name" c4Type="Software System" c4Description="Description of external software system." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F3F3&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;labelBackgroundColor=none;fillColor=#8C8496;fontColor=#ffffff;align=center;arcSize=10;strokeColor=#736782;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
     <mxGeometry height="120" width="240" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -74,7 +89,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Container (Application / Service)
 
 ```xml
-<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. Node.js" c4Description="Description of container role." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%: %c4Technology%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#E6E6E6&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. Node.js" c4Description="Description of container role." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%: %c4Technology%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F6FA&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;labelBackgroundColor=none;fillColor=#23A2D9;fontColor=#ffffff;align=center;arcSize=10;strokeColor=#0E7DAD;metaEdit=1;resizable=0;points=[[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];" vertex="1">
     <mxGeometry height="120" width="240" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -84,7 +99,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Container (Database / Data Store)
 
 ```xml
-<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. PostgreSQL" c4Description="Description of storage role." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#E6E6E6&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. PostgreSQL" c4Description="Description of storage role." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F6FA&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="shape=cylinder3;size=15;whiteSpace=wrap;html=1;boundedLbl=1;rounded=0;labelBackgroundColor=none;fillColor=#23A2D9;fontSize=12;fontColor=#ffffff;align=center;strokeColor=#0E7DAD;metaEdit=1;points=[[0.5,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.5,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];resizable=0;" vertex="1">
     <mxGeometry height="120" width="240" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -94,7 +109,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Container (Microservice)
 
 ```xml
-<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. Micronaut" c4Description="Description of microservice role." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#E6E6E6&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. Micronaut" c4Description="Description of microservice role." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F6FA&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="shape=hexagon;size=50;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;labelBackgroundColor=none;fillColor=#23A2D9;fontSize=12;fontColor=#ffffff;align=center;strokeColor=#0E7DAD;metaEdit=1;points=[[0.5,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.5,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];resizable=0;" vertex="1">
     <mxGeometry height="170" width="200" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -104,7 +119,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Container (Message Bus)
 
 ```xml
-<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. Apache Kafka" c4Description="Description of message bus role." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#E6E6E6&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. Apache Kafka" c4Description="Description of message bus role." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F6FA&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="shape=cylinder3;size=15;direction=south;whiteSpace=wrap;html=1;boundedLbl=1;rounded=0;labelBackgroundColor=none;fillColor=#23A2D9;fontSize=12;fontColor=#ffffff;align=center;strokeColor=#0E7DAD;metaEdit=1;points=[[0.5,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.5,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];resizable=0;" vertex="1">
     <mxGeometry height="120" width="240" x="X" y="Y" as="geometry" />
   </mxCell>
@@ -114,7 +129,7 @@ Do NOT use generic `rounded=1` rectangles. Use the exact shapes and styles defin
 ### Container (Web Browser)
 
 ```xml
-<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. JavaScript, Angular" c4Description="Description of web browser container." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#E6E6E6&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
+<object placeholders="1" c4Name="Container Name" c4Type="Container" c4Technology="e.g. JavaScript, Angular" c4Description="Description of web browser container." label="&lt;font style=&quot;font-size: 16px;color:#ffffff&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;&lt;font color=&quot;#ffffff&quot;&gt;[%c4Type%:&amp;nbsp;%c4Technology%]&lt;/font&gt;&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot; color=&quot;#F3F6FA&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="UNIQUE_ID">
   <mxCell parent="1" style="shape=mxgraph.c4.webBrowserContainer2;whiteSpace=wrap;html=1;boundedLbl=1;rounded=0;labelBackgroundColor=none;strokeColor=#118ACD;fillColor=#23A2D9;strokeColor2=#0E7DAD;fontSize=12;fontColor=#ffffff;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.5,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];resizable=0;" vertex="1">
     <mxGeometry height="160" width="240" x="X" y="Y" as="geometry" />
   </mxCell>

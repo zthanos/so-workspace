@@ -189,12 +189,12 @@ function parseBlockSequence(lines: string[]): unknown[] {
 
       while (i < lines.length) {
         const next = lines[i];
-        if (next.trim().startsWith("- ")) break;
         if (next.trim() === "") {
           i++;
           continue;
         }
         const nextIndent = next.search(/\S/);
+        if (next.trim().startsWith("- ") && nextIndent <= seqIndent) break;
         if (nextIndent <= seqIndent) break;
         children.push(next);
         i++;
