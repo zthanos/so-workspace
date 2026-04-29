@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { AssetResolver } from "./asset-resolver";
 
 /**
@@ -110,6 +111,61 @@ List the references used in this project.
       console.error("Workspace initialization failed:", error);
       vscode.window.showErrorMessage(
         `Failed to initialize workspace: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Refreshes workspace-owned templates from the current extension version.
+   * This is intended for already-initialized workspaces that need updated
+   * skills/rules/context without touching project artifacts.
+   *
+   * Updated targets:
+   * - .github/skills/**
+   * - .github/rules/**
+   * - docs/so_agent_context.md
+   * - README_SO_Workspace.md
+   */
+  async updateWorkspaceTemplates(workspaceRoot: vscode.Uri): Promise<void> {
+    try {
+      await this.createFolderStructure(workspaceRoot);
+
+      const skillsTemplateUri = this.assetResolver.getTemplatePath("skills");
+      if (await this.assetResolver.assetExists(skillsTemplateUri)) {
+        const skillsTargetUri = vscode.Uri.joinPath(workspaceRoot, ".github", "skills");
+        await this.copyDirectoryRecursive(skillsTemplateUri, skillsTargetUri, true);
+      }
+
+      const rulesTemplateUri = this.assetResolver.getRulePath("");
+      if (await this.assetResolver.assetExists(rulesTemplateUri)) {
+        const rulesTargetUri = vscode.Uri.joinPath(workspaceRoot, ".github", "rules");
+        await this.copyDirectoryRecursive(rulesTemplateUri, rulesTargetUri, true);
+      }
+
+      try {
+        const ctxTemplateUri = this.assetResolver.getAgentContextTemplatePath();
+        const ctxTargetUri = vscode.Uri.joinPath(workspaceRoot, "docs", "so_agent_context.md");
+        await this.copyFileForce(ctxTemplateUri, ctxTargetUri);
+      } catch {
+        // Optional template: skip if not packaged.
+      }
+
+      try {
+        const readmeTemplateUri = this.assetResolver.getTemplatePath("README_SO_Workspace.md");
+        const readmeTargetUri = vscode.Uri.joinPath(workspaceRoot, "README_SO_Workspace.md");
+        await this.copyFileForce(readmeTemplateUri, readmeTargetUri);
+      } catch {
+        // Optional template: skip if not packaged.
+      }
+
+      vscode.window.showInformationMessage(
+        "SO workspace templates updated successfully from the current extension version."
+      );
+    } catch (error) {
+      console.error("Workspace template update failed:", error);
+      vscode.window.showErrorMessage(
+        `Failed to update SO workspace templates: ${error instanceof Error ? error.message : String(error)}`
       );
       throw error;
     }
@@ -373,6 +429,12 @@ List the references used in this project.
     if (!exists) {
       await vscode.workspace.fs.copy(sourceUri, targetUri);
     }
+  }
+
+  private async copyFileForce(sourceUri: vscode.Uri, targetUri: vscode.Uri): Promise<void> {
+    const parentUri = vscode.Uri.file(path.dirname(targetUri.fsPath));
+    await vscode.workspace.fs.createDirectory(parentUri);
+    await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
   }
 
   /**

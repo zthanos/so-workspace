@@ -16,6 +16,13 @@ Purpose:
 Evaluate the selected diagram for correctness, completeness, scope alignment,
 and compliance with the official draw.io C4 shape standard (v29+).
 
+Load and apply these evaluation references:
+- resources/drawio-c4-guidelines.md
+- resources/drawio-c4-layout-patterns.md
+- resources/drawio-c4-anti-patterns.md
+- resources/drawio-xml-integrity.md
+- resources/drawio-c4-examples.md
+
 Rules:
 - Do NOT modify any files.
 - Base findings strictly on objectives.md and requirements.inventory.md.

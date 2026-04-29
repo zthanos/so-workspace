@@ -215,54 +215,77 @@ Use draw.io for:
 - C4 Context
 - C4 Container
 
-**Always load `resources/drawio-c4-guidelines.md` before generating or updating any `.drawio` C4 diagram.**
-That file contains the authoritative stencil style strings, label formats, layout rules, and colour conventions.
+Always load these resources before generating or updating C4 draw.io artifacts:
+- `resources/drawio-c4-guidelines.md`
+- `resources/drawio-c4-layout-patterns.md`
+- `resources/drawio-c4-anti-patterns.md`
+- `resources/drawio-xml-integrity.md`
+- `resources/drawio-c4-examples.md`
 
-### Required stencil shapes (summary)
+Treat those files as the authoritative source for:
+- exact stencil and style strings
+- label placement and formatting
+- spacing and layering
+- XML structure and editability
+- patterns to imitate and anti-patterns to avoid
 
-All C4 shapes in generated XML must use `shape=mxgraph.c4.*` styles — never generic rectangles or ellipses.
+### Required stencil families
 
-| Element | Shape style key |
-|---|---|
-| Person (internal) | `mxgraph.c4.person2` + blue fill `#dae8fc` |
-| External Person | `mxgraph.c4.person2` + grey fill `#f5f5f5` |
-| Software System (internal) | `mxgraph.c4.system` + blue fill |
-| External Software System | `mxgraph.c4.system` + grey fill |
-| Container (app/service) | `mxgraph.c4.container` + blue fill |
-| Container (database) | `mxgraph.c4.db` + blue fill |
-| System Boundary | `mxgraph.c4.boundary` + transparent + dashed stroke |
-| Connector | `orthogonalEdgeStyle` + arrowhead block |
+Generated C4 XML must use official draw.io C4-oriented shapes and the exact styles defined in the resources.
 
-See `drawio-c4-guidelines.md` for the complete `style=` strings to copy verbatim.
+Typical allowed element families:
+- `mxgraph.c4.person2`
+- rounded C4 software-system styles
+- browser container styles
+- database cylinder styles
+- message-bus styles
+- microservice hexagon styles
+- dashed transparent boundary styles
 
-### Required label format
+Do not fall back to generic rectangles or ellipses for C4 elements unless the resource explicitly says so.
 
-Every shape uses a three-line HTML label:
-```
-<b>Name</b><br/>[Type tag]<br/><font style="font-size:10px;">Description</font>
-```
+### Required label discipline
 
-### Layout principles
+Every C4 element must use:
+- placeholder-driven labels
+- a three-line structure
+- correct type tags
+- a short description
 
-- System boundary centred on canvas
-- Actors above/left of boundary; external systems below/right
-- Inside boundary (C4 Container): layer top-to-bottom — UI → API → Services → Data
-- Connectors: `orthogonalEdgeStyle` only, labelled, arrow points toward the called party
-- Minimum spacing: 80px horizontal, 60px vertical
-- Boundary padding: 40px on all sides
+Container-level labels must include technology.
 
-### When editing visually in draw.io
-1. Open **View → Shapes → C4** to activate the library
-2. Drag shapes from the C4 stencil — do not use the generic shape palette
-3. Follow the label format above for every shape
-4. Use orthogonal connectors with descriptive labels
+### Layout discipline
 
-### When generating `.drawio` XML
-- Produce valid `mxfile` / `mxGraphModel` XML
-- Use verbatim `style=` strings from `drawio-c4-guidelines.md`
-- Set `parent="<boundary_id>"` for shapes inside a boundary
-- Every cell has a unique `id`; connectors have `source` and `target`
-- Keep the file editable for later visual refinement in draw.io
+- Context diagrams:
+  - system in the center
+  - actors left or upper-left
+  - external systems right or lower-right
+- Container diagrams:
+  - actors on the left
+  - external systems on the right
+  - UI -> API -> Services -> Data in layered order inside the boundary
+- Snap coordinates to a 10px grid
+- Prefer structural crossing avoidance before jump arcs or detours
+
+### XML discipline
+
+- Produce valid uncompressed draw.io XML
+- Preserve a stable editable `mxfile -> diagram -> mxGraphModel -> root` structure
+- Use unique ids
+- Set correct `parent` relationships
+- Keep updates minimal during patch/revision operations
+
+### Anti-patterns to avoid
+
+- generic shapes instead of the approved C4 stencil styles
+- hardcoded raw text labels when placeholder labels are expected
+- external systems inside the boundary
+- mixed C4 levels on one page
+- missing relationship labels
+- missing technology tag on containers
+- diagonal connectors when orthogonal routing is possible
+- connectors passing through shapes
+- overlapping labels or shapes
 
 ## Mermaid rules
 
@@ -292,16 +315,14 @@ Avoid unnecessary complexity.
 
 ### draw.io C4 diagrams
 
-Before generating, load `resources/drawio-c4-guidelines.md` to obtain the authoritative style strings.
-
 When generating draw.io C4 diagrams:
 - place output in `docs/03_architecture/diagrams/src/*.drawio`
 - use draw.io-compatible XML that remains editable
 - structure the layout as an enterprise architecture diagram, not as a casual sketch
-- use **only** the official `shape=mxgraph.c4.*` stencil styles — never generic shapes
-- apply the three-line HTML label format: `<b>Name</b><br/>[Type tag]<br/><font ...>description</font>`
+- follow the exact shape and label guidance from the draw.io resources
+- choose the correct container subtype for each container
 - follow C4 abstraction levels strictly and do not mix levels in a single view
-- use `orthogonalEdgeStyle` for all connectors; label every relationship
+- use orthogonal connectors only and label every relationship
 - set the correct `parent` for shapes inside a boundary cell
 
 ### Mermaid diagrams
@@ -313,7 +334,7 @@ When generating Mermaid diagrams:
 - place output in `docs/03_architecture/diagrams/src/*.mmd`
 - keep node labels short and descriptive
 - use subgraphs to group related components
-- prefer `TD` (top-down) layout unless horizontal flow is more natural
+- prefer `TD` unless horizontal flow is more natural
 
 ## Syntax validation
 
@@ -326,14 +347,15 @@ Before rendering or reviewing any diagram, validate the source to catch errors e
 - ensure connectors link the intended nodes with `source` and `target` ids
 - confirm the system boundary and external systems are visually separated
 - validate that the diagram level matches the selected C4 level
-- **stencil check**: confirm every shape uses `shape=mxgraph.c4.*` — flag any generic style (e.g. `rounded=1`, `ellipse`)
-- **label check**: confirm every shape has the three-line format `Name / [Type tag] / description`
-- **connector check**: confirm all connectors use `orthogonalEdgeStyle` and carry a label
+- confirm the correct stencil family is used for each element subtype
+- confirm label placement follows the required three-line format
+- confirm container subtype choices are appropriate
+- confirm XML remains editable and structurally stable
 
 ### Mermaid validation
-- verify the diagram starts with a valid diagram type keyword (`graph`, `sequenceDiagram`, `stateDiagram-v2`, `classDiagram`, `flowchart`, etc.)
+- verify the diagram starts with a valid diagram type keyword
 - check that all node references are defined before use
-- ensure arrow syntax is correct (`-->`, `-.->`, `==>` for flowcharts; `->>`, `-->>` for sequence diagrams)
+- ensure arrow syntax is correct
 - confirm subgraph blocks are properly opened and closed
 - validate that quoted labels use matching delimiters
 

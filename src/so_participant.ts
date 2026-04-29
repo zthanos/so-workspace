@@ -7,6 +7,7 @@ import {
   DiagramCatalogEntry,
 } from "./skill-loader";
 import { AssetResolver } from "./asset-resolver";
+import { WorkspaceInitializer } from "./workspace-initializer";
 
 // ---------------------------------------------------------------------------
 // Paths (relative to workspace root)
@@ -395,7 +396,7 @@ async function buildSystemPrompt(
       parts.push(`# Active Skill: ${config.name} (workspace)\n\n` + wsSkillContent);
 
       // Resources: workspace-owned only. No packaged fallback.
-      const resourceFiles = ["methodology.md", "output-template.md", "report-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "drawio-c4-guidelines.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
+      const resourceFiles = ["methodology.md", "output-template.md", "report-template.md", "taxonomy.md", "mapping-rules.md", "review-rules.md", "section-guidelines.md", "registry-guidelines.md", "diagram-taxonomy.md", "drawio-c4-guidelines.md", "drawio-c4-layout-patterns.md", "drawio-c4-anti-patterns.md", "drawio-xml-integrity.md", "drawio-c4-examples.md", "adr-template.md", "decision-guidelines.md", "evaluation-rules.md"];
       for (const resFile of resourceFiles) {
         const wsResContent = await readFileSafe(
           path.join(workspaceRoot, WORKSPACE_SKILLS_PATH, skillFolder, "resources", resFile)
@@ -886,6 +887,33 @@ async function soParticipantHandler(
   const slashCommand = request.command;
   const operation = (slashCommand as SkillOperation | undefined)
     ?? inferOperationFromPrompt(request.prompt);
+
+  if (slashCommand === "updateWorkspace") {
+    const response = await vscode.window.showWarningMessage(
+      "Update workspace templates from the current extension version? This will overwrite .github/skills, .github/rules, docs/so_agent_context.md, and README_SO_Workspace.md.",
+      { modal: true },
+      "Update",
+      "Cancel"
+    );
+
+    if (response !== "Update") {
+      stream.markdown("Workspace template update cancelled.");
+      return {};
+    }
+
+    try {
+      const initializer = new WorkspaceInitializer(assetResolver);
+      await initializer.updateWorkspaceTemplates(workspaceFolders[0].uri);
+      stream.markdown(
+        "Workspace templates updated from the current extension version.\n\nUpdated targets:\n- `.github/skills/**`\n- `.github/rules/**`\n- `docs/so_agent_context.md`\n- `README_SO_Workspace.md`"
+      );
+    } catch (error) {
+      stream.markdown(
+        `Failed to update workspace templates: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+    return {};
+  }
 
   // Detect active skill
   const skillFolder = await detectSkillDeterministic(request.prompt, slashCommand, assetResolver);

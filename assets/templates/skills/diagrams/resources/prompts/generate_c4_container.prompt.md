@@ -8,7 +8,12 @@ Authoritative inputs:
 - docs/01_requirements/requirements.inventory.md
 - docs/03_architecture/diagrams/src/c4_context.drawio (for context, if present)
 
-Load and follow: resources/drawio-c4-guidelines.md (official draw.io C4 v29 shapes)
+Load and follow these resources before generating:
+- resources/drawio-c4-guidelines.md
+- resources/drawio-c4-layout-patterns.md
+- resources/drawio-c4-anti-patterns.md
+- resources/drawio-xml-integrity.md
+- resources/drawio-c4-examples.md
 
 Purpose:
 Generate a C4 Model Level 2 (Container) diagram using the official draw.io C4 shape
@@ -18,6 +23,7 @@ library with placeholders=1 and c4Name/c4Type/c4Technology/c4Description metadat
 
 SHAPES: Use <object placeholders="1" ...> wrappers with c4* attributes and %placeholder% labels.
 DO NOT use plain mxCell with hardcoded text labels for C4 elements.
+Use only approved C4 stencil families from the guidance resources.
 
 ### Shape styles:
 
@@ -35,6 +41,14 @@ ContainerScopeBoundary — fillColor=none; strokeColor=#666666; dashed=1; dashPa
 endArrow=blockThin; endFill=1; strokeColor=#828282; edgeStyle=orthogonalEdgeStyle
 Use c4Description + c4Technology on all relationships.
 
+### Label discipline:
+- Use a 3-line C4 label pattern through placeholders:
+  - line 1: c4Name
+  - line 2: [c4Type: c4Technology] when technology is known
+  - line 3: c4Description
+- Labels must remain inside shapes and be readable at normal zoom.
+- Do not place descriptive text outside the container shape.
+
 ## C4 Level 2 rules
 
 Include ONLY:
@@ -46,12 +60,15 @@ Include ONLY:
 CRITICAL: External systems (payment, notifications, etc.) must be OUTSIDE the boundary.
 
 Do NOT include: components, code detail, infrastructure annotations.
+Do NOT mix component-level detail into a container diagram.
 
 ## Layout
 - Canvas: pageWidth=1600 pageHeight=1200
 - Boundary centred; actors left; external systems right
 - All connectors: orthogonalEdgeStyle; arrow direction consumer→provider
 - Every relationship must carry c4Description and c4Technology
+- Follow the container-diagram placement pattern from resources/drawio-c4-layout-patterns.md
+- Prefer clean left-to-right and top-to-bottom flow over dense packing
 
 ## Output
 
@@ -59,6 +76,7 @@ Return only the content of:
 docs/03_architecture/diagrams/src/c4_container.drawio
 
 The file must be valid mxfile XML, fully editable in draw.io 29+.
+It must comply with the XML integrity rules and remain uncompressed/editable.
 
 ## Connector crossing avoidance
 
@@ -75,3 +93,10 @@ Before finalising coordinates, apply this layout strategy:
 6. As a last resort, add jumpStyle=arc;jumpSize=16; to the crossing connector's style.
 
 Never let two connectors cross without a jump arc. Prefer structural avoidance over jump arcs.
+
+## Anti-patterns to avoid
+
+- Do not use a generic rounded rectangle where a browser, database, microservice, or message-bus stencil is more appropriate.
+- Do not place external systems inside the ContainerScopeBoundary.
+- Do not omit c4Technology on container relationships when the interaction style is known.
+- Do not route connectors diagonally.

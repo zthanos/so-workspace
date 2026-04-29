@@ -150,6 +150,10 @@
         "isSticky": true,
         "commands": [
           {
+            "name": "updateWorkspace",
+            "description": "Refresh workspace-owned SO templates from the current extension version"
+          },
+          {
             "name": "generate",
             "description": "Generate a workflow artifact using the active SO skill"
           },
@@ -184,6 +188,10 @@
       {
         "command": "so-workspace.initialize",
         "title": "SO: 0-02 Initialize SO Workspace Structure"
+      },
+      {
+        "command": "so-workspace.updateWorkspace",
+        "title": "SO: 0-03 Update Workspace Templates From Current Extension"
       },
       {
         "command": "so-workspace.switchEndpointEnvironment",

@@ -23,6 +23,7 @@ import { registerValidateDiagramsCommand } from "./validate-diagrams-command";
 import { registerDocxExportCommand } from "./docx-exporter";
 import { ConfigurationManager } from "./configuration-manager";
 import { initializeWorkspaceCommand } from "./commands/initialize-workspace-command";
+import { updateWorkspaceCommand } from "./commands/update-workspace-command";
 import { PanelManager } from "./diagram-previewer/panelManager";
 import { readConfig, onConfigChange } from "./diagram-previewer/config";
 import { initializeLogger, getLogger } from "./diagram-previewer/logger";
@@ -59,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // Workspace Initialization
   context.subscriptions.push(
     vscode.commands.registerCommand("so-workspace.initialize", () => initializeWorkspaceCommand(assetResolver)),
+    vscode.commands.registerCommand("so-workspace.updateWorkspace", () => updateWorkspaceCommand(assetResolver)),
     vscode.commands.registerCommand("so-workspace.req.generate", reqInventoryGenerateOpenChat),
     vscode.commands.registerCommand("so-workspace.req.eval", reqInventoryEvalOpenChat),
     vscode.commands.registerCommand("so-workspace.req.update", reqInventoryUpdateOpenChat),
