@@ -7,6 +7,24 @@ SO Workspace v3.2.0 tightens the participant-driven artifact workflow, refreshes
 ### Participant workflow and command routing
 
 - Added clearer `@so` command aliases for requirements, objectives, C4, solution outline, BPMN, and workspace refresh flows.
+- Added explicit participant commands for the main SO workflow stages:
+  - `/GenerateRequirements`
+  - `/EvaluateRequirements`
+  - `/PatchRequirement`
+  - `/ReviewRequirement`
+  - `/GenerateObjectives`
+  - `/EvaluateObjectives`
+  - `/PatchObjectives`
+  - `/ReviewObjectives`
+  - `/GenerateC4`
+  - `/EvaluateC4`
+  - `/PatchC4`
+  - `/ReviewC4`
+  - `/GenerateSolutionOutline`
+  - `/EvaluateSolutionOutline`
+  - `/PatchSolutionOutline`
+  - `/ReviewSolutionOutline`
+  - `/UpdateWorkspace`
 - Improved participant routing so natural-language requests and slash commands resolve the correct skill and artifact more reliably.
 - Hardened the native editor handoff so prompts open in chat instead of being injected into the active file buffer.
 - Added explicit multi-artifact orchestration for `@so /GenerateC4` so the participant now generates the C4 pair in sequence:
