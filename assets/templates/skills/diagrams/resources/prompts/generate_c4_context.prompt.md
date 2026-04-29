@@ -65,6 +65,25 @@ Do NOT mix C4 levels or introduce implementation detail.
 - Follow the context-diagram placement pattern from resources/drawio-c4-layout-patterns.md
 - Keep even spacing and avoid cramped boundaries, overlapping labels, or floating orphan elements
 
+### Preferred coordinate pattern
+
+Use this as the default placement pattern unless the workspace artifacts require a clearly better variation:
+
+- System boundary:
+  - x=540 y=150 width=500 height=520
+- System of interest:
+  - x=670 y=350 width=240 height=120
+- Actors on the left, vertically stacked:
+  - x=120 and y=120 / 310 / 500 / 690
+- External systems on the right, vertically stacked:
+  - x=1100 and y=220 / 460
+- Title block:
+  - x=40 y=820 width≈360 height≈40
+
+Do not place the system of interest partly outside the boundary.
+Do not place the title underneath actors or overlapping the left column.
+Do not place external systems so close that they collide with the internal system or its relationship labels.
+
 ## Output
 
 Return only the content of:
@@ -81,6 +100,7 @@ Before finalising coordinates, apply this layout strategy:
 2. Position external systems directly right of the system they connect to — connectors flow straight right.
 3. Use explicit exit/entry points:
    - Actor → System: exitX=1;exitY=0.5 on actor, entryX=0;entryY=0.5 on system
+   - System → External System: exitX=1;exitY=0.5 on system, entryX=0;entryY=0.5 on external system
 4. If a crossing cannot be avoided, add jumpStyle=arc;jumpSize=16; to the connector style.
 5. If connectors must detour, add <Array as="points"><mxPoint x="..." y="..."/></Array> waypoints inside <mxGeometry>.
 

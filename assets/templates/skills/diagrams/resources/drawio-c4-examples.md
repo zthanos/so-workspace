@@ -26,21 +26,21 @@ Use these as pattern references, not as domain content to copy blindly.
 ## Label Examples
 
 - Person:
-  - `Player`
+  - `Customer`
   - `[Person]`
-  - `Discovers and books activities`
+  - `Uses the platform to complete business tasks`
 
 - Internal system:
-  - `Sports Booking Platform`
+  - `Core Business Platform`
   - `[Software System]`
-  - `Coordinates booking, scheduling, and related interactions`
+  - `Coordinates core business capabilities and related interactions`
 
 - Container:
   - `Application Services`
   - `[Container: Node.js]`
-  - `Implements booking, scheduling, and business rules`
+  - `Implements core business rules and orchestration`
 
 - Database:
-  - `Platform Database`
+  - `Operational Database`
   - `[Container: PostgreSQL]`
-  - `Stores bookings, users, venues, and schedules`
+  - `Stores operational records, users, and transactions`

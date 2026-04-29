@@ -489,18 +489,15 @@ List the references used in this project.
     const exists = await this.exists(targetUri);
 
     if (exists && overwrite) {
-      const response = await vscode.window.showWarningMessage(
-        `File ${targetUri.fsPath} already exists. Overwrite?`,
-        "Yes",
-        "No"
-      );
-      if (response === "Yes") {
-        await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
-      }
+      const parentUri = vscode.Uri.file(path.dirname(targetUri.fsPath));
+      await vscode.workspace.fs.createDirectory(parentUri);
+      await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
       return;
     }
 
     if (!exists) {
+      const parentUri = vscode.Uri.file(path.dirname(targetUri.fsPath));
+      await vscode.workspace.fs.createDirectory(parentUri);
       await vscode.workspace.fs.copy(sourceUri, targetUri);
     }
   }

@@ -38,6 +38,7 @@ const NATIVE_EDIT_START_COMMANDS = [
   "interactiveEditor.start",
 ] as const;
 const NATIVE_CHAT_SUBMIT_COMMAND = "workbench.action.chat.submit";
+const CHAT_VIEW_OPEN_COMMAND = "workbench.action.chat.open";
 
 const ARTIFACT_TARGETS: Record<string, Partial<Record<SkillOperation, string>>> = {
   "requirements-inventory": {
@@ -152,6 +153,7 @@ type ParticipantCommandResolution =
       skillFolder: string;
       operation?: SkillOperation;
       promptAugment?: string;
+      additionalArtifactTargets?: string[];
     };
 
 const PARTICIPANT_COMMAND_ALIASES: Record<string, ParticipantCommandResolution> = {
@@ -192,8 +194,20 @@ const PARTICIPANT_COMMAND_ALIASES: Record<string, ParticipantCommandResolution> 
   reviewObjective: { type: "skill", skillFolder: "objectives" },
   ReviewObjective: { type: "skill", skillFolder: "objectives" },
 
-  generateC4: { type: "skill", skillFolder: "diagrams", operation: "generate", promptAugment: "diagram_id: c4_context" },
-  GenerateC4: { type: "skill", skillFolder: "diagrams", operation: "generate", promptAugment: "diagram_id: c4_context" },
+  generateC4: {
+    type: "skill",
+    skillFolder: "diagrams",
+    operation: "generate",
+    promptAugment: "diagram_id: c4_context",
+    additionalArtifactTargets: ["docs/03_architecture/diagrams/src/c4_container.drawio"],
+  },
+  GenerateC4: {
+    type: "skill",
+    skillFolder: "diagrams",
+    operation: "generate",
+    promptAugment: "diagram_id: c4_context",
+    additionalArtifactTargets: ["docs/03_architecture/diagrams/src/c4_container.drawio"],
+  },
   evaluateC4: { type: "skill", skillFolder: "diagrams", operation: "eval", promptAugment: "diagram_id: c4_context" },
   EvaluateC4: { type: "skill", skillFolder: "diagrams", operation: "eval", promptAugment: "diagram_id: c4_context" },
   patchC4: { type: "skill", skillFolder: "diagrams", operation: "patch", promptAugment: "diagram_id: c4_context" },
@@ -431,7 +445,11 @@ function resolveParticipantCommand(command: string | undefined, prompt: string):
   ) {
     const lower = prompt.toLowerCase();
     if (lower.includes("container")) {
-      return { ...mapped, promptAugment: "diagram_id: c4_container" };
+      return {
+        ...mapped,
+        promptAugment: "diagram_id: c4_container",
+        additionalArtifactTargets: [],
+      };
     }
   }
 
@@ -799,34 +817,68 @@ function buildNativeEditPrompt(
   contextPaths: string[],
   userPrompt: string,
   skillFolder?: string | null,
-  operation?: SkillOperation
+  operation?: SkillOperation,
+  additionalArtifactTargets: string[] = []
 ): string {
   const compactContextPaths = contextPaths.slice(0, 8);
+  const allTargets = [artifactTarget, ...additionalArtifactTargets];
   const sections = [
-    `Edit the currently open file: ${artifactTarget}`,
+    allTargets.length > 1
+      ? `Edit the currently open file first, then continue with the additional target files in order:\n${allTargets.map((item, index) => `${index + 1}. ${item}`).join("\n")}`
+      : `Edit the currently open file: ${artifactTarget}`,
     `Use only workspace artifacts as source of truth. Do not invent scope or unsupported details.`,
-    `Target file: ${artifactTarget}`,
+    allTargets.length > 1
+      ? `Target files:\n${allTargets.map((item) => `- ${item}`).join("\n")}`
+      : `Target file: ${artifactTarget}`,
     compactContextPaths.length
       ? `Relevant workspace files:\n${compactContextPaths.map((item) => `- ${item}`).join("\n")}`
       : "Relevant workspace files: none pre-identified",
     contextPaths.length > compactContextPaths.length
       ? `Additional workspace files are available if needed: ${contextPaths.length - compactContextPaths.length}`
       : "",
-    buildNativeEditInstruction(skillFolder, operation, artifactTarget, operationInstruction),
+    buildNativeEditInstruction(skillFolder, operation, artifactTarget, operationInstruction, additionalArtifactTargets),
+    formatOperationInstructionForNativeHandoff(operationInstruction),
     `User request:\n${userPrompt}`,
-    `Apply the change directly in ${artifactTarget}. Prefer native inline edits over chat-only suggestions.`,
+    allTargets.length > 1
+      ? `Apply the changes directly in the listed target files. Complete them in order, starting with ${artifactTarget}. Prefer native inline edits over chat-only suggestions.`
+      : `Apply the change directly in ${artifactTarget}. Prefer native inline edits over chat-only suggestions.`,
   ].filter(Boolean);
 
   return sections.join("\n\n---\n\n");
+}
+
+function formatOperationInstructionForNativeHandoff(operationInstruction: string): string {
+  const trimmed = operationInstruction.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const lines = trimmed
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+$/g, ""));
+
+  const limitedLines = lines.slice(0, 80).join("\n").trim();
+  const limitedText =
+    limitedLines.length > 5000
+      ? `${limitedLines.slice(0, 5000).trim()}\n...`
+      : limitedLines;
+
+  return `Operation-specific instruction:\n${limitedText}`;
 }
 
 function buildNativeEditInstruction(
   skillFolder: string | null | undefined,
   operation: SkillOperation | undefined,
   artifactTarget: string,
-  operationInstruction: string
+  operationInstruction: string,
+  additionalArtifactTargets: string[] = []
 ): string {
   const action = operation ?? "update";
+  const isC4PairGeneration =
+    skillFolder === "diagrams" &&
+    action === "generate" &&
+    artifactTarget.endsWith("c4_context.drawio") &&
+    additionalArtifactTargets.some((target) => target.endsWith("c4_container.drawio"));
 
   const deterministicGuidance: Record<string, string[]> = {
     "requirements-inventory": [
@@ -859,17 +911,31 @@ function buildNativeEditInstruction(
     ],
     "diagrams": [
       `SO ${action} guidance for Diagram:`,
+      ...(isC4PairGeneration
+        ? [
+            "- generate both C4 diagrams in sequence: first c4_context.drawio, then c4_container.drawio",
+            "- keep the two diagrams aligned to the same actors, systems, and naming",
+            "- the context diagram must stay at C4 Level 1 and the container diagram must stay at C4 Level 2",
+          ]
+        : []),
       artifactTarget.endsWith(".drawio")
         ? "- for C4 diagrams, preserve valid editable draw.io XML and enterprise-grade layout"
         : "- preserve valid diagram source syntax",
+      "- do not leave placeholder labels, template names, or generic descriptions in the final result",
+      "- avoid overlaps between shapes, labels, boundaries, and connectors",
+      "- keep internal systems inside the boundary and external actors/systems outside it",
       "- keep the abstraction level correct",
       "- do not invent unsupported actors, systems, containers, or relationships",
-      "- update only the target diagram artifact",
+      isC4PairGeneration
+        ? "- update only the two target C4 diagram artifacts for this request"
+        : "- update only the target diagram artifact",
     ],
     "bpmn": [
       `SO ${action} guidance for BPMN Diagram:`,
       "- preserve valid editable draw.io XML using BPMN 2.0 semantics",
       "- use correct BPMN shapes, pools, lanes, and connector types",
+      "- when independent participants interact, prefer separate pools and message flows rather than one shared lane stack",
+      "- keep sequence flow inside a single pool only",
       "- do not invent unsupported participants, tasks, gateways, or messages",
       "- update only the target BPMN artifact",
     ],
@@ -968,27 +1034,29 @@ async function handoffToNativeEditSession(prompt: string): Promise<{
   command?: string;
 }> {
   const commands = new Set(await vscode.commands.getCommands(true));
+  if (commands.has(CHAT_VIEW_OPEN_COMMAND)) {
+    try {
+      await vscode.commands.executeCommand(CHAT_VIEW_OPEN_COMMAND, {
+        query: prompt,
+        isPartialQuery: false,
+      });
+      return {
+        started: true,
+        autoSubmitted: true,
+        command: CHAT_VIEW_OPEN_COMMAND,
+      };
+    } catch {
+      // fall through to legacy inline path
+    }
+  }
+
   const startCommand = NATIVE_EDIT_START_COMMANDS.find((command) => commands.has(command));
   if (!startCommand) {
     return { started: false, autoSubmitted: false };
   }
 
   await vscode.commands.executeCommand(startCommand);
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  await vscode.commands.executeCommand("type", { text: prompt });
-
-  let autoSubmitted = false;
-  if (commands.has(NATIVE_CHAT_SUBMIT_COMMAND)) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 75));
-      await vscode.commands.executeCommand(NATIVE_CHAT_SUBMIT_COMMAND);
-      autoSubmitted = true;
-    } catch {
-      autoSubmitted = false;
-    }
-  }
-
-  return { started: true, autoSubmitted, command: startCommand };
+  return { started: true, autoSubmitted: false, command: startCommand };
 }
 
 // ---------------------------------------------------------------------------
@@ -1080,6 +1148,8 @@ async function soParticipantHandler(
   }
 
   const artifactTarget = await resolveArtifactTarget(skillFolder, operation, effectivePrompt);
+  const additionalArtifactTargets =
+    commandResolution?.type === "skill" ? (commandResolution.additionalArtifactTargets ?? []) : [];
 
   if (artifactTarget && skillFolder && operation) {
     const contextPaths = await collectArtifactPaths(workspaceRoot, skillFolder);
@@ -1090,23 +1160,38 @@ async function soParticipantHandler(
       contextPaths,
       effectivePrompt,
       skillFolder,
-      operation
+      operation,
+      additionalArtifactTargets
     );
 
     const targetUri = await ensureTargetDocument(workspaceRoot, artifactTarget, skillFolder);
+    const additionalTargetUris: vscode.Uri[] = [];
+    for (const additionalTarget of additionalArtifactTargets) {
+      additionalTargetUris.push(
+        await ensureTargetDocument(workspaceRoot, additionalTarget, skillFolder)
+      );
+    }
     const handoff = await handoffToNativeEditSession(nativePrompt);
 
     if (handoff.started) {
       stream.markdown(
         handoff.autoSubmitted
-          ? `Opened native editor chat for \`${artifactTarget}\` and handed off the SO prompt.`
-          : `Opened native editor chat for \`${artifactTarget}\` and prefilled the SO prompt. Press Enter in the editor chat to run it.`
+          ? additionalArtifactTargets.length > 0
+            ? `Opened native editor chat for \`${artifactTarget}\` and handed off the SO prompt to generate the full C4 pair, then continue with \`${additionalArtifactTargets.join("`, `")}\`.`
+            : `Opened native editor chat for \`${artifactTarget}\` and handed off the SO prompt.`
+          : additionalArtifactTargets.length > 0
+            ? `Opened native editor chat for \`${artifactTarget}\` and prefilled the SO prompt to generate the full C4 pair. Press Enter in the editor chat to run it, then let it continue with \`${additionalArtifactTargets.join("`, `")}\`.`
+            : `Opened native editor chat for \`${artifactTarget}\` and prefilled the SO prompt. Press Enter in the editor chat to run it.`
       );
       stream.reference(targetUri);
+      for (const additionalTargetUri of additionalTargetUris) {
+        stream.reference(additionalTargetUri);
+      }
       return {
         metadata: {
           mode: "native-edit-handoff",
           artifactTarget,
+          additionalArtifactTargets,
           skillFolder,
           operation,
           autoSubmitted: handoff.autoSubmitted,

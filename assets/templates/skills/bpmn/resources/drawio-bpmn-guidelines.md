@@ -10,6 +10,7 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 - Use pools for participant boundaries and lanes for responsibility boundaries
 - Label outgoing flows from exclusive and inclusive gateways
 - Preserve editable draw.io XML structure
+- In collaboration scenarios, default to separate pools for external participants and the platform/system participant
 
 ## Core semantics
 
@@ -18,6 +19,7 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 - Message flow is valid only between pools
 - Inter-participant processes should use pools, and lanes when role separation matters
 - Exclusive and inclusive gateway outgoing branches should be labeled
+- Customer/user actions and platform/system actions should not be chained together with sequence flow across participant boundaries
 
 ## Element expectations
 
@@ -26,6 +28,7 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 - preserve event sizing consistency
 - place start events near the process entry and end events near completion/termination points
 - use BPMN-aware connection behavior so event edges attach cleanly to the boundary
+- keep event labels short; the business detail belongs on adjacent tasks
 
 ### Activities
 - keep tasks business-oriented
@@ -43,6 +46,11 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 - use lanes for roles or responsibility partitions inside a participant
 - model cross-pool communication with message flows only
 - keep BPMN elements inside their owning pool or lane containers
+- default pattern for product workflows:
+  - pool 1: customer / player / requester
+  - pool 2: coach / operator / reviewer when acting independently
+  - pool 3: platform / system processing
+- only collapse participants into lanes when they belong to the same internal organizational owner
 
 ### Connectors
 - sequence flow: solid directional flow within a pool
@@ -50,6 +58,10 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 - keep arrow direction aligned with process semantics
 - do not route a sequence flow across a pool boundary
 - keep connector labels readable and close to the relevant branch
+- if participant A requests something from participant B, show:
+  - a sending task in participant A
+  - a receiving/review task in participant B
+  - a message flow between them
 
 ## draw.io style expectations
 
