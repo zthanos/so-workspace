@@ -1,9 +1,14 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs/promises";
+import * as os from "os";
+import { execFile } from "child_process";
+import { promisify } from "util";
 import * as mammoth from "mammoth";
 import TurndownService from "turndown";
 import * as turndownPluginGfm from "turndown-plugin-gfm";
+
+const execFileAsync = promisify(execFile);
 
 /**
  * Output channel for logging Word to Markdown conversion operations.
@@ -254,6 +259,131 @@ async function findDocxFiles(inboxPath: string): Promise<string[]> {
   }
 }
 
+async function convertDocToMarkdown(contextUri?: vscode.Uri): Promise<void> {
+  outputChannel.appendLine("[INFO] ========================================");
+  outputChannel.appendLine("[INFO] DOC to Markdown conversion started");
+  outputChannel.appendLine(contextUri
+    ? `[INFO] Invoked from context menu: ${contextUri.fsPath}`
+    : "[INFO] Invoked from Command Palette");
+  outputChannel.appendLine("[INFO] ========================================");
+
+  try {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+      const errorMsg = "No workspace folder open. Please open a workspace to use this command.";
+      outputChannel.appendLine(`[ERROR] ${errorMsg}`);
+      vscode.window.showErrorMessage(errorMsg);
+      return;
+    }
+
+    const workspaceRoot = workspaceFolders[0].uri.fsPath;
+
+    let selectedFile: string;
+    if (contextUri) {
+      selectedFile = contextUri.fsPath;
+      outputChannel.appendLine(`[INFO] Using .doc file from context menu: ${path.basename(selectedFile)}`);
+    } else {
+      const inboxPath = path.join(workspaceRoot, "inbox", "brd");
+      const docFiles = await findDocFiles(inboxPath);
+      const picked = await selectDocFile(docFiles);
+      if (!picked) {
+        outputChannel.appendLine("[INFO] DOC conversion cancelled or no files available");
+        outputChannel.appendLine("[INFO] ========================================");
+        return;
+      }
+      selectedFile = picked;
+    }
+
+    const outputPath = await promptOutputPath("docs/00_brd/brd.md");
+    if (!outputPath) {
+      outputChannel.appendLine("[INFO] User cancelled output path selection");
+      outputChannel.appendLine("[INFO] DOC conversion cancelled by user");
+      outputChannel.appendLine("[INFO] ========================================");
+      return;
+    }
+
+    const fullOutputPath = path.isAbsolute(outputPath)
+      ? outputPath
+      : path.join(workspaceRoot, outputPath);
+
+    const shouldProceed = await checkOverwrite(fullOutputPath);
+    if (!shouldProceed) {
+      outputChannel.appendLine("[INFO] User declined to overwrite existing file");
+      outputChannel.appendLine("[INFO] DOC conversion cancelled by user");
+      outputChannel.appendLine("[INFO] ========================================");
+      return;
+    }
+
+    await validateAndCreateOutputDirectory(fullOutputPath);
+
+    const outputBasename = path.basename(fullOutputPath, path.extname(fullOutputPath));
+    const outputDir = path.dirname(fullOutputPath);
+    const assetsDir = path.join(outputDir, "assets", outputBasename);
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: "Converting DOC document to Markdown",
+        cancellable: false
+      },
+      async (progress) => {
+        let temporaryDocxPath: string | undefined;
+        try {
+          temporaryDocxPath = await convertLegacyDocToTemporaryDocx(selectedFile, progress);
+          await performConversion(temporaryDocxPath, fullOutputPath, assetsDir, progress);
+          progress.report({ increment: 100, message: "Complete!" });
+        } finally {
+          if (temporaryDocxPath) {
+            await cleanupTemporaryFile(temporaryDocxPath);
+          }
+        }
+      }
+    );
+
+    outputChannel.appendLine("[INFO] ========================================");
+    outputChannel.appendLine("[INFO] DOC conversion completed successfully");
+    outputChannel.appendLine(`[INFO] Output file: ${fullOutputPath}`);
+    outputChannel.appendLine("[INFO] ========================================");
+    await offerToOpenFile(fullOutputPath);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    outputChannel.appendLine(`[ERROR] Unexpected error during DOC conversion: ${errorMessage}`);
+    if (error instanceof Error && error.stack) {
+      outputChannel.appendLine(`[ERROR] Stack trace: ${error.stack}`);
+    }
+    outputChannel.appendLine("[INFO] ========================================");
+    vscode.window.showErrorMessage(`DOC conversion failed: ${errorMessage}`);
+  }
+}
+
+async function findDocFiles(inboxPath: string): Promise<string[]> {
+  try {
+    const stats = await fs.stat(inboxPath);
+    if (!stats.isDirectory()) {
+      outputChannel.appendLine(`[WARN] Path is not a directory: ${inboxPath}`);
+      return [];
+    }
+
+    const files = await fs.readdir(inboxPath);
+    const docFiles = files
+      .filter(file => {
+        const lower = file.toLowerCase();
+        return lower.endsWith(".doc") && !lower.endsWith(".docx");
+      })
+      .map(file => path.join(inboxPath, file));
+
+    outputChannel.appendLine(`[INFO] Found ${docFiles.length} .doc file(s) in ${inboxPath}`);
+    return docFiles;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      outputChannel.appendLine(`[WARN] Directory not found: ${inboxPath}`);
+    } else {
+      outputChannel.appendLine(`[WARN] Error accessing directory ${inboxPath}: ${error}`);
+    }
+    return [];
+  }
+}
+
 /**
  * Presents file selection UI to the user based on the number of files found.
  * - Empty list: Shows informative message and returns undefined
@@ -296,6 +426,98 @@ async function selectDocxFile(files: string[]): Promise<string | undefined> {
   } else {
     outputChannel.appendLine("[INFO] User cancelled file selection");
     return undefined;
+  }
+}
+
+async function selectDocFile(files: string[]): Promise<string | undefined> {
+  if (files.length === 0) {
+    vscode.window.showInformationMessage("No legacy Word (.doc) documents found in inbox/brd directory");
+    outputChannel.appendLine("[INFO] No .doc files to select");
+    return undefined;
+  }
+
+  if (files.length === 1) {
+    const selectedFile = files[0];
+    outputChannel.appendLine(`[INFO] Auto-selected single .doc file: ${path.basename(selectedFile)}`);
+    return selectedFile;
+  }
+
+  const items = files.map(file => ({
+    label: path.basename(file),
+    description: file,
+    filePath: file
+  }));
+
+  const selected = await vscode.window.showQuickPick(items, {
+    placeHolder: "Select a legacy Word (.doc) document to convert",
+    title: "DOC to Markdown Conversion"
+  });
+
+  if (selected) {
+    outputChannel.appendLine(`[INFO] User selected .doc file: ${selected.label}`);
+    return selected.filePath;
+  } else {
+    outputChannel.appendLine("[INFO] User cancelled .doc file selection");
+    return undefined;
+  }
+}
+
+async function convertLegacyDocToTemporaryDocx(
+  inputPath: string,
+  progress?: vscode.Progress<{ message?: string; increment?: number }>
+): Promise<string> {
+  outputChannel.appendLine(`[INFO] Preparing legacy .doc conversion for: ${inputPath}`);
+  progress?.report({ increment: 10, message: "Converting .doc to temporary .docx..." });
+
+  const tempDir = path.join(os.tmpdir(), "so-workspace-doc-convert");
+  await fs.mkdir(tempDir, { recursive: true });
+  const tempDocxPath = path.join(
+    tempDir,
+    `${path.basename(inputPath, path.extname(inputPath))}-${Date.now()}.docx`
+  );
+
+  const escapedInput = inputPath.replace(/'/g, "''");
+  const escapedOutput = tempDocxPath.replace(/'/g, "''");
+  const script = [
+    "$ErrorActionPreference = 'Stop'",
+    "$word = $null",
+    "$document = $null",
+    "try {",
+    "  $word = New-Object -ComObject Word.Application",
+    "  $word.Visible = $false",
+    "  $document = $word.Documents.Open('" + escapedInput + "')",
+    "  $document.SaveAs([ref]'" + escapedOutput + "', [ref]16)",
+    "  $document.Close()",
+    "  $word.Quit()",
+    "} finally {",
+    "  if ($document -ne $null) { [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($document) }",
+    "  if ($word -ne $null) { [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($word) }",
+    "  [GC]::Collect()",
+    "  [GC]::WaitForPendingFinalizers()",
+    "}"
+  ].join("; ");
+
+  try {
+    await execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], {
+      windowsHide: true,
+    });
+    outputChannel.appendLine(`[INFO] Temporary .docx created: ${tempDocxPath}`);
+    return tempDocxPath;
+  } catch (error) {
+    const stderr = (error as { stderr?: string }).stderr ?? "";
+    outputChannel.appendLine(`[ERROR] Word COM conversion failed: ${stderr || String(error)}`);
+    throw new Error(
+      "Legacy .doc conversion requires Microsoft Word on Windows. Word COM automation could not convert the file to .docx."
+    );
+  }
+}
+
+async function cleanupTemporaryFile(filePath: string): Promise<void> {
+  try {
+    await fs.unlink(filePath);
+    outputChannel.appendLine(`[INFO] Removed temporary file: ${filePath}`);
+  } catch (error) {
+    outputChannel.appendLine(`[WARN] Failed to remove temporary file ${filePath}: ${String(error)}`);
   }
 }
 
@@ -611,4 +833,22 @@ export function registerWordToMarkdownCommand(context: vscode.ExtensionContext):
   context.subscriptions.push(outputChannel);
   
   outputChannel.appendLine("[INFO] Word to Markdown command registered");
+}
+
+export function registerDocToMarkdownCommand(context: vscode.ExtensionContext): void {
+  if (!outputChannel) {
+    outputChannel = vscode.window.createOutputChannel("SO Workspace - Word to Markdown");
+  }
+
+  const disposable = vscode.commands.registerCommand(
+    "so-workspace.convertDocToMarkdown",
+    (uri?: vscode.Uri) => convertDocToMarkdown(uri)
+  );
+
+  context.subscriptions.push(disposable);
+  if (!context.subscriptions.includes(outputChannel)) {
+    context.subscriptions.push(outputChannel);
+  }
+
+  outputChannel.appendLine("[INFO] DOC to Markdown command registered");
 }

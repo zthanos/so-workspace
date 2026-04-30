@@ -15,7 +15,7 @@ import {
 import { initializeSkillLoader } from "./skill-loader";
 import { registerPaletteBuildCommands } from "./build_open_tasks";
 import { CommandHandlerImpl } from "./diagram_renderer_v2";
-import { registerWordToMarkdownCommand } from "./word_to_markdown";
+import { registerWordToMarkdownCommand, registerDocToMarkdownCommand } from "./word_to_markdown";
 import { registerPdfToMarkdownCommand } from "./pdf_to_markdown";
 import { registerSoParticipant } from "./so_participant";
 import { registerSwitchEnvironmentCommand } from "./switch-environment-command";
@@ -208,6 +208,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Word to Markdown conversion
   registerWordToMarkdownCommand(context);
+  registerDocToMarkdownCommand(context);
   registerPdfToMarkdownCommand(context);
 
   // SO Chat Participant (uses so_agent_context.md + skills)

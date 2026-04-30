@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
@@ -158,6 +158,14 @@
               "description": "Convert a DOCX or PDF file to Markdown"
             },
             {
+              "name": "ConvertDocxToMd",
+              "description": "Convert a DOCX file to Markdown"
+            },
+            {
+              "name": "ConvertDocToMd",
+              "description": "Convert a legacy DOC file to Markdown"
+            },
+            {
               "name": "ConvertFileToDoc",
               "description": "Run the Markdown to DOCX export flow"
             },
@@ -253,14 +261,18 @@
       }
     ],
     "commands": [
-      {
-        "command": "so-workspace.convertWordToMarkdown",
-        "title": "SO: 0-01 Convert Word to Markdown"
-      },
-      {
-        "command": "so-workspace.convertPdfToMarkdown",
-        "title": "SO: 0-01b Convert PDF to Markdown"
-      },
+        {
+          "command": "so-workspace.convertWordToMarkdown",
+          "title": "SO: 0-01 Convert Word to Markdown"
+        },
+        {
+          "command": "so-workspace.convertDocToMarkdown",
+          "title": "SO: 0-01a Convert DOC to Markdown"
+        },
+        {
+          "command": "so-workspace.convertPdfToMarkdown",
+          "title": "SO: 0-01b Convert PDF to Markdown"
+        },
       {
         "command": "so-workspace.initialize",
         "title": "SO: 0-02 Initialize SO Workspace Structure"
@@ -466,15 +478,20 @@
           "command": "so.showIntegrationRequirements",
           "when": "resourceFilename == requirements.inventory.md"
         },
-        {
-          "command": "so-workspace.convertWordToMarkdown",
-          "when": "resourceExtname == .docx",
-          "group": "navigation"
-        },
-        {
-          "command": "so-workspace.exportDocx",
-          "when": "resourceExtname == .md",
-          "group": "navigation"
+          {
+            "command": "so-workspace.convertWordToMarkdown",
+            "when": "resourceExtname == .docx",
+            "group": "navigation"
+          },
+          {
+            "command": "so-workspace.convertDocToMarkdown",
+            "when": "resourceExtname == .doc",
+            "group": "navigation"
+          },
+          {
+            "command": "so-workspace.exportDocx",
+            "when": "resourceExtname == .md",
+            "group": "navigation"
         },
         {
           "command": "so-workspace.exportPdfNpm",

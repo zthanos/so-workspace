@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.2.3
+
+SO Workspace v3.2.3 expands participant-driven document conversion and adds a real legacy `.doc` to Markdown backend for Windows environments with Microsoft Word installed.
+
+### Participant conversion commands
+
+- Added explicit participant commands for document conversion:
+  - `/ConvertFileToMd`
+  - `/ConvertToMd`
+  - `/ConvertDocxToMd`
+  - `/ConvertDocToMd`
+  - `/ConvertFileToDoc`
+  - `/ConvertFileToPdf`
+- Updated the `@so` participant so conversion commands execute the existing VS Code commands directly instead of routing through chat-style artifact generation.
+- Added filename-aware participant resolution so workspace file names and paths can be used directly in conversion requests.
+
+### Word and legacy DOC conversion
+
+- Added a dedicated `so-workspace.convertDocToMarkdown` command.
+- Added explorer/context-menu support for `.doc` files alongside the existing `.docx` and `.pdf` conversion entries.
+- Implemented legacy `.doc -> .docx -> markdown` conversion on Windows by:
+  - converting `.doc` to a temporary `.docx` through Microsoft Word COM automation
+  - reusing the existing `.docx -> markdown` pipeline for the final Markdown output
+- Kept `.docx -> markdown` and `.pdf -> markdown` on their existing direct conversion paths.
+
 ## 3.2.0
 
 SO Workspace v3.2.0 tightens the participant-driven artifact workflow, refreshes workspace templates more safely, and significantly improves draw.io-based C4 and BPMN generation quality.
