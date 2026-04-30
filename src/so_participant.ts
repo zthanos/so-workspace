@@ -149,6 +149,11 @@ const SKILL_ALIASES: Record<string, string[]> = {
 type ParticipantCommandResolution =
   | { type: "workspace-update" }
   | {
+      type: "command";
+      commandId: string;
+      sourceMode: "docx-or-pdf-to-md" | "markdown-to-docx" | "markdown-to-pdf";
+    }
+  | {
       type: "skill";
       skillFolder: string;
       operation?: SkillOperation;
@@ -159,6 +164,19 @@ type ParticipantCommandResolution =
 const PARTICIPANT_COMMAND_ALIASES: Record<string, ParticipantCommandResolution> = {
   updateWorkspace: { type: "workspace-update" },
   UpdateWorkspace: { type: "workspace-update" },
+
+  convertFileToMd: { type: "command", commandId: "so-workspace.convertWordToMarkdown", sourceMode: "docx-or-pdf-to-md" },
+  ConvertFileToMd: { type: "command", commandId: "so-workspace.convertWordToMarkdown", sourceMode: "docx-or-pdf-to-md" },
+  convertToMd: { type: "command", commandId: "so-workspace.convertWordToMarkdown", sourceMode: "docx-or-pdf-to-md" },
+  ConvertToMd: { type: "command", commandId: "so-workspace.convertWordToMarkdown", sourceMode: "docx-or-pdf-to-md" },
+  convertFileToDoc: { type: "command", commandId: "so-workspace.exportDocx", sourceMode: "markdown-to-docx" },
+  ConvertFileToDoc: { type: "command", commandId: "so-workspace.exportDocx", sourceMode: "markdown-to-docx" },
+  convertToDoc: { type: "command", commandId: "so-workspace.exportDocx", sourceMode: "markdown-to-docx" },
+  ConvertToDoc: { type: "command", commandId: "so-workspace.exportDocx", sourceMode: "markdown-to-docx" },
+  convertFileToPdf: { type: "command", commandId: "so-workspace.exportPdfNpm", sourceMode: "markdown-to-pdf" },
+  ConvertFileToPdf: { type: "command", commandId: "so-workspace.exportPdfNpm", sourceMode: "markdown-to-pdf" },
+  convertToPdf: { type: "command", commandId: "so-workspace.exportPdfNpm", sourceMode: "markdown-to-pdf" },
+  ConvertToPdf: { type: "command", commandId: "so-workspace.exportPdfNpm", sourceMode: "markdown-to-pdf" },
 
   generateRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "generate" },
   GenerateRequirements: { type: "skill", skillFolder: "requirements-inventory", operation: "generate" },
@@ -305,6 +323,72 @@ async function readDirContextFilesRecursive(
   } catch {
     return [];
   }
+}
+
+function extractCandidateFileToken(prompt: string): string | null {
+  const quotedMatch = prompt.match(/["']([^"']+\.[A-Za-z0-9]+)["']/);
+  if (quotedMatch) {
+    return quotedMatch[1].trim();
+  }
+
+  const pathLikeMatch = prompt.match(/([A-Za-z0-9_./\\-]+\.[A-Za-z0-9]+)/);
+  if (pathLikeMatch) {
+    return pathLikeMatch[1].trim();
+  }
+
+  return null;
+}
+
+async function resolveWorkspaceFileFromPrompt(
+  workspaceRoot: string,
+  prompt: string,
+  allowedExtensions: string[]
+): Promise<vscode.Uri | null> {
+  const candidate = extractCandidateFileToken(prompt);
+  if (!candidate) {
+    return null;
+  }
+
+  const normalizedCandidate = candidate.replace(/\\/g, "/");
+  const ext = path.extname(normalizedCandidate).toLowerCase();
+  if (ext && !allowedExtensions.includes(ext)) {
+    return null;
+  }
+
+  const directPath = path.isAbsolute(candidate)
+    ? candidate
+    : path.join(workspaceRoot, candidate);
+
+  try {
+    const directUri = vscode.Uri.file(directPath);
+    await vscode.workspace.fs.stat(directUri);
+    return directUri;
+  } catch {
+    // fall back to workspace search by basename / suffix
+  }
+
+  const basename = path.basename(normalizedCandidate);
+  const matches = await vscode.workspace.findFiles(`**/${basename}`, "**/node_modules/**", 20);
+  if (matches.length === 1) {
+    return matches[0];
+  }
+
+  const suffixMatch = matches.find((uri) =>
+    uri.fsPath.replace(/\\/g, "/").toLowerCase().endsWith(normalizedCandidate.toLowerCase())
+  );
+  return suffixMatch ?? null;
+}
+
+async function resolveParticipantCommandSource(
+  workspaceRoot: string,
+  prompt: string,
+  sourceMode: "docx-or-pdf-to-md" | "markdown-to-docx" | "markdown-to-pdf"
+): Promise<vscode.Uri | null> {
+  if (sourceMode === "docx-or-pdf-to-md") {
+    return resolveWorkspaceFileFromPrompt(workspaceRoot, prompt, [".docx", ".pdf"]);
+  }
+
+  return resolveWorkspaceFileFromPrompt(workspaceRoot, prompt, [".md"]);
 }
 
 // ---------------------------------------------------------------------------
@@ -1116,6 +1200,57 @@ async function soParticipantHandler(
     } catch (error) {
       stream.markdown(
         `Failed to update workspace templates: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+    return {};
+  }
+
+  if (commandResolution?.type === "command") {
+    const sourceUri = await resolveParticipantCommandSource(
+      workspaceRoot,
+      request.prompt,
+      commandResolution.sourceMode
+    );
+
+    const shouldOpenAsTextEditor = Boolean(
+      sourceUri && commandResolution.sourceMode !== "docx-or-pdf-to-md"
+    );
+
+    if (shouldOpenAsTextEditor && sourceUri) {
+      const doc = await vscode.workspace.openTextDocument(sourceUri);
+      await vscode.window.showTextDocument(doc, { preview: false });
+    }
+
+    if (commandResolution.sourceMode === "docx-or-pdf-to-md" && sourceUri) {
+      const ext = path.extname(sourceUri.fsPath).toLowerCase();
+      const commandId =
+        ext === ".pdf"
+          ? "so-workspace.convertPdfToMarkdown"
+          : "so-workspace.convertWordToMarkdown";
+      await vscode.commands.executeCommand(commandId, sourceUri);
+      stream.markdown(`Started file conversion for \`${workspaceRelativePathForFile(sourceUri.fsPath)}\` to Markdown.`);
+      stream.reference(sourceUri);
+      return {};
+    }
+
+    await vscode.commands.executeCommand(commandResolution.commandId);
+
+    if (sourceUri) {
+      stream.markdown(
+        commandResolution.sourceMode === "markdown-to-docx"
+          ? `Started DOCX export while using \`${workspaceRelativePathForFile(sourceUri.fsPath)}\` as the active Markdown context.`
+          : commandResolution.sourceMode === "markdown-to-pdf"
+            ? `Started PDF export while using \`${workspaceRelativePathForFile(sourceUri.fsPath)}\` as the active Markdown context.`
+            : `Started conversion for \`${workspaceRelativePathForFile(sourceUri.fsPath)}\`.`
+      );
+      stream.reference(sourceUri);
+    } else {
+      stream.markdown(
+        commandResolution.sourceMode === "docx-or-pdf-to-md"
+          ? "Started the file-to-Markdown conversion flow."
+          : commandResolution.sourceMode === "markdown-to-docx"
+            ? "Started the Markdown-to-DOCX export flow."
+            : "Started the Markdown-to-PDF export flow."
       );
     }
     return {};

@@ -2,7 +2,7 @@
   "name": "so-vsix",
   "displayName": "SO Workspace",
   "description": "Chat participant for SO workspace management",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "publisher": "architecture-team",
   "icon": "assets/icon.png",
   "repository": {
@@ -149,14 +149,26 @@
         "description": "SO workspace documentation and build assistant",
         "isSticky": true,
         "commands": [
-          {
-            "name": "UpdateWorkspace",
-            "description": "Refresh workspace-owned SO templates from the current extension version"
-          },
-          {
-            "name": "GenerateRequirements",
-            "description": "Generate the Requirements Inventory artifact"
-          },
+            {
+              "name": "UpdateWorkspace",
+              "description": "Refresh workspace-owned SO templates from the current extension version"
+            },
+            {
+              "name": "ConvertFileToMd",
+              "description": "Convert a DOCX or PDF file to Markdown"
+            },
+            {
+              "name": "ConvertFileToDoc",
+              "description": "Run the Markdown to DOCX export flow"
+            },
+            {
+              "name": "ConvertFileToPdf",
+              "description": "Run the Markdown to PDF export flow"
+            },
+            {
+              "name": "GenerateRequirements",
+              "description": "Generate the Requirements Inventory artifact"
+            },
           {
             "name": "EvaluateRequirements",
             "description": "Evaluate the Requirements Inventory artifact"
