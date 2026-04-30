@@ -4,6 +4,7 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 
 ## Critical rules
 
+- Use the draw.io BPMN 2.0 stencil/library as the default shape source
 - Use BPMN-specific shapes for events and gateways; do not fall back to generic ellipse or diamond semantics
 - Keep sequence flow inside a single pool only
 - Use message flow only between pools
@@ -14,6 +15,7 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 
 ## Core semantics
 
+- BPMN elements must come from the BPMN 2.0 stencil set, not from generic flowchart or UML libraries
 - Events and gateways must use BPMN-specific shapes, not generic ellipses or diamonds
 - Sequence flow is valid only inside one pool
 - Message flow is valid only between pools
@@ -65,10 +67,25 @@ Use these rules when generating BPMN 2.0 diagrams in draw.io XML.
 
 ## draw.io style expectations
 
+- Enable and use the BPMN 2.0 stencil/library in draw.io for events, tasks, gateways, pools, and lanes
 - BPMN event and gateway elements should use BPMN-aware draw.io shape semantics rather than generic flowchart styles
 - pool and lane elements should behave as true containers
 - message flows should be visually distinct from sequence flows
 - BPMN XML should remain editable and stable after regeneration or patching
+
+## Required stencil families
+
+- start / intermediate / end events from the BPMN event stencil family
+- task / subprocess activity shapes from the BPMN activity stencil family
+- exclusive / inclusive / parallel / event-based gateways from the BPMN gateway stencil family
+- pools and lanes from the BPMN swimlane/pool family
+- BPMN sequence-flow and message-flow connectors
+
+Do not substitute:
+- generic ellipse for events
+- generic rounded rectangle for tasks when the BPMN task shape is available
+- generic diamond for gateways
+- generic containers for pools or lanes
 
 ## Visual quality
 

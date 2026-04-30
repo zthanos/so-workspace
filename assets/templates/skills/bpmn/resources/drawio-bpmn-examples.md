@@ -21,6 +21,10 @@
 - Pool: Booking Platform
 - Pool: Payment Provider
 
+Required shape source:
+- Use BPMN 2.0 stencil events, tasks, gateways, pools, and lanes from draw.io
+- Do not replace them with generic flowchart circles, rectangles, diamonds, or containers
+
 Optional lanes inside Booking Platform:
 - Sales Operations
 - Booking Service

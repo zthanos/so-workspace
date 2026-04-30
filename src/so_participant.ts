@@ -933,6 +933,7 @@ function buildNativeEditInstruction(
     "bpmn": [
       `SO ${action} guidance for BPMN Diagram:`,
       "- preserve valid editable draw.io XML using BPMN 2.0 semantics",
+      "- use the draw.io BPMN 2.0 stencil/library, not generic flowchart shapes",
       "- use correct BPMN shapes, pools, lanes, and connector types",
       "- when independent participants interact, prefer separate pools and message flows rather than one shared lane stack",
       "- keep sequence flow inside a single pool only",

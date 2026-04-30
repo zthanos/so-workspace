@@ -19,6 +19,7 @@ Purpose:
 Generate a BPMN 2.0 business process diagram in editable draw.io XML.
 
 Rules:
+- Use the draw.io BPMN 2.0 stencil/library for events, tasks, gateways, pools, lanes, and connectors.
 - Use BPMN semantics, not a generic flowchart.
 - Use pools and lanes when multiple participants or responsibility boundaries are involved.
 - Use sequence flows only within a single pool.
@@ -35,6 +36,7 @@ Collaboration modeling rules:
 
 Event and task rules:
 - Use a BPMN start event for process entry and a BPMN end event for completion.
+- Use BPMN event/task/gateway stencil shapes, not generic flowchart shapes that merely look similar.
 - Do not label start or end events with long business phrases; put business meaning on tasks and message labels.
 - Use verb-noun task names such as "Request Session Closure", "Confirm Session Closure", and "Record Session Closure".
 - If a participant sends a request to another participant, represent the send/receive interaction with message flows between the relevant tasks.
